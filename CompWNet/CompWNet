@@ -1,6 +1,7 @@
 # Mostly just a testing zone roight now, will eventually have to good stuff
 
 import os
+from re import I
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
 
 import tensorflow as tf
@@ -16,10 +17,31 @@ print("Initialized, data loaded. \n\n")
 print("Test shape:", x_test.shape)
 print("Train shape:", x_train.shape)
 
+class Dense(layers.Layer):
+    def __init__(self, units):
+        super(Dense, self).__init__()
+        self.units = units
+
+    def build(self, input_shape):
+        self.w = self.add_weight(
+            name='w', 
+            shape=(input_shape[-1], self.units),
+            initializer='random_normal', 
+            trainable=True
+        )
+        self.b = self.add_weight(
+            name='b', 
+            shape=(self.units, ), 
+            initializer='zeros'
+        )
+    
+    def call(self, inputs):
+        return tf.matmul(inputs, self.w) + self.b
+
 model = ks.Sequential([
     layers.Flatten(),
-    layers.Dense(128), 
-    layers.Dense(10),
+    Dense(128), 
+    Dense(10),
     ])
 
 model.compile(
