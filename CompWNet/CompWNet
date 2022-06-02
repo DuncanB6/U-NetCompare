@@ -1,6 +1,7 @@
 
 # Duncan Boyd, 17\05\2022
 # Uses a W-Net to reconstruct undersampled kspace. Works badly.
+# Although it's on github now so that's cool.
 
 # Libraries
 import tensorflow.compat.v1 as tf
