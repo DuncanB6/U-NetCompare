@@ -16,19 +16,6 @@ print("Initialized, data loaded. \n\n")
 print("Test shape:", x_test.shape)
 print("Train shape:", x_train.shape)
 
-class CNN_Block(layers.Layer):
-    def __init__(self, out_channels, kernel_size=(3, 3)):
-        super(CNN_Block, self).__init__()
-        self.con = layers.Conv2D(out_channels, kernel_size, padding='same')
-        self.batch = layers.BatchNormalization()
-
-    def call(self, input_tensor, training=False):
-        x = self.con(input_tensor)
-        print(x.shape)
-        x = self.batch(x, training=training)
-        x = tf.nn.relu(x)
-        return x
-
 model = ks.Sequential([
     layers.Flatten(),
     layers.Dense(128), 
