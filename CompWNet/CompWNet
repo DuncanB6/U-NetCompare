@@ -1,0 +1,205 @@
+
+# Duncan Boyd, 17\05\2022
+# Uses a W-Net to reconstruct undersampled kspace. Works badly.
+
+# Libraries
+import tensorflow.compat.v1 as tf
+tf.disable_v2_behavior()
+import keras as ks
+from keras import models
+from keras import layers
+from keras import optimizers
+from keras.models import Model
+from keras import backend as K
+from keras.layers import Input, Conv2D, Lambda,MaxPooling2D, concatenate, UpSampling2D,Add, BatchNormalization
+import numpy as np
+import matplotlib.pyplot as plt
+import glob
+
+import complexnn
+
+EPOCHS = 5
+NUM_BRAINS = 2
+TOTAL_PICS = 50
+TEST_PICS = 5
+
+def nrmse(y_true, y_pred):
+    denom = K.sqrt(K.mean(K.square(y_true), axis=(1,2,3)))
+    return K.sqrt(K.mean(K.square(y_pred - y_true), axis=(1,2,3)))\
+    /denom
+
+def ifft_layer(kspace):
+    real = Lambda(lambda kspace : kspace[:,:,:,0])(kspace)
+    imag = Lambda(lambda kspace : kspace[:,:,:,1])(kspace)
+    kspace_complex = tf.complex(real,imag)
+    rec1 = tf.abs(tf.ifft2d(kspace_complex))
+    rec1 = tf.expand_dims(rec1, -1)
+    return rec1
+
+def w_net(mu1,sigma1,mu2,sigma2,H=256,W=256,channels = 2,kshape = (3,3),kshape2=(3,3)):
+    inputs = Input(shape=(H,W,channels))
+
+    conv1 = complexnn.conv.ComplexConv2D(48, kshape, activation='relu', padding='same')(inputs)
+    conv1 = complexnn.conv.ComplexConv2D(48, kshape, activation='relu', padding='same')(conv1)
+    conv1 = complexnn.conv.ComplexConv2D(48, kshape, activation='relu', padding='same')(conv1)
+    pool1 = MaxPooling2D(pool_size=(2, 2))(conv1)
+    
+    conv2 = complexnn.conv.ComplexConv2D(64, kshape, activation='relu', padding='same')(pool1)
+    conv2 = complexnn.conv.ComplexConv2D(64, kshape, activation='relu', padding='same')(conv2)
+    conv2 = complexnn.conv.ComplexConv2D(64, kshape, activation='relu', padding='same')(conv2)
+    pool2 = MaxPooling2D(pool_size=(2, 2))(conv2)
+    
+    conv3 = complexnn.conv.Complexonv2D(128, kshape, activation='relu', padding='same')(pool2)
+    conv3 = complexnn.conv.ComplexConv2D(128, kshape, activation='relu', padding='same')(conv3)
+    conv3 = complexnn.conv.ComplexConv2D(128, kshape, activation='relu', padding='same')(conv3)
+    pool3 = MaxPooling2D(pool_size=(2, 2))(conv3)
+    
+    conv4 = complexnn.conv.ComplexConv2D(256, kshape, activation='relu', padding='same')(pool3)
+    conv4 = complexnn.conv.ComplexConv2D(256, kshape, activation='relu', padding='same')(conv4)
+    conv4 = complexnn.conv.ComplexConv2D(256, kshape, activation='relu', padding='same')(conv4)
+    
+    up1 = concatenate([UpSampling2D(size=(2, 2))(conv4), conv3],axis=-1)
+    conv5 = complexnn.conv.ComplexConv2D(128, kshape, activation='relu', padding='same')(up1)
+    conv5 = complexnn.conv.ComplexConv2D(128, kshape, activation='relu', padding='same')(conv5)
+    conv5 = complexnn.conv.ComplexConv2D(128, kshape, activation='relu', padding='same')(conv5)
+    
+    up2 = concatenate([UpSampling2D(size=(2, 2))(conv5), conv2],axis=-1)
+    conv6 = complexnn.conv.ComplexConv2D(64, kshape, activation='relu', padding='same')(up2)
+    conv6 = complexnn.conv.ComplexConv2D(64, kshape, activation='relu', padding='same')(conv6)
+    conv6 = complexnn.conv.ComplexConv2D(64, kshape, activation='relu', padding='same')(conv6)
+    
+    up3 = concatenate([UpSampling2D(size=(2, 2))(conv6), conv1],axis=-1)
+    conv7 = complexnn.conv.ComplexConv2D(48, kshape, activation='relu', padding='same')(up3)
+    conv7 = complexnn.conv.ComplexConv2D(48, kshape, activation='relu', padding='same')(conv7)
+    conv7 = complexnn.conv.ComplexConv2D(48, kshape, activation='relu', padding='same')(conv7)
+    
+    conv8 = complexnn.conv.ComplexConv2D(2, (1, 1), activation='linear')(conv7)
+    res1 = Add()([conv8,inputs])
+    res1_scaled = Lambda(lambda res1 : (res1*sigma1+mu1))(res1)
+    
+    rec1 = Lambda(ifft_layer)(res1_scaled)
+    rec1_norm = Lambda(lambda rec1 : (rec1-mu2)/sigma2)(rec1)
+    
+    conv9 = complexnn.conv.ComplexConv2D(48, kshape2, activation='relu', padding='same')(rec1_norm)
+    conv9 = complexnn.conv.ComplexConv2D(48, kshape2, activation='relu', padding='same')(conv9)
+    conv9 = complexnn.conv.ComplexConv2D(48, kshape2, activation='relu', padding='same')(conv9)
+    pool4 = MaxPooling2D(pool_size=(2, 2))(conv9)
+    
+    conv10 = complexnn.conv.ComplexConv2D(64, kshape2, activation='relu', padding='same')(pool4)
+    conv10 = complexnn.conv.ComplexConv2D(64, kshape2, activation='relu', padding='same')(conv10)
+    conv10 = complexnn.conv.ComplexConv2D(64, kshape2, activation='relu', padding='same')(conv10)
+    pool5 = MaxPooling2D(pool_size=(2, 2))(conv10)
+    
+    conv11 = complexnn.conv.ComplexConv2D(128, kshape2, activation='relu', padding='same')(pool5)
+    conv11 = complexnn.conv.ComplexConv2D(128, kshape2, activation='relu', padding='same')(conv11)
+    conv11 = complexnn.conv.ComplexConv2D(128, kshape2, activation='relu', padding='same')(conv11)
+    pool6 = MaxPooling2D(pool_size=(2, 2))(conv11)
+    
+    conv12 = complexnn.conv.ComplexConv2D(256, kshape2, activation='relu', padding='same')(pool6)
+    conv12 = complexnn.conv.ComplexConv2D(256, kshape2, activation='relu', padding='same')(conv12)
+    conv12 = complexnn.conv.ComplexConv2D(256, kshape2, activation='relu', padding='same')(conv12)
+    
+    up4 = concatenate([UpSampling2D(size=(2, 2))(conv12), conv11],axis=-1)
+    conv13 = complexnn.conv.ComplexConv2D(128, kshape2, activation='relu', padding='same')(up4)
+    conv13 = complexnn.conv.ComplexConv2D(128, kshape2, activation='relu', padding='same')(conv13)
+    conv13 = complexnn.conv.ComplexConv2D(128, kshape2, activation='relu', padding='same')(conv13)
+    
+    up5 = concatenate([UpSampling2D(size=(2, 2))(conv13), conv10],axis=-1)
+    conv14 = complexnn.conv.ComplexConv2D(64, kshape2, activation='relu', padding='same')(up5)
+    conv14 = complexnn.conv.ComplexConv2D(64, kshape2, activation='relu', padding='same')(conv14)
+    conv14 = complexnn.conv.ComplexConv2D(64, kshape2, activation='relu', padding='same')(conv14)
+    
+    up6 = concatenate([UpSampling2D(size=(2, 2))(conv14), conv9],axis=-1)
+    conv15 = complexnn.conv.ComplexConv2D(48, kshape2, activation='relu', padding='same')(up6)
+    conv15 = complexnn.conv.ComplexConv2D(48, kshape2, activation='relu', padding='same')(conv15)
+    conv15 = complexnn.conv.ComplexConv2D(48, kshape2, activation='relu', padding='same')(conv15)
+    
+    out = complexnn.conv.ComplexConv2D(1, (1, 1), activation='linear')(conv15)
+    model = Model(inputs=inputs, outputs=[res1_scaled,out])
+    return model
+
+# Displays messages to confirm initialization.
+print("\nInitializing...")
+print("Using Keras version", ks.__version__, "\n")
+
+stats = np.load("/Users/duncan.boyd/Documents/WorkCode/workvenv/WNetPractice/stats.npy")
+samp_mask = np.load("/Users/duncan.boyd/Documents/WorkCode/workvenv/WNetPractice/sampling_mask.npy")
+
+imshape = (256,256)
+norm = np.sqrt(imshape[0]*imshape[1])
+
+brains = [] # Complete MRI images.
+non_brains = [] # Complete K space.
+knon_brains = [] # Undersampled K space.
+k_brains = [] # Undersampled MRI images
+
+count = 0
+for brain in glob.glob('/Users/duncan.boyd/Documents/WorkCode/workvenv/MRIPractice/Train/*.npy') :
+    count += 1
+    kspace = np.load(brain)/norm
+    kspace2 = kspace.copy()
+    kspace3 = kspace.copy()
+    kspace2[ :, samp_mask, : ] = 0
+    kspace2 = (kspace2-stats[0])/stats[1]
+    rec1 = np.abs(np.fft.ifft2(kspace[:,:,:,0]+1j*kspace[:,:,:,1])).astype(np.float64)
+    rec2 = np.abs(np.fft.ifft2(kspace2[:,:,:,0]+1j*kspace2[:,:,:,1])).astype(np.float64)
+    if rec1.shape == (170, 256, 256) :
+        brains.append(rec1)
+        non_brains.append(kspace2)
+        knon_brains.append(kspace3)
+        k_brains.append(rec2)
+    if count == NUM_BRAINS :
+        break
+
+brains = np.array(brains)
+print(brains.shape)
+non_brains = np.array(non_brains)
+print(non_brains.shape)
+knon_brains = np.array(knon_brains)
+print(knon_brains.shape)
+k_brains = np.array(k_brains)
+print(knon_brains.shape)
+
+brains = brains / np.amax(brains)
+brains = np.expand_dims(brains, axis=-1)
+train_set_rec = brains[0, 60:(60+TOTAL_PICS), :, :]
+train_set_dec = non_brains[0, 60:(60+TOTAL_PICS), :, :]
+train_set_half_rec = knon_brains[0, 60:(60+TOTAL_PICS), :, :]
+test_set_rec = brains[1, 80:(80+TEST_PICS), :, :]
+test_set_half_rec = k_brains[1, 80:(80+TEST_PICS), :, :]
+test_set_dec = non_brains[1, 80:(80+TEST_PICS), :, :]
+
+print("Data in in range 0<x<1")
+print("Train rec: ", train_set_rec.shape)
+print("Train dec: ", train_set_dec.shape)
+print("Train half rec: ", train_set_half_rec.shape)
+print("Test rec: ", test_set_rec.shape)
+print("Test half rec: ", test_set_half_rec.shape)
+print("Test dec: ", test_set_dec.shape)
+
+# Calls U-Net model, compiles. 
+w_net =w_net(stats[0],stats[1],stats[2],stats[3],H=256,W=256,channels = 2,kshape = (3,3),kshape2=(3,3))
+w_net.compile(optimizer='adam',loss=[nrmse, nrmse],loss_weights=[0.01, 0.99])
+
+# Fits model using training data.
+w_net.fit(train_set_dec, [train_set_half_rec, train_set_rec], epochs=EPOCHS)
+
+# Predicts a set of reconstructed images.
+kspace_pred, final_pred = w_net.predict(test_set_dec)
+print(kspace_pred.shape, final_pred.shape)
+
+# Plots an individual image from test and predictions.
+fig_num = 0
+while(fig_num != -1) :
+    plt.figure(figsize=(10,10))
+    plt.subplot(1,3,1)
+    plt.imshow(test_set_rec[fig_num], cmap='Greys')
+    plt.subplot(1,3,2)
+    plt.imshow(test_set_half_rec[fig_num], cmap='Greys')
+    plt.subplot(1,3,3)
+    plt.imshow(final_pred[fig_num], cmap='Greys')
+    plt.savefig("/Users/duncan.boyd/Documents/WorkCode/workvenv/WNetPractice/RecBrains/"+str(fig_num)+".jpg")
+    plt.show()
+    fig_num = int(input('Figure number:'))
+
+exit()
