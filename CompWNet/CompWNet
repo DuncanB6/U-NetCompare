@@ -100,17 +100,19 @@ def get_brains():
 
     return train_set_rec, train_set_dec, train_set_half_rec, test_set_rec, test_set_half_rec, test_set_dec
 
-# Custom complex convolution. At the moment, all it does is split and then rejoin the data.
+# Custom complex convolution. This might work, although it has not been tested at all.
 class CompConv(layers.Layer):
     def __init__(self, out_channels, kshape=(3, 3)):
         super(CompConv, self).__init__()
         self.conv = layers.Conv2D(out_channels, kshape, activation='relu', padding='same')
 
     def call(self, input_tensor, training=False):
-        r, i = tf.split(input_tensor, num_or_size_splits=2, axis=3)
-        print("Real shape:", r.shape)
-        print("Imaginary shape", i.shape)
-        x = tf.concat([r, i], axis=3)
+        ureal, uimag = tf.split(input_tensor, num_or_size_splits=2, axis=3)
+        oreal = self.conv(ureal) - self.conv(uimag)
+        oimag = self.conv(ureal) + self.conv(uimag)
+        x = tf.concat([oreal, oimag], axis=3)
+        print("Real shape:", oreal.shape)
+        print("Imaginary shape", oimag.shape)
         print("Combined shape:", x.shape, "\n")
         return x
 
@@ -125,6 +127,7 @@ train_set_rec, train_set_dec, train_set_half_rec, test_set_rec, test_set_half_re
 
 # Declare, compile, fit the model.
 model = ks.Sequential([
+    CompConv(2), 
     CompConv(1)
     ])
 model.compile(optimizer='adam',loss=[nrmse, nrmse],loss_weights=[0.01, 0.99])
