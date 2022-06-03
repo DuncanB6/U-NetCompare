@@ -1,56 +1,135 @@
 # Mostly just a testing zone roight now, will eventually have to good stuff
+# June 3, 2022
 
+# Imports
 import os
 from re import I
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
-
 import tensorflow as tf
 from tensorflow import keras as ks
 from keras import layers
 from keras.datasets import mnist
+import cv2
+import numpy as np
+import matplotlib.pyplot as plt
+import glob
+from keras import backend as K
 
+# Variables
+EPOCHS = 1
+NUM_BRAINS = 2
+TOTAL_PICS = 20
+TEST_PICS = 5
+BRAINS_ADDR = '/Users/duncan.boyd/Documents/WorkCode/workvenv/MRIPractice/Train/*.npy'
+STATS_ADDR = '/Users/duncan.boyd/Documents/WorkCode/workvenv/WNetPractice/stats.npy'
+MASK_ADDR = '/Users/duncan.boyd/Documents/WorkCode/workvenv/WNetPractice/sampling_mask.npy'
+
+# Loading MNIST data
 (x_train, y_train), (x_test, y_test) = mnist.load_data()
 x_train = x_train.reshape(-1, 28, 28, 1).astype("float32") / 255.0
 x_test = x_test.reshape(-1, 28, 28, 1).astype("float32") / 255.0
 
+# Initialization message
 print("Initialized, data loaded. \n\n")
 print("Test shape:", x_test.shape)
 print("Train shape:", x_train.shape)
 
-class Dense(layers.Layer):
-    def __init__(self, units):
-        super(Dense, self).__init__()
-        self.units = units
+# Loss function
+def nrmse(y_true, y_pred):
+    denom = K.sqrt(K.mean(K.square(y_true), axis=(1,2,3)))
+    return K.sqrt(K.mean(K.square(y_pred - y_true), axis=(1,2,3)))\
+    /denom
 
-    def build(self, input_shape):
-        self.w = self.add_weight(
-            name='w', 
-            shape=(input_shape[-1], self.units),
-            initializer='random_normal', 
-            trainable=True
-        )
-        self.b = self.add_weight(
-            name='b', 
-            shape=(self.units, ), 
-            initializer='zeros'
-        )
-    
-    def call(self, inputs):
-        return tf.matmul(inputs, self.w) + self.b
+# Loads MRIs to arrays. Returns reconstructed and deconstructed test and train data in both 
+# kspace and image domain. Note that addresses are still hard coded as variables.
+def get_brains():
+    stats = np.load(STATS_ADDR)
+    samp_mask = np.load(MASK_ADDR)
 
+    imshape = (256,256)
+    norm = np.sqrt(imshape[0]*imshape[1])
+
+    brains = [] # Complete MRI images.
+    non_brains = [] # Complete K space.
+    knon_brains = [] # Undersampled K space.
+    k_brains = [] # Undersampled MRI images
+
+    count = 0
+    for brain in glob.glob(BRAINS_ADDR) :
+        count += 1
+        kspace = np.load(brain)/norm
+        kspace2 = kspace.copy()
+        kspace3 = kspace.copy()
+        kspace2[ :, samp_mask, : ] = 0
+        kspace2 = (kspace2-stats[0])/stats[1]
+        rec1 = np.abs(np.fft.ifft2(kspace[:,:,:,0]+1j*kspace[:,:,:,1])).astype(np.float64)
+        rec2 = np.abs(np.fft.ifft2(kspace2[:,:,:,0]+1j*kspace2[:,:,:,1])).astype(np.float64)
+        if rec1.shape == (170, 256, 256) :
+            brains.append(rec1)
+            non_brains.append(kspace2)
+            knon_brains.append(kspace3)
+            k_brains.append(rec2)
+        if count == NUM_BRAINS :
+            break
+
+    brains = np.array(brains)
+    print(brains.shape)
+    non_brains = np.array(non_brains)
+    print(non_brains.shape)
+    knon_brains = np.array(knon_brains)
+    print(knon_brains.shape)
+    k_brains = np.array(k_brains)
+    print(knon_brains.shape)
+
+    brains = brains / np.amax(brains)
+    brains = np.expand_dims(brains, axis=-1)
+    train_set_rec = brains[0, 60:(60+TOTAL_PICS), :, :]
+    train_set_dec = non_brains[0, 60:(60+TOTAL_PICS), :, :]
+    train_set_half_rec = knon_brains[0, 60:(60+TOTAL_PICS), :, :]
+    test_set_rec = brains[1, 80:(80+TEST_PICS), :, :]
+    test_set_half_rec = k_brains[1, 80:(80+TEST_PICS), :, :]
+    test_set_dec = non_brains[1, 80:(80+TEST_PICS), :, :]
+
+    print("\nData in in range 0<x<1")
+    print("Train rec: ", train_set_rec.shape)
+    print("Train dec: ", train_set_dec.shape)
+    print("Train half rec: ", train_set_half_rec.shape)
+    print("Test rec: ", test_set_rec.shape)
+    print("Test half rec: ", test_set_half_rec.shape)
+    print("Test dec: ", test_set_dec.shape, "\n\n")
+
+    return train_set_rec, train_set_dec, train_set_half_rec, test_set_rec, test_set_half_rec, test_set_dec
+
+# Custom complex convolution. At the moment, all it does is split and then rejoin the data.
+class CompConv(layers.Layer):
+    def __init__(self, out_channels, kshape=(3, 3)):
+        super(CompConv, self).__init__()
+        self.conv = layers.Conv2D(out_channels, kshape, activation='relu', padding='same')
+
+    def call(self, input_tensor, training=False):
+        r, i = tf.split(input_tensor, num_or_size_splits=2, axis=3)
+        print("Real shape:", r.shape)
+        print("Imaginary shape", i.shape)
+        x = tf.concat([r, i], axis=3)
+        print("Combined shape:", x.shape, "\n")
+        return x
+
+# Loads data.
+# train_set_rec -> Complete, image domain 
+# train_set_dec -> Incomplete, kspace domain
+# train_st_half_rec -> Complete, kspace domain
+# test_set_rec -> Complete, image domain
+# test_set_half_rec -> Complete, kspace domain MAY HAVE AN ERROR, BE CAREFUL. IS THE WRONG SHAPE
+# test_set_dec -> Incomplete, kspace domain
+train_set_rec, train_set_dec, train_set_half_rec, test_set_rec, test_set_half_rec, test_set_dec = get_brains()
+
+# Declare, compile, fit the model.
 model = ks.Sequential([
-    layers.Flatten(),
-    Dense(128), 
-    Dense(10),
+    CompConv(1)
     ])
-
-model.compile(
-    optimizer=ks.optimizers.Adam(), 
-    loss=ks.losses.SparseCategoricalCrossentropy(from_logits=True), 
-    metrics=['accuracy']
-    )
-
-model.fit(x_train, y_train, batch_size=64, epochs=1)
-model.evaluate(x_test, y_test, batch_size=64)
+model.compile(optimizer='adam',loss=[nrmse, nrmse],loss_weights=[0.01, 0.99])
+# Fits model using training data.
+model.fit(train_set_dec, train_set_half_rec, epochs=EPOCHS)
+model.summary()
 
 
