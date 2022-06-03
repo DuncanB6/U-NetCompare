@@ -12,6 +12,8 @@ git commit -m "_message_"
 
 git push origin main 
 
+git pull origin main
+
 ---
 
 Helpful links:
