@@ -8,12 +8,12 @@ os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
 import tensorflow as tf
 from tensorflow import keras as ks
 from keras import layers
-from keras.datasets import mnist
 import cv2
 import numpy as np
 import matplotlib.pyplot as plt
 import glob
 from keras import backend as K
+from keras.models import Model
 
 # Variables
 EPOCHS = 1
@@ -23,16 +23,6 @@ TEST_PICS = 5
 BRAINS_ADDR = '/Users/duncan.boyd/Documents/WorkCode/workvenv/MRIPractice/Train/*.npy'
 STATS_ADDR = '/Users/duncan.boyd/Documents/WorkCode/workvenv/WNetPractice/stats.npy'
 MASK_ADDR = '/Users/duncan.boyd/Documents/WorkCode/workvenv/WNetPractice/sampling_mask.npy'
-
-# Loading MNIST data
-(x_train, y_train), (x_test, y_test) = mnist.load_data()
-x_train = x_train.reshape(-1, 28, 28, 1).astype("float32") / 255.0
-x_test = x_test.reshape(-1, 28, 28, 1).astype("float32") / 255.0
-
-# Initialization message
-print("Initialized, data loaded. \n\n")
-print("Test shape:", x_test.shape)
-print("Train shape:", x_train.shape)
 
 # Loss function
 def nrmse(y_true, y_pred):
@@ -101,9 +91,9 @@ def get_brains():
     return train_set_rec, train_set_dec, train_set_half_rec, test_set_rec, test_set_half_rec, test_set_dec
 
 # Custom complex convolution. This might work, although it has not been tested at all.
-class CompConv(layers.Layer):
+class CompConv2D(layers.Layer):
     def __init__(self, out_channels, kshape=(3, 3)):
-        super(CompConv, self).__init__()
+        super(CompConv2D, self).__init__()
         self.conv = layers.Conv2D(out_channels, kshape, activation='relu', padding='same')
 
     def call(self, input_tensor, training=False):
@@ -111,10 +101,53 @@ class CompConv(layers.Layer):
         oreal = self.conv(ureal) - self.conv(uimag)
         oimag = self.conv(ureal) + self.conv(uimag)
         x = tf.concat([oreal, oimag], axis=3)
-        print("Real shape:", oreal.shape)
+        '''print("Real shape:", oreal.shape)
         print("Imaginary shape", oimag.shape)
-        print("Combined shape:", x.shape, "\n")
+        print("Combined shape:", x.shape, "\n")'''
         return x
+
+# U-Net model. Note: Filters are halved to maintain structure, but they probably shouldn't be.
+def u_net(H=256,W=256,channels = 2,kshape = (3,3)):
+    inputs = layers.Input(shape=(H,W,channels))
+
+    conv1 = CompConv2D(24)(inputs)
+    conv1 = CompConv2D(24)(conv1)
+    conv1 = CompConv2D(24)(conv1)
+    pool1 = layers.MaxPooling2D(pool_size=(2, 2))(conv1)
+    
+    conv2 = CompConv2D(32)(pool1)
+    conv2 = CompConv2D(32)(conv2)
+    conv2 = CompConv2D(32)(conv2)
+    pool2 = layers.MaxPooling2D(pool_size=(2, 2))(conv2)
+    
+    conv3 = CompConv2D(64)(pool2)
+    conv3 = CompConv2D(64)(conv3)
+    conv3 = CompConv2D(64)(conv3)
+    pool3 = layers.MaxPooling2D(pool_size=(2, 2))(conv3)
+    
+    conv4 = CompConv2D(128)(pool3)
+    conv4 = CompConv2D(128)(conv4)
+    conv4 = CompConv2D(128)(conv4)
+    
+    up1 = layers.concatenate([layers.UpSampling2D(size=(2, 2))(conv4), conv3],axis=-1)
+    conv5 = CompConv2D(64)(up1)
+    conv5 = CompConv2D(64)(conv5)
+    conv5 = CompConv2D(64)(conv5)
+    
+    up2 = layers.concatenate([layers.UpSampling2D(size=(2, 2))(conv5), conv2],axis=-1)
+    conv6 = CompConv2D(32)(up2)
+    conv6 = CompConv2D(32)(conv6)
+    conv6 = CompConv2D(32)(conv6)
+    
+    up3 = layers.concatenate([layers.UpSampling2D(size=(2, 2))(conv6), conv1],axis=-1)
+    conv7 = CompConv2D(24)(up3)
+    conv7 = CompConv2D(24)(conv7)
+    conv7 = CompConv2D(24)(conv7)
+    
+    outputs = CompConv2D(1)(conv7)
+
+    final = Model(inputs=inputs, outputs=outputs)
+    return final
 
 # Loads data.
 # train_set_rec -> Complete, image domain 
@@ -126,13 +159,24 @@ class CompConv(layers.Layer):
 train_set_rec, train_set_dec, train_set_half_rec, test_set_rec, test_set_half_rec, test_set_dec = get_brains()
 
 # Declare, compile, fit the model.
-model = ks.Sequential([
-    CompConv(2), 
-    CompConv(1)
-    ])
+model = u_net()
 model.compile(optimizer='adam',loss=[nrmse, nrmse],loss_weights=[0.01, 0.99])
 # Fits model using training data.
 model.fit(train_set_dec, train_set_half_rec, epochs=EPOCHS)
 model.summary()
+
+predictions = model.predict(test_set_dec)
+
+test_brain = np.abs(np.fft.ifft2(predictions[:,:,:,0]+1j*predictions[:,:,:,1])).astype(np.float64)
+
+print(predictions.shape)
+print(test_brain.shape)
+
+plt.figure(figsize=(10,10))
+plt.subplot(1,3,1)
+plt.imshow(test_set_rec[0], cmap='Greys')
+plt.subplot(1,3,2)
+plt.imshow(test_brain[0], cmap='Greys')
+plt.show()
 
 
