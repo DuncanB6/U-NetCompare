@@ -16,9 +16,9 @@ from keras import backend as K
 from keras.models import Model
 
 # Variables
-EPOCHS = 1
+EPOCHS = 10
 NUM_BRAINS = 2
-TOTAL_PICS = 20
+TOTAL_PICS = 60
 TEST_PICS = 5
 BRAINS_ADDR = '/Users/duncan.boyd/Documents/WorkCode/workvenv/MRIPractice/Train/*.npy'
 STATS_ADDR = '/Users/duncan.boyd/Documents/WorkCode/workvenv/WNetPractice/stats.npy'
@@ -94,16 +94,14 @@ def get_brains():
 class CompConv2D(layers.Layer):
     def __init__(self, out_channels, kshape=(3, 3)):
         super(CompConv2D, self).__init__()
-        self.conv = layers.Conv2D(out_channels, kshape, activation='relu', padding='same')
+        self.conv1 = layers.Conv2D(out_channels, kshape, activation='relu', padding='same')
+        self.conv2 = layers.Conv2D(out_channels, kshape, activation='relu', padding='same')
 
     def call(self, input_tensor, training=False):
         ureal, uimag = tf.split(input_tensor, num_or_size_splits=2, axis=3)
-        oreal = self.conv(ureal) - self.conv(uimag)
-        oimag = self.conv(ureal) + self.conv(uimag)
+        oreal = self.conv1(ureal) - self.conv2(uimag)
+        oimag = self.conv2(ureal) + self.conv1(uimag)
         x = tf.concat([oreal, oimag], axis=3)
-        '''print("Real shape:", oreal.shape)
-        print("Imaginary shape", oimag.shape)
-        print("Combined shape:", x.shape, "\n")'''
         return x
 
 # U-Net model. Note: Filters are halved to maintain structure, but they probably shouldn't be.
@@ -160,6 +158,9 @@ train_set_rec, train_set_dec, train_set_half_rec, test_set_rec, test_set_half_re
 
 # Declare, compile, fit the model.
 model = u_net()
+'''model = ks.Sequential([
+    CompConv2D(1)
+])'''
 model.compile(optimizer='adam',loss=[nrmse, nrmse],loss_weights=[0.01, 0.99])
 # Fits model using training data.
 model.fit(train_set_dec, train_set_half_rec, epochs=EPOCHS)
@@ -174,9 +175,9 @@ print(test_brain.shape)
 
 plt.figure(figsize=(10,10))
 plt.subplot(1,3,1)
-plt.imshow(test_set_rec[0], cmap='Greys')
+plt.imshow((255.0 - test_set_rec[0]), cmap='Greys')
 plt.subplot(1,3,2)
-plt.imshow(test_brain[0], cmap='Greys')
+plt.imshow((255.0 - test_brain[0]), cmap='Greys')
 plt.show()
 
 
