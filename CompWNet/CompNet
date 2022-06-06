@@ -106,16 +106,20 @@ def get_brains():
     return stats, train_set_rec, train_set_dec, train_set_half_rec, test_set_rec, test_set_half_rec, test_set_dec
 
 # Custom complex convolution. Really loves returning blank images, I don't know why.
+# Uses algerbra below. I've used "|" to denote a two channel array, and "f" to denote a variable that is a part of a filter.
+
+# (R | I) * (Rf | If) = Or | Oi = (R * Rf - I * If) | (I * Rf + R * If)
+
 class CompConv2D(layers.Layer):
     def __init__(self, out_channels, kshape=(3, 3)):
         super(CompConv2D, self).__init__()
-        self.conv1 = layers.Conv2D(out_channels, kshape, activation='relu', padding='same')
-        self.conv2 = layers.Conv2D(out_channels, kshape, activation='relu', padding='same')
+        self.convreal = layers.Conv2D(out_channels, kshape, activation='relu', padding='same')
+        self.convimag = layers.Conv2D(out_channels, kshape, activation='relu', padding='same')
 
     def call(self, input_tensor, training=False):
         ureal, uimag = tf.split(input_tensor, num_or_size_splits=2, axis=3)
-        oreal = self.conv1(ureal) - self.conv2(uimag)
-        oimag = self.conv2(ureal) + self.conv1(uimag)
+        oreal = self.convreal(ureal) - self.convimag(uimag)
+        oimag = self.convimag(ureal) + self.convreal(uimag)
         x = tf.concat([oreal, oimag], axis=3)
         return x
 
