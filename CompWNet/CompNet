@@ -34,7 +34,7 @@ def nrmse(y_true, y_pred):
     return K.sqrt(K.mean(K.square(y_pred - y_true), axis=(1,2,3)))\
     /denom
 
-# IFFT layer, usd in u_net.
+# IFFT layer, used in u_net.
 def ifft_layer(kspace):
     real = layers.Lambda(lambda kspace : kspace[:,:,:,0])(kspace)
     imag = layers.Lambda(lambda kspace : kspace[:,:,:,1])(kspace)
@@ -45,7 +45,8 @@ def ifft_layer(kspace):
 
 # Loads MRIs to arrays. Returns reconstructed and deconstructed test and train data in both 
 # kspace and image domain. Note that addresses are hard coded as variables. 
-# Therefore, it only works on my work computer.
+# Therefore, it only works on my (Duncan's) work computer. Data used is from https://drive.google.com/drive/folders/1wa4npKnob3YPwMjuXT_-9YQX9rua0OiE?usp=sharing
+# Only 2 scans from test data is used, as this is quite small scale.
 def get_brains():
     stats = np.load(STATS_ADDR)
     samp_mask = np.load(MASK_ADDR)
@@ -104,7 +105,7 @@ def get_brains():
 
     return stats, train_set_rec, train_set_dec, train_set_half_rec, test_set_rec, test_set_half_rec, test_set_dec
 
-# Custom complex convolution. Really loves whiting out image, I don't know why.
+# Custom complex convolution. Really loves returning blank images, I don't know why.
 class CompConv2D(layers.Layer):
     def __init__(self, out_channels, kshape=(3, 3)):
         super(CompConv2D, self).__init__()
@@ -119,8 +120,8 @@ class CompConv2D(layers.Layer):
         return x
 
 # U-Net model. Includes kspace domain U-Net and IFFT.
-# Note: Filters are halved to maintain structure, but they probably shouldn't be.
-# Question: Can a purely kspace model be trained, with no reference to image domain?
+# Note: Filters are halved to maintain structure, but they probably shouldn't be. Although this may reduce performance, I think it's probably fine for testing.
+# Question: Can a purely kspace model be trained, with no reference to image domain? For this code, I've assumed no (also just for convenience viewing results).
 def u_net(mu1,sigma1,mu2,sigma2, H=256,W=256,channels = 2,kshape = (3,3)):
     inputs = layers.Input(shape=(H,W,channels))
 
@@ -168,7 +169,7 @@ def u_net(mu1,sigma1,mu2,sigma2, H=256,W=256,channels = 2,kshape = (3,3)):
     model = Model(inputs=inputs, outputs=final)
     return model
 
-# Loads data.
+# Loads data. Apologies that they're out of order.
 # train_set_rec -> Complete, image domain 
 # train_set_dec -> Incomplete, kspace domain
 # train_st_half_rec -> Complete, kspace domain
@@ -179,9 +180,10 @@ stats, train_set_rec, train_set_dec, train_set_half_rec, test_set_rec, test_set_
 
 # Declare, compile, fit the model.
 model = u_net(stats[0],stats[1],stats[2],stats[3])
-model.compile(optimizer='adam',loss=nrmse)
+model.compile(optimizer='adam', loss=nrmse)
+
 # Fits model using training data.
-model.fit(train_set_dec, train_set_half_rec, epochs=EPOCHS)
+model.fit(train_set_dec, train_set_rec, epochs=EPOCHS)
 model.summary()
 
 # Makes predictions
