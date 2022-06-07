@@ -1,10 +1,13 @@
 
-# Status: This is the beginning of a complex U-Net. Code is written, returns poor quality images. Will
-# be looking into techniques to improve quality (batch, val) before exploring larger datasets.
-# June 3, 2022
+# Status: This is the beginning of a complex U-Net. Code is written, returns poor quality images.
+# Hopefully poor quality is due to training practices limited by local hardware and not technique.
+# Data processing is limited, but does use validation.
+# Will need significant updates to deploy at larger scale.
+# June 7, 2022
 
 # Imports
 import os
+import time
 from re import I
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
 import tensorflow as tf
@@ -20,14 +23,18 @@ from keras.models import Model
 
 # Variables
 EPOCHS = 5
-NUM_BRAINS = 2
+NUM_BRAINS = 3
 TOTAL_PICS = 30
 TEST_PICS = 5
+VAL_PICS = 10
 MOD = 1
 BATCH_SIZE = 10
 BRAINS_ADDR = '/Users/duncan.boyd/Documents/WorkCode/workvenv/MRIPractice/Train/*.npy'
 STATS_ADDR = '/Users/duncan.boyd/Documents/WorkCode/workvenv/WNetPractice/stats.npy'
 MASK_ADDR = '/Users/duncan.boyd/Documents/WorkCode/workvenv/WNetPractice/sampling_mask.npy'
+
+init_time = time.time()
+print("\nInitialized\n")
 
 # Loss function
 def nrmse(y_true, y_pred):
@@ -95,6 +102,8 @@ def get_brains():
     test_set_rec = brains[1, 80:(80+TEST_PICS), :, :]
     test_set_half_rec = k_brains[1, 80:(80+TEST_PICS), :, :]
     test_set_dec = non_brains[1, 80:(80+TEST_PICS), :, :]
+    val_dec = non_brains[2, 80:(80+VAL_PICS), :, :]
+    val_rec = brains[2, 80:(80+VAL_PICS), :, :]
 
     print("\nData in in range 0<x<1")
     print("Train rec: ", train_set_rec.shape)
@@ -104,7 +113,7 @@ def get_brains():
     print("Test half rec: ", test_set_half_rec.shape)
     print("Test dec: ", test_set_dec.shape, "\n\n")
 
-    return stats, train_set_rec, train_set_dec, train_set_half_rec, test_set_rec, test_set_half_rec, test_set_dec
+    return val_dec, val_rec, stats, train_set_rec, train_set_dec, train_set_half_rec, test_set_rec, test_set_half_rec, test_set_dec
 
 # Custom complex convolution. 
 # Uses algebra below. I've used "|" to denote a two channel array, and "f" to denote a variable that is a part of a filter.
@@ -177,25 +186,29 @@ def u_net(mu1,sigma1,mu2,sigma2, H=256,W=256,channels = 2,kshape = (3,3)):
     return model
 
 # Loads data. Apologies that they're out of order.
+# val_dec -> Incomplete, kspace domain
+# val_rec -> Complete, image domain
 # train_set_rec -> Complete, image domain 
 # train_set_dec -> Incomplete, kspace domain
 # train_st_half_rec -> Complete, kspace domain
 # test_set_rec -> Complete, image domain
 # test_set_half_rec -> Complete, kspace domain MAY HAVE AN ERROR, BE CAREFUL. IS THE WRONG SHAPE
 # test_set_dec -> Incomplete, kspace domain
-stats, train_set_rec, train_set_dec, train_set_half_rec, test_set_rec, test_set_half_rec, test_set_dec = get_brains()
+val_dec, val_rec, stats, train_set_rec, train_set_dec, train_set_half_rec, test_set_rec, test_set_half_rec, test_set_dec = get_brains()
 
 # Declare, compile, fit the model.
 model = u_net(stats[0],stats[1],stats[2],stats[3])
 model.compile(optimizer='adam', loss=nrmse)
 
-# Fits model using training data.
-model.fit(train_set_dec, train_set_rec, batch_size=BATCH_SIZE, epochs=EPOCHS)
+# Fits model using training data, validation data.
+model.fit(train_set_dec, train_set_rec, validation_data=(val_dec, val_rec), batch_size=BATCH_SIZE, epochs=EPOCHS)
 model.summary()
 
 # Makes predictions
 predictions = model.predict(test_set_dec)
 print(predictions.shape)
+
+end_time = time.time()
 
 # Displays predictions
 plt.figure(figsize=(15,15))
@@ -203,7 +216,7 @@ plt.subplot(1,2,1)
 plt.imshow((255.0 - test_set_rec[0]), cmap='Greys')
 plt.subplot(1,2,2)
 plt.imshow((255.0 - predictions[0]), cmap='Greys')
-plt.savefig("/Users/duncan.boyd/Documents/WorkCode/workvenv/UofC2022/SmallScaleTest"+str(EPOCHS)+".jpg")
+plt.savefig("/Users/duncan.boyd/Documents/WorkCode/workvenv/UofC2022/SmallScaleTest/"+str(EPOCHS)+"_"+str(TOTAL_PICS)+"_"+str(MOD)+"_"+str(int(end_time-init_time))+".jpg")
 plt.show()
 
 
