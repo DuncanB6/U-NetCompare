@@ -1,6 +1,6 @@
-# Mostly just a testing zone roight now, will eventually have to good stuff.
-# Status: This is the beginning of a complex U-Net. Code is written, but at the moment it returns 
-# blank images. I'm not sure why. I'm also not sure if CompConv2D is written correctly conceptually. 
+
+# Status: This is the beginning of a complex U-Net. Code is written, returns poor quality images. Will
+# be looking into techniques to improve quality (batch, val) before exploring larger datasets.
 # June 3, 2022
 
 # Imports
@@ -10,9 +10,8 @@ os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
 import tensorflow as tf
 import tensorflow.compat.v1 as tf
 tf.disable_v2_behavior()
-from tensorflow import keras as ks
+from tensorflow import keras
 from keras import layers
-import cv2
 import numpy as np
 import matplotlib.pyplot as plt
 import glob
@@ -24,7 +23,8 @@ EPOCHS = 5
 NUM_BRAINS = 2
 TOTAL_PICS = 30
 TEST_PICS = 5
-MOD = 0.5
+MOD = 1
+BATCH_SIZE = 10
 BRAINS_ADDR = '/Users/duncan.boyd/Documents/WorkCode/workvenv/MRIPractice/Train/*.npy'
 STATS_ADDR = '/Users/duncan.boyd/Documents/WorkCode/workvenv/WNetPractice/stats.npy'
 MASK_ADDR = '/Users/duncan.boyd/Documents/WorkCode/workvenv/WNetPractice/sampling_mask.npy'
@@ -106,8 +106,8 @@ def get_brains():
 
     return stats, train_set_rec, train_set_dec, train_set_half_rec, test_set_rec, test_set_half_rec, test_set_dec
 
-# Custom complex convolution. Really loves returning blank images, I don't know why.
-# Uses algerbra below. I've used "|" to denote a two channel array, and "f" to denote a variable that is a part of a filter.
+# Custom complex convolution. 
+# Uses algebra below. I've used "|" to denote a two channel array, and "f" to denote a variable that is a part of a filter.
 
 # (R | I) * (Rf | If) = Or | Oi = (R * Rf - I * If) | (I * Rf + R * If)
 
@@ -126,6 +126,7 @@ class CompConv2D(layers.Layer):
 
 # U-Net model. Includes kspace domain U-Net and IFFT.
 # Note: Filters are halved to maintain structure, but they probably shouldn't be. Although this may reduce performance, I think it's probably fine for testing.
+# A variable (MOD) was added to make testing easier. At small scale, MOD = 1 worked best.
 # Question: Can a purely kspace model be trained, with no reference to image domain? For this code, I've assumed no (also just for convenience viewing results).
 def u_net(mu1,sigma1,mu2,sigma2, H=256,W=256,channels = 2,kshape = (3,3)):
     inputs = layers.Input(shape=(H,W,channels))
@@ -189,7 +190,7 @@ model = u_net(stats[0],stats[1],stats[2],stats[3])
 model.compile(optimizer='adam', loss=nrmse)
 
 # Fits model using training data.
-model.fit(train_set_dec, train_set_rec, epochs=EPOCHS)
+model.fit(train_set_dec, train_set_rec, batch_size=BATCH_SIZE, epochs=EPOCHS)
 model.summary()
 
 # Makes predictions
