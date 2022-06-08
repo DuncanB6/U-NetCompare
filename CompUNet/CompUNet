@@ -1,7 +1,7 @@
 
 # Status: This is the beginning of a complex U-Net. Code is written, returns poor quality images.
 # Hopefully poor quality is due to training practices limited by local hardware and not technique.
-# Data processing is limited, but does use validation.
+# Data processing is limited, but does use validation. Considering data augmentation.
 # Will need significant updates to deploy at larger scale.
 # June 7, 2022
 
@@ -22,7 +22,7 @@ from keras import backend as K
 from keras.models import Model
 
 # Variables
-EPOCHS = 5
+EPOCHS = 2
 NUM_BRAINS = 3
 TOTAL_PICS = 30
 TEST_PICS = 5
