@@ -20,18 +20,18 @@ import matplotlib.pyplot as plt
 import glob
 from keras import backend as K
 from keras.models import Model
+from keras.callbacks import ModelCheckpoint, EarlyStopping
+from keras.preprocessing.image import ImageDataGenerator
+import random
 
 # Variables
-EPOCHS = 2
-NUM_BRAINS = 3
-TOTAL_PICS = 30
-TEST_PICS = 5
-VAL_PICS = 10
+EPOCHS = 1
 MOD = 1
 BATCH_SIZE = 10
-BRAINS_ADDR = '/Users/duncan.boyd/Documents/WorkCode/workvenv/MRIPractice/Train/*.npy'
-STATS_ADDR = '/Users/duncan.boyd/Documents/WorkCode/workvenv/WNetPractice/stats.npy'
-MASK_ADDR = '/Users/duncan.boyd/Documents/WorkCode/workvenv/WNetPractice/sampling_mask.npy'
+num_train = 30 # max 4254
+num_val = 5 # max 1700
+num_test = 5 # max 1700
+addr = '/Users/duncan.boyd/Documents/WorkCode/workvenv/MRIPractice/'
 
 init_time = time.time()
 print("\nInitialized\n")
@@ -51,71 +51,101 @@ def ifft_layer(kspace):
     rec1 = tf.expand_dims(rec1, -1)
     return rec1
 
-# Loads MRIs to arrays. Returns reconstructed and deconstructed test and train data in both 
-# kspace and image domain. Note that addresses are hard coded as variables. 
-# Therefore, it only works on my (Duncan's) work computer. Data used is from https://drive.google.com/drive/folders/1wa4npKnob3YPwMjuXT_-9YQX9rua0OiE?usp=sharing
-# Only 2 scans from test data is used, as this is quite small scale.
-def get_brains():
-    stats = np.load(STATS_ADDR)
-    samp_mask = np.load(MASK_ADDR)
+# Upgraded version, returns fewer arrays but with a better method.
+# Still need to figure out the imaginary image domain stuff. 
+def get_brains_2(num_train, num_val, num_test, addr):
 
-    imshape = (256,256)
-    norm = np.sqrt(imshape[0]*imshape[1])
+    # Note: In train, one file is (174, 256, 256).
+    kspace_files_train = np.asarray(glob.glob(addr+"Train/*.npy")) 
+    kspace_files_val = np.asarray(glob.glob(addr+"Val/*.npy"))
+    kspace_files_test = np.asarray(glob.glob(addr+"Test/*.npy"))
 
-    brains = [] # Complete MRI images.
-    non_brains = [] # Complete K space.
-    knon_brains = [] # Undersampled K space.
-    k_brains = [] # Undersampled MRI images
+    print("train scans:", len(kspace_files_train))
+    print("val scans:", len(kspace_files_val))
+    print("test scans:", len(kspace_files_test))
 
+    samp_mask = np.load(addr+"mask.npy")
+    shape = (256, 256)
+    norm = np.sqrt(shape[0]*shape[1])
+
+    image_train = []
+    kspace_train = []
     count = 0
-    for brain in glob.glob(BRAINS_ADDR) :
-        count += 1
-        kspace = np.load(brain)/norm
-        kspace2 = kspace.copy()
-        kspace3 = kspace.copy()
-        kspace2[ :, samp_mask, : ] = 0
-        kspace2 = (kspace2-stats[0])/stats[1]
-        rec1 = np.abs(np.fft.ifft2(kspace[:,:,:,0]+1j*kspace[:,:,:,1])).astype(np.float64)
-        rec2 = np.abs(np.fft.ifft2(kspace2[:,:,:,0]+1j*kspace2[:,:,:,1])).astype(np.float64)
-        if rec1.shape == (170, 256, 256) :
-            brains.append(rec1)
-            non_brains.append(kspace2)
-            knon_brains.append(kspace3)
-            k_brains.append(rec2)
-        if count == NUM_BRAINS :
-            break
+    for i in random.sample(range(0, len(kspace_files_train)), len(kspace_files_train)):
+        brain = np.load(kspace_files_train[i])/norm
+        if count >= num_train:
+                break
+        for i in random.sample(range(0, brain.shape[0]), brain.shape[0]):
+            image_train.append(np.abs(np.fft.ifft2(brain[i,:,:,0]+1j*brain[i,:,:,1])).astype(np.float64))
+            brain[i, samp_mask, : ] = 0
+            kspace_train.append(brain[i].astype(np.float64))
+            count += 1
+            if count >= num_train:
+                break
+    kspace_train = np.asarray(kspace_train)
+    print("kspace train:", kspace_train.shape)
+    image_train = np.asarray(image_train)
+    image_train = np.expand_dims(image_train, axis=3)
+    print("image train:", image_train.shape)
 
-    brains = np.array(brains)
-    print(brains.shape)
-    non_brains = np.array(non_brains)
-    print(non_brains.shape)
-    knon_brains = np.array(knon_brains)
-    print(knon_brains.shape)
-    k_brains = np.array(k_brains)
-    print(knon_brains.shape)
+    image_val = []
+    kspace_val = []
+    count = 0
+    for i in random.sample(range(0, len(kspace_files_val)), len(kspace_files_val)):
+        brain = np.load(kspace_files_val[i])/norm
+        if count >= num_val:
+                break
+        for i in random.sample(range(0, brain.shape[0]), brain.shape[0]):
+            image_val.append(np.abs(np.fft.ifft2(brain[i,:,:,0]+1j*brain[i,:,:,1])).astype(np.float64))
+            brain[i, samp_mask, : ] = 0
+            kspace_val.append(brain[i].astype(np.float64))
+            count += 1
+            if count >= num_val:
+                break
+    kspace_val = np.asarray(kspace_val)
+    print("kspace val:", kspace_val.shape)
+    image_val = np.asarray(image_val)
+    image_val = np.expand_dims(image_val, axis=3)
+    print("image val:", image_val.shape)
 
-    brains = brains / np.amax(brains)
-    brains = np.expand_dims(brains, axis=-1)
-    train_set_rec = brains[0, 60:(60+TOTAL_PICS), :, :]
-    train_set_dec = non_brains[0, 60:(60+TOTAL_PICS), :, :]
-    train_set_half_rec = knon_brains[0, 60:(60+TOTAL_PICS), :, :]
-    test_set_rec = brains[1, 80:(80+TEST_PICS), :, :]
-    test_set_half_rec = k_brains[1, 80:(80+TEST_PICS), :, :]
-    test_set_dec = non_brains[1, 80:(80+TEST_PICS), :, :]
-    val_dec = non_brains[2, 80:(80+VAL_PICS), :, :]
-    val_rec = brains[2, 80:(80+VAL_PICS), :, :]
+    image_test = []
+    kspace_test = []
+    count = 0
+    for i in random.sample(range(0, len(kspace_files_test)), len(kspace_files_test)):
+        brain = np.load(kspace_files_test[i])/norm
+        if count >= num_test:
+                break
+        for i in random.sample(range(0, brain.shape[0]), brain.shape[0]):
+            image_test.append(np.abs(np.fft.ifft2(brain[i,:,:,0]+1j*brain[i,:,:,1])).astype(np.float64))
+            brain[i, samp_mask, : ] = 0
+            kspace_test.append(brain[i].astype(np.float64))
+            count += 1
+            if count >= num_test:
+                break
+    kspace_test = np.asarray(kspace_test)
+    print("kspace test:", kspace_test.shape)
+    image_test = np.asarray(image_test)
+    image_test = np.expand_dims(image_test, axis=3)
+    print("image test:", image_test.shape)
 
-    print("\nData in in range 0<x<1")
-    print("Train rec: ", train_set_rec.shape)
-    print("Train dec: ", train_set_dec.shape)
-    print("Train half rec: ", train_set_half_rec.shape)
-    print("Test rec: ", test_set_rec.shape)
-    print("Test half rec: ", test_set_half_rec.shape)
-    print("Test dec: ", test_set_dec.shape, "\n\n")
+    # Question: image_train seems to be the reconstructed images here, but it's imaginary. Why is image domain imaginary?
+    # Especially since the WNet returns a real image. 
+    # For the time being, I'm just going to load the stats manually.
+    stats = np.load('/Users/duncan.boyd/Documents/WorkCode/workvenv/WNetPractice/stats.npy')
+    '''# save k-space and image domain stats
+    stats = np.zeros(4)
+    stats[0] = kspace_train.mean()
+    stats[1] = kspace_train.std()
+    aux = np.abs(image_train[:,:,:,0] +1j*image_train[:,:,:,1])
+    stats[2] = aux.mean()
+    stats[3] = aux.std()
+    np.save(STATS_ADDR, stats)'''
 
-    return val_dec, val_rec, stats, train_set_rec, train_set_dec, train_set_half_rec, test_set_rec, test_set_half_rec, test_set_dec
+    return stats, kspace_train, image_train, kspace_val, image_val, kspace_test, image_test
 
 # Custom complex convolution. 
+# I feel like my understanding of his might be off. How are the amount of output filters related to the two channel 
+# number? Are the imaginary numbers preserved?
 # Uses algebra below. I've used "|" to denote a two channel array, and "f" to denote a variable that is a part of a filter.
 
 # (R | I) * (Rf | If) = Or | Oi = (R * Rf - I * If) | (I * Rf + R * If)
@@ -185,27 +215,18 @@ def u_net(mu1,sigma1,mu2,sigma2, H=256,W=256,channels = 2,kshape = (3,3)):
     model = Model(inputs=inputs, outputs=final)
     return model
 
-# Loads data. Apologies that they're out of order.
-# val_dec -> Incomplete, kspace domain
-# val_rec -> Complete, image domain
-# train_set_rec -> Complete, image domain 
-# train_set_dec -> Incomplete, kspace domain
-# train_st_half_rec -> Complete, kspace domain
-# test_set_rec -> Complete, image domain
-# test_set_half_rec -> Complete, kspace domain MAY HAVE AN ERROR, BE CAREFUL. IS THE WRONG SHAPE
-# test_set_dec -> Incomplete, kspace domain
-val_dec, val_rec, stats, train_set_rec, train_set_dec, train_set_half_rec, test_set_rec, test_set_half_rec, test_set_dec = get_brains()
+stats, kspace_train, image_train, kspace_val, image_val, kspace_test, image_test = get_brains_2(num_train, num_val, num_test, addr)
 
 # Declare, compile, fit the model.
 model = u_net(stats[0],stats[1],stats[2],stats[3])
 model.compile(optimizer='adam', loss=nrmse)
 
 # Fits model using training data, validation data.
-model.fit(train_set_dec, train_set_rec, validation_data=(val_dec, val_rec), batch_size=BATCH_SIZE, epochs=EPOCHS)
+model.fit(kspace_train, image_train, validation_data=(kspace_val, image_val), batch_size=BATCH_SIZE, epochs=EPOCHS)
 model.summary()
 
 # Makes predictions
-predictions = model.predict(test_set_dec)
+predictions = model.predict(kspace_test)
 print(predictions.shape)
 
 end_time = time.time()
@@ -213,10 +234,10 @@ end_time = time.time()
 # Displays predictions
 plt.figure(figsize=(15,15))
 plt.subplot(1,2,1)
-plt.imshow((255.0 - test_set_rec[0]), cmap='Greys')
+plt.imshow((255.0 - image_test[0]), cmap='Greys')
 plt.subplot(1,2,2)
 plt.imshow((255.0 - predictions[0]), cmap='Greys')
-plt.savefig("/Users/duncan.boyd/Documents/WorkCode/workvenv/UofC2022/SmallScaleTest/"+str(EPOCHS)+"_"+str(TOTAL_PICS)+"_"+str(MOD)+"_"+str(int(end_time-init_time))+".jpg")
+plt.savefig("/Users/duncan.boyd/Documents/WorkCode/workvenv/UofC2022/SmallScaleTest/"+str(EPOCHS)+"_"+str(num_train)+"_"+str(MOD)+"_"+str(int(end_time-init_time))+".jpg")
 plt.show()
 
 
