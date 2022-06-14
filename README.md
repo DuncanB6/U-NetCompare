@@ -16,8 +16,11 @@ the account isn't working yet.
 Reminder for Duncan: 
 
 git add . 
+
 git commit -m "_message_" 
+
 git push origin main 
+
 git pull origin main
 
 
