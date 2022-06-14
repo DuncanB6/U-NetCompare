@@ -3,7 +3,7 @@
 # Hopefully poor quality is due to training practices limited by local hardware and not technique.
 # Data processing is limited, but does use validation. Considering data augmentation.
 # Will need significant updates to deploy at larger scale.
-# June 7, 2022
+# June 13, 2022
 
 # Imports
 import os
@@ -27,8 +27,8 @@ import random
 # Variables
 EPOCHS = 1
 MOD = 1
-BATCH_SIZE = 10
-num_train = 30 # max 4254
+BATCH_SIZE = 5
+num_train = 20 # max 4254
 num_val = 5 # max 1700
 num_test = 5 # max 1700
 addr = '/Users/duncan.boyd/Documents/WorkCode/workvenv/MRIPractice/'
@@ -53,7 +53,7 @@ def ifft_layer(kspace):
 
 # Upgraded version, returns fewer arrays but with a better method.
 # Still need to figure out the imaginary image domain stuff. 
-def get_brains_2(num_train, num_val, num_test, addr):
+def get_brains(num_train, num_val, num_test, addr):
 
     # Note: In train, one file is (174, 256, 256).
     kspace_files_train = np.asarray(glob.glob(addr+"Train/*.npy")) 
@@ -167,6 +167,7 @@ class CompConv2D(layers.Layer):
 # Note: Filters are halved to maintain structure, but they probably shouldn't be. Although this may reduce performance, I think it's probably fine for testing.
 # A variable (MOD) was added to make testing easier. At small scale, MOD = 1 worked best.
 # Question: Can a purely kspace model be trained, with no reference to image domain? For this code, I've assumed no (also just for convenience viewing results).
+# I'm pretty sure it can though.
 def u_net(mu1,sigma1,mu2,sigma2, H=256,W=256,channels = 2,kshape = (3,3)):
     inputs = layers.Input(shape=(H,W,channels))
 
@@ -215,11 +216,14 @@ def u_net(mu1,sigma1,mu2,sigma2, H=256,W=256,channels = 2,kshape = (3,3)):
     model = Model(inputs=inputs, outputs=final)
     return model
 
-stats, kspace_train, image_train, kspace_val, image_val, kspace_test, image_test = get_brains_2(num_train, num_val, num_test, addr)
+stats, kspace_train, image_train, kspace_val, image_val, kspace_test, image_test = get_brains(num_train, num_val, num_test, addr)
 
 # Declare, compile, fit the model.
 model = u_net(stats[0],stats[1],stats[2],stats[3])
-model.compile(optimizer='adam', loss=nrmse)
+opt = tf.keras.optimizers.Adam(lr=1e-3,decay = 1e-7)
+model.compile(optimizer=opt, loss=nrmse)
+
+# Some tools are skipped here (model loading, early stopping) as they aren't effective for small scale testing. 
 
 # Fits model using training data, validation data.
 model.fit(kspace_train, image_train, validation_data=(kspace_val, image_val), batch_size=BATCH_SIZE, epochs=EPOCHS)
