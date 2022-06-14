@@ -1,6 +1,6 @@
 
 # Status: This is the beginning of a complex U-Net. Code is written, returns poor quality images.
-# Hopefully poor quality is due to training practices limited by local hardware and not technique.
+# Hopefully poor quality is due to training practices limited by local hardware and not by method.
 # Data processing is limited, but does use validation. Considering data augmentation.
 # Will need significant updates to deploy at larger scale.
 # June 13, 2022
@@ -51,7 +51,7 @@ def ifft_layer(kspace):
     rec1 = tf.expand_dims(rec1, -1)
     return rec1
 
-# Upgraded version, returns fewer arrays but with a better method.
+# Upgraded version, returns fewer arrays but with a faster and more efficient method.
 # Still need to figure out the imaginary image domain stuff. 
 def get_brains(num_train, num_val, num_test, addr):
 
@@ -129,7 +129,7 @@ def get_brains(num_train, num_val, num_test, addr):
     print("image test:", image_test.shape)
 
     # Question: image_train seems to be the reconstructed images here, but it's imaginary. Why is image domain imaginary?
-    # Especially since the WNet returns a real image. 
+    # Especially since the WNet returns a real image. Does the imaginary part in image domain yield any valuable information?
     # For the time being, I'm just going to load the stats manually.
     stats = np.load('/Users/duncan.boyd/Documents/WorkCode/workvenv/WNetPractice/stats.npy')
     '''# save k-space and image domain stats
@@ -223,7 +223,7 @@ model = u_net(stats[0],stats[1],stats[2],stats[3])
 opt = tf.keras.optimizers.Adam(lr=1e-3,decay = 1e-7)
 model.compile(optimizer=opt, loss=nrmse)
 
-# Some tools are skipped here (model loading, early stopping) as they aren't effective for small scale testing. 
+# Some tools are skipped here (model loading, early stopping) as they aren't effective/necessary for small scale testing. 
 
 # Fits model using training data, validation data.
 model.fit(kspace_train, image_train, validation_data=(kspace_val, image_val), batch_size=BATCH_SIZE, epochs=EPOCHS)
@@ -241,7 +241,7 @@ plt.subplot(1,2,1)
 plt.imshow((255.0 - image_test[0]), cmap='Greys')
 plt.subplot(1,2,2)
 plt.imshow((255.0 - predictions[0]), cmap='Greys')
-plt.savefig("/Users/duncan.boyd/Documents/WorkCode/workvenv/UofC2022/SmallScaleTest/"+str(EPOCHS)+"_"+str(num_train)+"_"+str(MOD)+"_"+str(int(end_time-init_time))+".jpg")
+plt.savefig("/Users/duncan.boyd/Documents/WorkCode/workvenv/UofC2022/SmallScaleTest/im_"+str(EPOCHS)+"_"+str(num_train)+"_"+str(MOD)+"_"+str(int(end_time-init_time))+".jpg")
 plt.show()
 
 
