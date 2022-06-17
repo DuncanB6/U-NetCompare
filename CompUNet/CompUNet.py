@@ -25,12 +25,12 @@ from keras.preprocessing.image import ImageDataGenerator
 import random
 
 # Variables
-EPOCHS = 1
+EPOCHS = 20
 MOD = 1
-BATCH_SIZE = 5
-num_train = 20 # max 4254
-num_val = 5 # max 1700
-num_test = 5 # max 1700
+BATCH_SIZE = 100
+num_train = 1000 # max 4254
+num_val = 100 # max 1700
+num_test = 100 # max 1700
 addr = '/Users/duncan.boyd/Documents/WorkCode/workvenv/MRIPractice/'
 
 init_time = time.time()
