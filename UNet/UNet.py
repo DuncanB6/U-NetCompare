@@ -190,6 +190,7 @@ def u_net(mu1,sigma1,mu2,sigma2, H=256,W=256,channels = 2,kshape = (3,3)):
 
 if __name__ == '__main__':
     logging.basicConfig(filename='/Users/duncan.boyd/Documents/WorkCode/workvenv/UofC2022/Data/UNet.log', filemode='w', format='%(name)s - %(levelname)s - %(message)s', level=logging.DEBUG)
+    logging.getLogger('matplotlib').setLevel(logging.WARNING)
     logging.debug('Initialized')
 
     init_time = time.time()
@@ -223,7 +224,7 @@ if __name__ == '__main__':
     plt.imshow((255.0 - image_test[0]), cmap='Greys')
     plt.subplot(1,2,2)
     plt.imshow((255.0 - predictions[0]), cmap='Greys')
-    plt.savefig("/Users/duncan.boyd/Documents/WorkCode/workvenv/UofC2022/SmallScaleTest/re_"+str(EPOCHS)+"_"+str(num_train)+"_"+str(MOD)+"_"+str(int(end_time-init_time))+".jpg")
+    # plt.savefig("/Users/duncan.boyd/Documents/WorkCode/workvenv/UofC2022/SmallScaleTest/re_"+str(EPOCHS)+"_"+str(num_train)+"_"+str(MOD)+"_"+str(int(end_time-init_time))+".jpg")
     plt.show()
 
 

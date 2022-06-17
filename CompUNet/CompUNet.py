@@ -219,6 +219,7 @@ def u_net(mu1,sigma1,mu2,sigma2, H=256,W=256,channels = 2,kshape = (3,3)):
 
 if __name__ == '__main__':
     logging.basicConfig(filename='/Users/duncan.boyd/Documents/WorkCode/workvenv/UofC2022/Data/CompUNet.log', filemode='w', format='%(name)s - %(levelname)s - %(message)s', level=logging.DEBUG)
+    logging.getLogger('matplotlib').setLevel(logging.WARNING)
     logging.debug('Initialized')
 
     init_time = time.time()
