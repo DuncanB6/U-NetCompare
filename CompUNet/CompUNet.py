@@ -25,16 +25,13 @@ from keras.preprocessing.image import ImageDataGenerator
 import random
 
 # Variables
-EPOCHS = 20
+EPOCHS = 1
 MOD = 1
-BATCH_SIZE = 100
-num_train = 1000 # max 4254
-num_val = 100 # max 1700
-num_test = 100 # max 1700
+BATCH_SIZE = 1
+num_train = 10 # max 4254
+num_val = 5 # max 1700
+num_test = 5 # max 1700
 addr = '/Users/duncan.boyd/Documents/WorkCode/workvenv/MRIPractice/'
-
-init_time = time.time()
-print("\nInitialized\n")
 
 # Loss function
 def nrmse(y_true, y_pred):
@@ -216,32 +213,37 @@ def u_net(mu1,sigma1,mu2,sigma2, H=256,W=256,channels = 2,kshape = (3,3)):
     model = Model(inputs=inputs, outputs=final)
     return model
 
-stats, kspace_train, image_train, kspace_val, image_val, kspace_test, image_test = get_brains(num_train, num_val, num_test, addr)
+if __name__ == '__main__':
 
-# Declare, compile, fit the model.
-model = u_net(stats[0],stats[1],stats[2],stats[3])
-opt = tf.keras.optimizers.Adam(lr=1e-3,decay = 1e-7)
-model.compile(optimizer=opt, loss=nrmse)
+    init_time = time.time()
+    print("\nInitialized\n")
 
-# Some tools are skipped here (model loading, early stopping) as they aren't effective/necessary for small scale testing. 
+    stats, kspace_train, image_train, kspace_val, image_val, kspace_test, image_test = get_brains(num_train, num_val, num_test, addr)
 
-# Fits model using training data, validation data.
-model.fit(kspace_train, image_train, validation_data=(kspace_val, image_val), batch_size=BATCH_SIZE, epochs=EPOCHS)
-model.summary()
+    # Declare, compile, fit the model.
+    model = u_net(stats[0],stats[1],stats[2],stats[3])
+    opt = tf.keras.optimizers.Adam(lr=1e-3,decay = 1e-7)
+    model.compile(optimizer=opt, loss=nrmse)
 
-# Makes predictions
-predictions = model.predict(kspace_test)
-print(predictions.shape)
+    # Some tools are skipped here (model loading, early stopping) as they aren't effective/necessary for small scale testing. 
 
-end_time = time.time()
+    # Fits model using training data, validation data.
+    model.fit(kspace_train, image_train, validation_data=(kspace_val, image_val), batch_size=BATCH_SIZE, epochs=EPOCHS)
+    model.summary()
 
-# Displays predictions
-plt.figure(figsize=(15,15))
-plt.subplot(1,2,1)
-plt.imshow((255.0 - image_test[0]), cmap='Greys')
-plt.subplot(1,2,2)
-plt.imshow((255.0 - predictions[0]), cmap='Greys')
-plt.savefig("/Users/duncan.boyd/Documents/WorkCode/workvenv/UofC2022/SmallScaleTest/im_"+str(EPOCHS)+"_"+str(num_train)+"_"+str(MOD)+"_"+str(int(end_time-init_time))+".jpg")
-plt.show()
+    # Makes predictions
+    predictions = model.predict(kspace_test)
+    print(predictions.shape)
+
+    end_time = time.time()
+
+    # Displays predictions
+    plt.figure(figsize=(15,15))
+    plt.subplot(1,2,1)
+    plt.imshow((255.0 - image_test[0]), cmap='Greys')
+    plt.subplot(1,2,2)
+    plt.imshow((255.0 - predictions[0]), cmap='Greys')
+    plt.savefig("/Users/duncan.boyd/Documents/WorkCode/workvenv/UofC2022/SmallScaleTest/im_"+str(EPOCHS)+"_"+str(num_train)+"_"+str(MOD)+"_"+str(int(end_time-init_time))+".jpg")
+    plt.show()
 
 
