@@ -19,11 +19,12 @@ import glob
 from keras import backend as K
 from keras.models import Model
 import random
+import logging
 
 # Variables
 EPOCHS = 1
 MOD = 1
-BATCH_SIZE = 1
+BATCH_SIZE = 5
 num_train = 10 # max 4254
 num_val = 5 # max 1700
 num_test = 5 # max 1700
@@ -53,9 +54,10 @@ def get_brains(num_train, num_val, num_test, addr):
     kspace_files_val = np.asarray(glob.glob(addr+"Val/*.npy"))
     kspace_files_test = np.asarray(glob.glob(addr+"Test/*.npy"))
 
-    print("train scans:", len(kspace_files_train))
-    print("val scans:", len(kspace_files_val))
-    print("test scans:", len(kspace_files_test))
+    logging.info("train scans: " + str(len(kspace_files_train)))
+    logging.info("val scans: " + str(len(kspace_files_val)))
+    logging.info("test scans: " + str(len(kspace_files_test)))
+    logging.debug("Scans loaded")
 
     samp_mask = np.load(addr+"mask.npy")
     shape = (256, 256)
@@ -76,10 +78,10 @@ def get_brains(num_train, num_val, num_test, addr):
             if count >= num_train:
                 break
     kspace_train = np.asarray(kspace_train)
-    print("kspace train:", kspace_train.shape)
+    logging.info("kspace train: " + str(kspace_train.shape))
     image_train = np.asarray(image_train)
     image_train = np.expand_dims(image_train, axis=3)
-    print("image train:", image_train.shape)
+    logging.info("image train: " + str(image_train.shape))
 
     image_val = []
     kspace_val = []
@@ -96,10 +98,10 @@ def get_brains(num_train, num_val, num_test, addr):
             if count >= num_val:
                 break
     kspace_val = np.asarray(kspace_val)
-    print("kspace val:", kspace_val.shape)
+    logging.info("kspace val: " + str(kspace_val.shape))
     image_val = np.asarray(image_val)
     image_val = np.expand_dims(image_val, axis=3)
-    print("image val:", image_val.shape)
+    logging.info("image val: " + str(image_val.shape))
 
     image_test = []
     kspace_test = []
@@ -116,10 +118,12 @@ def get_brains(num_train, num_val, num_test, addr):
             if count >= num_test:
                 break
     kspace_test = np.asarray(kspace_test)
-    print("kspace test:", kspace_test.shape)
+    logging.info("kspace test: " + str(kspace_test.shape))
     image_test = np.asarray(image_test)
     image_test = np.expand_dims(image_test, axis=3)
-    print("image test:", image_test.shape)
+    logging.info("image test: " + str(image_test.shape))
+
+    logging.debug("Scans formatted")
 
     # Question: image_train seems to be the reconstructed images here, but it's imaginary. Why is image domain imaginary?
     # Especially since the WNet returns a real image. Does the imaginary part in image domain yield any valuable information?
@@ -185,12 +189,15 @@ def u_net(mu1,sigma1,mu2,sigma2, H=256,W=256,channels = 2,kshape = (3,3)):
     return model
 
 if __name__ == '__main__':
+    logging.basicConfig(filename='/Users/duncan.boyd/Documents/WorkCode/workvenv/UofC2022/Data/UNet.log', filemode='w', format='%(name)s - %(levelname)s - %(message)s', level=logging.DEBUG)
+    logging.debug('Initialized')
 
     init_time = time.time()
-    print("\nInitialized\n")
 
+    logging.debug('Loading data')
     stats, kspace_train, image_train, kspace_val, image_val, kspace_test, image_test = get_brains(num_train, num_val, num_test, addr)
 
+    logging.debug('Compiling UNet')
     # Declare, compile, fit the model.
     model = u_net(stats[0],stats[1],stats[2],stats[3])
     opt = tf.keras.optimizers.Adam(lr=1e-3,decay = 1e-7)
@@ -198,10 +205,12 @@ if __name__ == '__main__':
 
     # Some tools are skipped here (model loading, early stopping) as they aren't effective/necessary for small scale testing. 
 
+    logging.debug('Fitting UNet')
     # Fits model using training data, validation data.
     model.fit(kspace_train, image_train, validation_data=(kspace_val, image_val), batch_size=BATCH_SIZE, epochs=EPOCHS)
     model.summary()
 
+    logging.debug('Evaluating UNet')
     # Makes predictions
     predictions = model.predict(kspace_test)
     print(predictions.shape)
