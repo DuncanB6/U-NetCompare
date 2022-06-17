@@ -1,4 +1,4 @@
-root - DEBUG - Initialized
+root - DEBUG - Initialized im UNet
 root - DEBUG - Loading data
 root - INFO - train scans: 25
 root - INFO - val scans: 10
@@ -17,3 +17,5 @@ tensorflow - WARNING - From /Users/duncan.boyd/Library/Python/3.8/lib/python/sit
 Instructions for updating:
 This property should not be used in TensorFlow 2.0, as updates are applied automatically.
 root - DEBUG - Evaluating UNet
+root - INFO - total time: 119
+root - DEBUG - Done
