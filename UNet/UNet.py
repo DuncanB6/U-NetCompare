@@ -1,6 +1,6 @@
 
 # Basic Unet model that mirrors the complex Unet, but does not use the CompConv2D layer.
-# June 14, 2022
+# June 17, 2022
 
 # Imports
 import os
@@ -20,15 +20,18 @@ from keras import backend as K
 from keras.models import Model
 import random
 import logging
+import yaml
 
-# Variables
-EPOCHS = 1
-MOD = 1
-BATCH_SIZE = 5
-num_train = 10 # max 4254
-num_val = 5 # max 1700
-num_test = 5 # max 1700
-addr = '/Users/duncan.boyd/Documents/WorkCode/workvenv/MRIPractice/'
+with open("/Users/duncan.boyd/Documents/WorkCode/workvenv/UofC2022/settings.yaml", "r") as yamlfile:
+        data = yaml.load(yamlfile, Loader=yaml.FullLoader)
+        
+EPOCHS = data['EPOCHS']
+MOD = data['MOD']
+BATCH_SIZE = data['BATCH_SIZE']
+NUM_TRAIN = data['NUM_TRAIN']
+NUM_VAL = data['NUM_VAL']
+NUM_TEST = data['NUM_TEST']
+ADDR = data['ADDR']
 
 # Loss function
 def nrmse(y_true, y_pred):
@@ -47,19 +50,19 @@ def ifft_layer(kspace):
 
 # Upgraded version, returns fewer arrays but with a faster and more efficient method.
 # Still need to figure out the imaginary image domain stuff. 
-def get_brains(num_train, num_val, num_test, addr):
+def get_brains(NUM_TRAIN, NUM_VAL, NUM_TEST, ADDR):
 
     # Note: In train, one file is (174, 256, 256).
-    kspace_files_train = np.asarray(glob.glob(addr+"Train/*.npy")) 
-    kspace_files_val = np.asarray(glob.glob(addr+"Val/*.npy"))
-    kspace_files_test = np.asarray(glob.glob(addr+"Test/*.npy"))
+    kspace_files_train = np.asarray(glob.glob(ADDR+"Train/*.npy")) 
+    kspace_files_val = np.asarray(glob.glob(ADDR+"Val/*.npy"))
+    kspace_files_test = np.asarray(glob.glob(ADDR+"Test/*.npy"))
 
     logging.info("train scans: " + str(len(kspace_files_train)))
     logging.info("val scans: " + str(len(kspace_files_val)))
     logging.info("test scans: " + str(len(kspace_files_test)))
     logging.debug("Scans loaded")
 
-    samp_mask = np.load(addr+"mask.npy")
+    samp_mask = np.load(ADDR+"mask.npy")
     shape = (256, 256)
     norm = np.sqrt(shape[0]*shape[1])
 
@@ -68,14 +71,14 @@ def get_brains(num_train, num_val, num_test, addr):
     count = 0
     for i in random.sample(range(0, len(kspace_files_train)), len(kspace_files_train)):
         brain = np.load(kspace_files_train[i])/norm
-        if count >= num_train:
+        if count >= NUM_TRAIN:
                 break
         for i in random.sample(range(0, brain.shape[0]), brain.shape[0]):
             image_train.append(np.abs(np.fft.ifft2(brain[i,:,:,0]+1j*brain[i,:,:,1])).astype(np.float64))
             brain[i, samp_mask, : ] = 0
             kspace_train.append(brain[i].astype(np.float64))
             count += 1
-            if count >= num_train:
+            if count >= NUM_TRAIN:
                 break
     kspace_train = np.asarray(kspace_train)
     logging.info("kspace train: " + str(kspace_train.shape))
@@ -88,14 +91,14 @@ def get_brains(num_train, num_val, num_test, addr):
     count = 0
     for i in random.sample(range(0, len(kspace_files_val)), len(kspace_files_val)):
         brain = np.load(kspace_files_val[i])/norm
-        if count >= num_val:
+        if count >= NUM_VAL:
                 break
         for i in random.sample(range(0, brain.shape[0]), brain.shape[0]):
             image_val.append(np.abs(np.fft.ifft2(brain[i,:,:,0]+1j*brain[i,:,:,1])).astype(np.float64))
             brain[i, samp_mask, : ] = 0
             kspace_val.append(brain[i].astype(np.float64))
             count += 1
-            if count >= num_val:
+            if count >= NUM_VAL:
                 break
     kspace_val = np.asarray(kspace_val)
     logging.info("kspace val: " + str(kspace_val.shape))
@@ -108,14 +111,14 @@ def get_brains(num_train, num_val, num_test, addr):
     count = 0
     for i in random.sample(range(0, len(kspace_files_test)), len(kspace_files_test)):
         brain = np.load(kspace_files_test[i])/norm
-        if count >= num_test:
+        if count >= NUM_TEST:
                 break
         for i in random.sample(range(0, brain.shape[0]), brain.shape[0]):
             image_test.append(np.abs(np.fft.ifft2(brain[i,:,:,0]+1j*brain[i,:,:,1])).astype(np.float64))
             brain[i, samp_mask, : ] = 0
             kspace_test.append(brain[i].astype(np.float64))
             count += 1
-            if count >= num_test:
+            if count >= NUM_TEST:
                 break
     kspace_test = np.asarray(kspace_test)
     logging.info("kspace test: " + str(kspace_test.shape))
@@ -196,7 +199,7 @@ if __name__ == '__main__':
     init_time = time.time()
 
     logging.debug('Loading data')
-    stats, kspace_train, image_train, kspace_val, image_val, kspace_test, image_test = get_brains(num_train, num_val, num_test, addr)
+    stats, kspace_train, image_train, kspace_val, image_val, kspace_test, image_test = get_brains(NUM_TRAIN, NUM_VAL, NUM_TEST, ADDR)
 
     logging.debug('Compiling UNet')
     # Declare, compile, fit the model.
@@ -224,7 +227,7 @@ if __name__ == '__main__':
     plt.imshow((255.0 - image_test[0]), cmap='Greys')
     plt.subplot(1,2,2)
     plt.imshow((255.0 - predictions[0]), cmap='Greys')
-    # plt.savefig("/Users/duncan.boyd/Documents/WorkCode/workvenv/UofC2022/SmallScaleTest/re_"+str(EPOCHS)+"_"+str(num_train)+"_"+str(MOD)+"_"+str(int(end_time-init_time))+".jpg")
+    # plt.savefig("/Users/duncan.boyd/Documents/WorkCode/workvenv/UofC2022/SmallScaleTest/re_"+str(EPOCHS)+"_"+str(NUM_TRAIN)+"_"+str(MOD)+"_"+str(int(end_time-init_time))+".jpg")
     plt.show()
 
 

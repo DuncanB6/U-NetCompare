@@ -4,8 +4,8 @@ root - INFO - train scans: 25
 root - INFO - val scans: 10
 root - INFO - test scans: 10
 root - DEBUG - Scans loaded
-root - INFO - kspace train: (10, 256, 256, 2)
-root - INFO - image train: (10, 256, 256, 1)
+root - INFO - kspace train: (20, 256, 256, 2)
+root - INFO - image train: (20, 256, 256, 1)
 root - INFO - kspace val: (5, 256, 256, 2)
 root - INFO - image val: (5, 256, 256, 1)
 root - INFO - kspace test: (5, 256, 256, 2)
