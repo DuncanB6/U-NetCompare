@@ -3,7 +3,7 @@
 # June 17, 2022
 
 if __name__ == '__main__':
-
+    
     # Is there a good way to only import this block in one file (instead of having this block of code at the top
     # of every file), or as a function?
     # Like a header, but for python. I haven't found a good way to do it yet, but I'm sure it's doable.
@@ -27,25 +27,28 @@ if __name__ == '__main__':
     import logging
     import yaml
     import sys
+    from pathlib import *
+
+    ADDR = Path.cwd() # /Users/duncan.boyd/Documents/WorkCode/workvenv
+    ADDR = ADDR / 'UofC2022'
 
     # Imports global vars from settings YAML file.
     # Same deal as above, is it possible to only see this block of code in one file?
-    with open("/Users/duncan.boyd/Documents/WorkCode/workvenv/UofC2022/settings.yaml", "r") as yamlfile:
-            data = yaml.load(yamlfile, Loader=yaml.FullLoader)
-    EPOCHS = data['EPOCHS']
-    MOD = data['MOD']
-    BATCH_SIZE = data['BATCH_SIZE']
-    NUM_TRAIN = data['NUM_TRAIN']
-    NUM_VAL = data['NUM_VAL']
-    NUM_TEST = data['NUM_TEST']
-    ADDR = data['ADDR']
+    with open(ADDR / 'Config/settings.yaml', "r") as yamlfile:
+            set = yaml.load(yamlfile, Loader=yaml.FullLoader)
+    EPOCHS = set['params']['EPOCHS']
+    MOD = set['params']['MOD']
+    BATCH_SIZE = set['params']['BATCH_SIZE']
+    NUM_TRAIN = set['params']['NUM_TRAIN']
+    NUM_VAL = set['params']['NUM_VAL']
+    NUM_TEST = set['params']['NUM_TEST']
 
-    # Imports 
-    sys.path.append('/Users/duncan.boyd/Documents/WorkCode/workvenv/UofC2022/Functions')
+    # Imports my functions
+    sys.path.append(str(ADDR/'Functions'))
     from Functions import get_brains, re_u_net, nrmse
 
     # Initializes logging
-    logging.basicConfig(filename='/Users/duncan.boyd/Documents/WorkCode/workvenv/UofC2022/Data/UNet.log', filemode='w', format='%(name)s - %(levelname)s - %(message)s', level=logging.DEBUG)
+    logging.basicConfig(filename=str(ADDR/'Data/CompUNet.log'), filemode='w', format='%(name)s - %(levelname)s - %(message)s', level=logging.DEBUG)
     logging.getLogger('matplotlib').setLevel(logging.WARNING)
     logging.debug('Initialized re UNet')
     init_time = time.time()
@@ -56,7 +59,7 @@ if __name__ == '__main__':
 
     # Declare, compile, fit the model.
     logging.debug('Compiling UNet')
-    model = re_u_net(stats[0],stats[1],stats[2],stats[3])
+    model = re_u_net(stats[0],stats[1],stats[2],stats[3],MOD)
     opt = tf.keras.optimizers.Adam(lr=1e-3,decay = 1e-7)
     model.compile(optimizer=opt, loss=nrmse)
 
@@ -80,7 +83,8 @@ if __name__ == '__main__':
     plt.imshow((255.0 - image_test[0]), cmap='Greys')
     plt.subplot(1,2,2)
     plt.imshow((255.0 - predictions[0]), cmap='Greys')
-    # plt.savefig("/Users/duncan.boyd/Documents/WorkCode/workvenv/UofC2022/SmallScaleTest/re_"+str(EPOCHS)+"_"+str(NUM_TRAIN)+"_"+str(MOD)+"_"+str(int(end_time-init_time))+".jpg")
+    file_name = 're_' + str(int(end_time-init_time)) + '.jpg'
+    plt.savefig(str(ADDR / 'Outputs' / file_name))
     plt.show()
 
     logging.debug("Done")

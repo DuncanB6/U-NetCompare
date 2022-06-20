@@ -21,17 +21,6 @@ import random
 import logging
 import yaml
 
-with open("/Users/duncan.boyd/Documents/WorkCode/workvenv/UofC2022/config/settings.yaml", "r") as yamlfile:
-        data = yaml.load(yamlfile, Loader=yaml.FullLoader)
-        
-EPOCHS = data['EPOCHS']
-MOD = data['MOD']
-BATCH_SIZE = data['BATCH_SIZE']
-NUM_TRAIN = data['NUM_TRAIN']
-NUM_VAL = data['NUM_VAL']
-NUM_TEST = data['NUM_TEST']
-ADDR = data['ADDR']
-
 # Loss function
 def nrmse(y_true, y_pred):
     denom = K.sqrt(K.mean(K.square(y_true), axis=(1,2,3)))
@@ -52,16 +41,16 @@ def ifft_layer(kspace):
 def get_brains(NUM_TRAIN, NUM_VAL, NUM_TEST, ADDR):
 
     # Note: In train, one file is (174, 256, 256).
-    kspace_files_train = np.asarray(glob.glob(ADDR+"Train/*.npy")) 
-    kspace_files_val = np.asarray(glob.glob(ADDR+"Val/*.npy"))
-    kspace_files_test = np.asarray(glob.glob(ADDR+"Test/*.npy"))
+    kspace_files_train = np.asarray(glob.glob(str(ADDR/"Train/*.npy"))) 
+    kspace_files_val = np.asarray(glob.glob(str(ADDR/"Val/*.npy")))
+    kspace_files_test = np.asarray(glob.glob(str(ADDR/"Test/*.npy")))
 
     logging.info("train scans: " + str(len(kspace_files_train)))
     logging.info("val scans: " + str(len(kspace_files_val)))
     logging.info("test scans: " + str(len(kspace_files_test)))
     logging.debug("Scans loaded")
 
-    samp_mask = np.load(ADDR+"mask.npy")
+    samp_mask = np.load(str(ADDR/"Data/mask.npy"))
     shape = (256, 256)
     norm = np.sqrt(shape[0]*shape[1])
 
@@ -130,7 +119,7 @@ def get_brains(NUM_TRAIN, NUM_VAL, NUM_TEST, ADDR):
     # Question: image_train seems to be the reconstructed images here, but it's imaginary. Why is image domain imaginary?
     # Especially since the WNet returns a real image. Does the imaginary part in image domain yield any valuable information?
     # For the time being, I'm just going to load the stats manually.
-    stats = np.load('/Users/duncan.boyd/Documents/WorkCode/workvenv/WNetPractice/stats.npy')
+    stats = np.load(str(ADDR/'Data/stats.npy'))
 
     '''# save k-space and image domain stats
     stats = np.zeros(4)
@@ -168,7 +157,7 @@ class CompConv2D(layers.Layer):
 # A variable (MOD) was added to make testing easier. At small scale, MOD = 1 worked best.
 # Question: Can a purely kspace model be trained, with no reference to image domain? For this code, I've assumed no (also just for convenience viewing results).
 # I'm pretty sure it can though.
-def im_u_net(mu1,sigma1,mu2,sigma2, H=256,W=256,channels = 2,kshape = (3,3)):
+def im_u_net(mu1,sigma1,mu2,sigma2, MOD=1, H=256,W=256,channels = 2,kshape = (3,3)):
     inputs = layers.Input(shape=(H,W,channels))
 
     conv1 = CompConv2D(24 * MOD)(inputs)
@@ -217,7 +206,7 @@ def im_u_net(mu1,sigma1,mu2,sigma2, H=256,W=256,channels = 2,kshape = (3,3)):
     return model
 
     # U-Net model.
-def re_u_net(mu1,sigma1,mu2,sigma2, H=256,W=256,channels = 2,kshape = (3,3)):
+def re_u_net(mu1,sigma1,mu2,sigma2, MOD=1, H=256,W=256,channels = 2,kshape = (3,3)):
     inputs = Input(shape=(H,W,channels))
 
     conv1 = Conv2D(48, kshape, activation='relu', padding='same')(inputs)

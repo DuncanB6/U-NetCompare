@@ -7,4 +7,10 @@ params:
   NUM_VAL: 5 # max 1700
   NUM_TEST: 5 # max 1700
 addrs:
-  data: /Users/duncan.boyd/Documents/WorkCode/workvenv/MRIPractice
+  TEST_ADDR: Test/*.npy
+  TRAIN_ADDR: Train/*.npy
+  VAL_ADDR: Val/*.npy
+  MASK_ADDR: Data/mask.npy
+  STATS_ADDR: Data/stats.npy
+  SAVE_ADDR: Outputs
+
