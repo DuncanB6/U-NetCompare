@@ -21,7 +21,7 @@ import random
 import logging
 import yaml
 
-with open("/Users/duncan.boyd/Documents/WorkCode/workvenv/UofC2022/settings.yaml", "r") as yamlfile:
+with open("/Users/duncan.boyd/Documents/WorkCode/workvenv/UofC2022/config/settings.yaml", "r") as yamlfile:
         data = yaml.load(yamlfile, Loader=yaml.FullLoader)
         
 EPOCHS = data['EPOCHS']

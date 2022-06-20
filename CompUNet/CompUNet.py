@@ -37,18 +37,21 @@ if __name__ == '__main__':
     import logging
     import yaml
     import sys
+    from pathlib import *
+
+    ROOT_DIR = Path.cwd() # /Users/duncan.boyd/Documents/WorkCode/workvenv
 
     # Imports global vars from settings YAML file.
     # Same deal as above, is it possible to only see this block of code in one file?
-    with open("/Users/duncan.boyd/Documents/WorkCode/workvenv/UofC2022/settings.yaml", "r") as yamlfile:
+    with open("/Users/duncan.boyd/Documents/WorkCode/workvenv/UofC2022/config/settings.yaml", "r") as yamlfile:
             data = yaml.load(yamlfile, Loader=yaml.FullLoader)
-    EPOCHS = data['EPOCHS']
+    '''EPOCHS = data['EPOCHS']
     MOD = data['MOD']
     BATCH_SIZE = data['BATCH_SIZE']
     NUM_TRAIN = data['NUM_TRAIN']
     NUM_VAL = data['NUM_VAL']
     NUM_TEST = data['NUM_TEST']
-    ADDR = data['ADDR']
+    ADDR = data['ADDR']'''
 
     # Imports my functions
     sys.path.append('/Users/duncan.boyd/Documents/WorkCode/workvenv/UofC2022/Functions')

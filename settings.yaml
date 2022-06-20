@@ -1,8 +1,0 @@
----
-EPOCHS: 2
-MOD: 1
-BATCH_SIZE: 5
-NUM_TRAIN: 20 # max 4254
-NUM_VAL: 5 # max 1700
-NUM_TEST: 5 # max 1700
-ADDR: '/Users/duncan.boyd/Documents/WorkCode/workvenv/MRIPractice/' # Must include stats, all data, mask
