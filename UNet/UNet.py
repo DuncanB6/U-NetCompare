@@ -24,7 +24,7 @@ if __name__ == "__main__":
     ADDR = ADDR / "UofC2022"
 
     # Imports global vars from settings YAML file.
-    with open(ADDR / "Data/settings.yaml", "r") as yamlfile:
+    with open(ADDR / "Inputs/settings.yaml", "r") as yamlfile:
         set = yaml.load(yamlfile, Loader=yaml.FullLoader)
 
     # Imports functions
@@ -69,6 +69,9 @@ if __name__ == "__main__":
         save_best_only=True,
     )
     es = tf.keras.callbacks.EarlyStopping(monitor="val_loss", patience=20, mode="min")
+    csvl = tf.keras.callbacks.CSVLogger(
+        str(ADDR / set["addrs"]["RECSV_ADDR"]), append=True, separator="|"
+    )
 
     # Fits model using training data, validation data.
     logging.debug("Fitting UNet")

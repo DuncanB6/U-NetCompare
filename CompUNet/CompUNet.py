@@ -6,7 +6,6 @@
 # To do:
 # Determine and implement evalutation methods (actually we sould be able to do this with the saved
 # models later)
-# Log data while training (eg. accuracy, loss)
 # Find out how to load models with custom layers and functions
 # Data augmentation?
 # Revise scheduler
@@ -35,7 +34,7 @@ if __name__ == "__main__":
     ADDR = ADDR / "UofC2022"
 
     # Imports global vars from settings YAML file.
-    with open(ADDR / "Data/settings.yaml", "r") as yamlfile:
+    with open(ADDR / "Inputs/settings.yaml", "r") as yamlfile:
         set = yaml.load(yamlfile, Loader=yaml.FullLoader)
 
     # Imports functions
@@ -71,7 +70,7 @@ if __name__ == "__main__":
     opt = tf.keras.optimizers.Adam(lr=1e-3, decay=1e-7)
     model.compile(optimizer=opt, loss=nrmse)
 
-    # Some tools are skipped here (model loading, early stopping) as they aren't effective/necessary for small scale testing.
+    # Callbacks to manage training
     lrs = tf.keras.callbacks.LearningRateScheduler(schedule)
     mc = tf.keras.callbacks.ModelCheckpoint(
         filepath=str(ADDR / set["addrs"]["IMCHEC_ADDR"]),
@@ -80,6 +79,9 @@ if __name__ == "__main__":
         save_best_only=True,
     )
     es = tf.keras.callbacks.EarlyStopping(monitor="val_loss", patience=20, mode="min")
+    csvl = tf.keras.callbacks.CSVLogger(
+        str(ADDR / set["addrs"]["IMCSV_ADDR"]), append=True, separator=";"
+    )
 
     # Fits model using training data, validation data.
     logging.debug("Fitting UNet")
@@ -89,7 +91,7 @@ if __name__ == "__main__":
         validation_data=(kspace_val, image_val),
         batch_size=set["params"]["BATCH_SIZE"],
         epochs=set["params"]["EPOCHS"],
-        callbacks=[lrs, mc, es],
+        callbacks=[lrs, mc, es, csvl],
     )
 
     # Saves model

@@ -1,0 +1,24 @@
+---
+params:
+  EPOCHS: 3
+  MOD: 1
+  BATCH_SIZE: 5
+  NUM_TRAIN: 20 # max 4254
+  NUM_VAL: 5 # max 1700
+  NUM_TEST: 5 # max 1700
+addrs:
+  TEST_ADDR: Test/*.npy
+  TRAIN_ADDR: Train/*.npy
+  VAL_ADDR: Val/*.npy
+  MASK_ADDR: Inputs/mask.npy
+  STATS_ADDR: Inputs/stats.npy
+  IMMODEL_ADDR: Outputs/immodel
+  REMODEL_ADDR: Outputs/remodel
+  IMLOG_ADDR: Outputs/CompUNet.log
+  RELOG_ADDR: Outputs/UNet.log
+  FUNC_ADDR: Functions
+  IMCHEC_ADDR: Outputs/imcheck
+  RECHEC_ADDR: Outputs/recheck
+  IMCSV_ADDR: Outputs/CompUNet_Train.log
+  RECSV_ADDR: Outputs/UNet_Train.log
+
