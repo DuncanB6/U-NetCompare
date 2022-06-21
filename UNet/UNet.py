@@ -9,18 +9,15 @@ if __name__ == "__main__":
     import os
     import time
     from datetime import datetime
-    import tensorflow.compat.v1 as tf
-    import keras as ks
+    import tensorflow as tf
     import matplotlib.pyplot as plt
     import logging
     import yaml
     import sys
     from pathlib import Path
 
-    # from keras.callbacks import ModelCheckpoint, EarlyStopping
     # from keras.preprocessing.image import ImageDataGenerator
 
-    tf.disable_v2_behavior()
     os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
 
     ADDR = Path.cwd()  # /Users/duncan.boyd/Documents/WorkCode/workvenv
@@ -30,13 +27,13 @@ if __name__ == "__main__":
     with open(ADDR / "Data/settings.yaml", "r") as yamlfile:
         set = yaml.load(yamlfile, Loader=yaml.FullLoader)
 
-    # Imports my functions
-    sys.path.append(str(ADDR / "Functions"))
-    from Functions import get_brains, re_u_net, nrmse
+    # Imports functions
+    sys.path.append(str(ADDR / set["addrs"]["FUNC_ADDR"]))
+    from Functions import get_brains, re_u_net, nrmse, schedule
 
     # Initializes logging
     logging.basicConfig(
-        filename=str(ADDR / "Data/UNet.log"),
+        filename=str(ADDR / set["addrs"]["RELOG_ADDR"]),
         filemode="w",
         format="%(name)s - %(levelname)s - %(message)s",
         level=logging.DEBUG,
@@ -64,6 +61,14 @@ if __name__ == "__main__":
     model.compile(optimizer=opt, loss=nrmse)
 
     # Some tools are skipped here (model loading, early stopping) as they aren't effective/necessary for small scale testing.
+    lrs = tf.keras.callbacks.LearningRateScheduler(schedule)
+    mc = tf.keras.callbacks.ModelCheckpoint(
+        filepath=str(ADDR / set["addrs"]["RECHEC_ADDR"]),
+        mode="min",
+        monitor="val_loss",
+        save_best_only=True,
+    )
+    es = tf.keras.callbacks.EarlyStopping(monitor="val_loss", patience=20, mode="min")
 
     # Fits model using training data, validation data.
     logging.debug("Fitting UNet")
@@ -73,6 +78,7 @@ if __name__ == "__main__":
         validation_data=(kspace_val, image_val),
         batch_size=set["params"]["BATCH_SIZE"],
         epochs=set["params"]["EPOCHS"],
+        callbacks=[lrs, mc, es],
     )
 
     # Save model

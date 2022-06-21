@@ -14,6 +14,14 @@ import logging
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
 tf.disable_v2_behavior()
 
+# Scheduler, currently just a stolen one as I don't know what I should be going for.
+def schedule(epoch, lr):
+    if epoch < 10:
+        return lr
+    else:
+        return lr * tf.math.exp(-0.1)
+
+
 # Loss function
 def nrmse(y_true, y_pred):
     denom = K.sqrt(K.mean(K.square(y_true), axis=(1, 2, 3)))

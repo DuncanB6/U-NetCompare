@@ -16,4 +16,7 @@ addrs:
   REMODEL_ADDR: Outputs/remodel
   IMLOG_ADDR: Data/CompUNet.log
   RELOG_ADDR: Data/UNet.log
+  FUNC_ADDR: Functions
+  IMCHEC_ADDR: Outputs/imcheck
+  RECHEC_ADDR: Outputs/recheck
 
