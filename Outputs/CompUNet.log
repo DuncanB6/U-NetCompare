@@ -4,8 +4,8 @@ root - INFO - train scans: 25
 root - INFO - val scans: 10
 root - INFO - test scans: 10
 root - DEBUG - Scans loaded
-root - INFO - kspace train: (20, 256, 256, 2)
-root - INFO - image train: (20, 256, 256, 1)
+root - INFO - kspace train: (10, 256, 256, 2)
+root - INFO - image train: (10, 256, 256, 1)
 root - INFO - kspace val: (5, 256, 256, 2)
 root - INFO - image val: (5, 256, 256, 1)
 root - INFO - kspace test: (5, 256, 256, 2)
@@ -17,6 +17,6 @@ tensorflow - WARNING - From /Users/duncan.boyd/Library/Python/3.8/lib/python/sit
 Instructions for updating:
 This property should not be used in TensorFlow 2.0, as updates are applied automatically.
 root - DEBUG - Evaluating UNet
-root - INFO - total time: 177
-root - INFO - time completed: 21/06/2022 14:47:41
+root - INFO - total time: 37
+root - INFO - time completed: 21/06/2022 14:54:43
 root - DEBUG - Done

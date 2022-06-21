@@ -1,4 +1,4 @@
-# June 20, 2022
+# June 21, 2022
 
 # Status: This is the beginning of a complex U-Net. Code is written, returns poor quality images.
 # Hopefully poor quality is due to training practices limited by local hardware and not by method.
@@ -13,9 +13,7 @@
 
 if __name__ == "__main__":
 
-    # Is there a good way to only import this block in one file (instead of having this block of code at the top
-    # of every file), or as a function?
-    # Like a header, but for python. I haven't found a good way to do it yet, but I'm sure it's doable.
+    # Imports
     import os
     import time
     from datetime import datetime
@@ -30,6 +28,7 @@ if __name__ == "__main__":
 
     os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
 
+    # Finds root address, will need to be checked in ARC.
     ADDR = Path.cwd()  # /Users/duncan.boyd/Documents/WorkCode/workvenv
     ADDR = ADDR / "UofC2022"
 
@@ -80,7 +79,7 @@ if __name__ == "__main__":
     )
     es = tf.keras.callbacks.EarlyStopping(monitor="val_loss", patience=20, mode="min")
     csvl = tf.keras.callbacks.CSVLogger(
-        str(ADDR / set["addrs"]["IMCSV_ADDR"]), append=True, separator=";"
+        str(ADDR / set["addrs"]["IMCSV_ADDR"]), append=True, separator="|"
     )
 
     # Fits model using training data, validation data.
