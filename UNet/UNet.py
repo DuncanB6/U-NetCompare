@@ -8,6 +8,7 @@ if __name__ == "__main__":
     # Like a header, but for python. I haven't found a good way to do it yet, but I'm sure it's doable.
     import os
     import time
+    from datetime import datetime
     import tensorflow.compat.v1 as tf
     import matplotlib.pyplot as plt
     import logging
@@ -25,15 +26,8 @@ if __name__ == "__main__":
     ADDR = ADDR / "UofC2022"
 
     # Imports global vars from settings YAML file.
-    # Same deal as above, is it possible to only see this block of code in one file?
     with open(ADDR / "Data/settings.yaml", "r") as yamlfile:
         set = yaml.load(yamlfile, Loader=yaml.FullLoader)
-    EPOCHS = set["params"]["EPOCHS"]
-    MOD = set["params"]["MOD"]
-    BATCH_SIZE = set["params"]["BATCH_SIZE"]
-    NUM_TRAIN = set["params"]["NUM_TRAIN"]
-    NUM_VAL = set["params"]["NUM_VAL"]
-    NUM_TEST = set["params"]["NUM_TEST"]
 
     # Imports my functions
     sys.path.append(str(ADDR / "Functions"))
@@ -41,7 +35,7 @@ if __name__ == "__main__":
 
     # Initializes logging
     logging.basicConfig(
-        filename=str(ADDR / "Data/CompUNet.log"),
+        filename=str(ADDR / "Data/UNet.log"),
         filemode="w",
         format="%(name)s - %(levelname)s - %(message)s",
         level=logging.DEBUG,
@@ -60,11 +54,11 @@ if __name__ == "__main__":
         image_val,
         kspace_test,
         image_test,
-    ) = get_brains(NUM_TRAIN, NUM_VAL, NUM_TEST, ADDR)
+    ) = get_brains(set, ADDR)
 
     # Declare, compile, fit the model.
     logging.debug("Compiling UNet")
-    model = re_u_net(stats[0], stats[1], stats[2], stats[3], MOD)
+    model = re_u_net(stats[0], stats[1], stats[2], stats[3])
     opt = tf.keras.optimizers.Adam(lr=1e-3, decay=1e-7)
     model.compile(optimizer=opt, loss=nrmse)
 
@@ -76,8 +70,8 @@ if __name__ == "__main__":
         kspace_train,
         image_train,
         validation_data=(kspace_val, image_val),
-        batch_size=BATCH_SIZE,
-        epochs=EPOCHS,
+        batch_size=set["params"]["BATCH_SIZE"],
+        epochs=set["params"]["EPOCHS"],
     )
 
     # Makes predictions
@@ -85,8 +79,12 @@ if __name__ == "__main__":
     predictions = model.predict(kspace_test)
     print(predictions.shape)
 
+    # Provides endtime logging info
     end_time = time.time()
+    now = datetime.now()
+    time_finished = now.strftime("%d/%m/%Y %H:%M:%S")
     logging.info("total time: " + str(int(end_time - init_time)))
+    logging.info("time completed: " + time_finished)
 
     # Displays predictions
     plt.figure(figsize=(15, 15))

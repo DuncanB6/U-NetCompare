@@ -23,4 +23,6 @@ git push origin main
 
 git pull origin main
 
+pip3 list – format=freeze > requirements.txt
+
 

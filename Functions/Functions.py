@@ -32,19 +32,19 @@ def ifft_layer(kspace):
 
 # Upgraded version, returns fewer arrays but with a faster and more efficient method.
 # Still need to figure out the imaginary image domain stuff.
-def get_brains(NUM_TRAIN, NUM_VAL, NUM_TEST, ADDR):
+def get_brains(set, ADDR):
 
     # Note: In train, one file is (174, 256, 256).
-    kspace_files_train = np.asarray(glob.glob(str(ADDR / "Train/*.npy")))
-    kspace_files_val = np.asarray(glob.glob(str(ADDR / "Val/*.npy")))
-    kspace_files_test = np.asarray(glob.glob(str(ADDR / "Test/*.npy")))
+    kspace_files_train = np.asarray(glob.glob(str(ADDR / set["addrs"]["TRAIN_ADDR"])))
+    kspace_files_val = np.asarray(glob.glob(str(ADDR / set["addrs"]["VAL_ADDR"])))
+    kspace_files_test = np.asarray(glob.glob(str(ADDR / set["addrs"]["TEST_ADDR"])))
 
     logging.info("train scans: " + str(len(kspace_files_train)))
     logging.info("val scans: " + str(len(kspace_files_val)))
     logging.info("test scans: " + str(len(kspace_files_test)))
     logging.debug("Scans loaded")
 
-    samp_mask = np.load(str(ADDR / "Data/mask.npy"))
+    samp_mask = np.load(str(ADDR / set["addrs"]["MASK_ADDR"]))
     shape = (256, 256)
     norm = np.sqrt(shape[0] * shape[1])
 
@@ -53,7 +53,7 @@ def get_brains(NUM_TRAIN, NUM_VAL, NUM_TEST, ADDR):
     count = 0
     for i in random.sample(range(0, len(kspace_files_train)), len(kspace_files_train)):
         brain = np.load(kspace_files_train[i]) / norm
-        if count >= NUM_TRAIN:
+        if count >= set["params"]["NUM_TRAIN"]:
             break
         for i in random.sample(range(0, brain.shape[0]), brain.shape[0]):
             image_train.append(
@@ -64,7 +64,7 @@ def get_brains(NUM_TRAIN, NUM_VAL, NUM_TEST, ADDR):
             brain[i, samp_mask, :] = 0
             kspace_train.append(brain[i].astype(np.float64))
             count += 1
-            if count >= NUM_TRAIN:
+            if count >= set["params"]["NUM_TRAIN"]:
                 break
     kspace_train = np.asarray(kspace_train)
     logging.info("kspace train: " + str(kspace_train.shape))
@@ -77,7 +77,7 @@ def get_brains(NUM_TRAIN, NUM_VAL, NUM_TEST, ADDR):
     count = 0
     for i in random.sample(range(0, len(kspace_files_val)), len(kspace_files_val)):
         brain = np.load(kspace_files_val[i]) / norm
-        if count >= NUM_VAL:
+        if count >= set["params"]["NUM_VAL"]:
             break
         for i in random.sample(range(0, brain.shape[0]), brain.shape[0]):
             image_val.append(
@@ -88,7 +88,7 @@ def get_brains(NUM_TRAIN, NUM_VAL, NUM_TEST, ADDR):
             brain[i, samp_mask, :] = 0
             kspace_val.append(brain[i].astype(np.float64))
             count += 1
-            if count >= NUM_VAL:
+            if count >= set["params"]["NUM_VAL"]:
                 break
     kspace_val = np.asarray(kspace_val)
     logging.info("kspace val: " + str(kspace_val.shape))
@@ -101,7 +101,7 @@ def get_brains(NUM_TRAIN, NUM_VAL, NUM_TEST, ADDR):
     count = 0
     for i in random.sample(range(0, len(kspace_files_test)), len(kspace_files_test)):
         brain = np.load(kspace_files_test[i]) / norm
-        if count >= NUM_TEST:
+        if count >= set["params"]["NUM_TEST"]:
             break
         for i in random.sample(range(0, brain.shape[0]), brain.shape[0]):
             image_test.append(
@@ -112,7 +112,7 @@ def get_brains(NUM_TRAIN, NUM_VAL, NUM_TEST, ADDR):
             brain[i, samp_mask, :] = 0
             kspace_test.append(brain[i].astype(np.float64))
             count += 1
-            if count >= NUM_TEST:
+            if count >= set["params"]["NUM_TEST"]:
                 break
     kspace_test = np.asarray(kspace_test)
     logging.info("kspace test: " + str(kspace_test.shape))
@@ -125,7 +125,7 @@ def get_brains(NUM_TRAIN, NUM_VAL, NUM_TEST, ADDR):
     # Question: image_train seems to be the reconstructed images here, but it's imaginary. Why is image domain imaginary?
     # Especially since the WNet returns a real image. Does the imaginary part in image domain yield any valuable information?
     # For the time being, I'm just going to load the stats manually.
-    stats = np.load(str(ADDR / "Data/stats.npy"))
+    stats = np.load(str(ADDR / set["addrs"]["STATS_ADDR"]))
 
     """# save k-space and image domain stats
     stats = np.zeros(4)
@@ -178,7 +178,9 @@ class CompConv2D(layers.Layer):
 # A variable (MOD) was added to make testing easier. At small scale, MOD = 1 worked best.
 # Question: Can a purely kspace model be trained, with no reference to image domain? For this code, I've assumed no (also just for convenience viewing results).
 # I'm pretty sure it can though.
-def im_u_net(mu1, sigma1, mu2, sigma2, MOD=1, H=256, W=256, channels=2, kshape=(3, 3)):
+def im_u_net(mu1, sigma1, mu2, sigma2, set, H=256, W=256, channels=2, kshape=(3, 3)):
+    MOD = set["params"]["MOD"]
+
     inputs = layers.Input(shape=(H, W, channels))
 
     conv1 = CompConv2D(24 * MOD)(inputs)
@@ -229,7 +231,8 @@ def im_u_net(mu1, sigma1, mu2, sigma2, MOD=1, H=256, W=256, channels=2, kshape=(
     # U-Net model.
 
 
-def re_u_net(mu1, sigma1, mu2, sigma2, MOD=1, H=256, W=256, channels=2, kshape=(3, 3)):
+def re_u_net(mu1, sigma1, mu2, sigma2, H=256, W=256, channels=2, kshape=(3, 3)):
+
     inputs = Input(shape=(H, W, channels))
 
     conv1 = Conv2D(48, kshape, activation="relu", padding="same")(inputs)
