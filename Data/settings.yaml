@@ -12,5 +12,8 @@ addrs:
   VAL_ADDR: Val/*.npy
   MASK_ADDR: Data/mask.npy
   STATS_ADDR: Data/stats.npy
-  SAVE_ADDR: Outputs
+  IMMODEL_ADDR: Outputs/immodel
+  REMODEL_ADDR: Outputs/remodel
+  IMLOG_ADDR: Data/CompUNet.log
+  RELOG_ADDR: Data/UNet.log
 

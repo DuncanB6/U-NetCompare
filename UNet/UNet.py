@@ -10,6 +10,7 @@ if __name__ == "__main__":
     import time
     from datetime import datetime
     import tensorflow.compat.v1 as tf
+    import keras as ks
     import matplotlib.pyplot as plt
     import logging
     import yaml
@@ -73,6 +74,9 @@ if __name__ == "__main__":
         batch_size=set["params"]["BATCH_SIZE"],
         epochs=set["params"]["EPOCHS"],
     )
+
+    # Save model
+    model.save(ADDR / set["addrs"]["REMODEL_ADDR"])
 
     # Makes predictions
     logging.debug("Evaluating UNet")

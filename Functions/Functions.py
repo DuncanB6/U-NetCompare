@@ -154,9 +154,9 @@ def get_brains(set, ADDR):
 
 # (R | I) * (Rf | If) = Or | Oi = (R * Rf - I * If) | (I * Rf + R * If)
 
-
+# Config function added to allow loading and saving.
 class CompConv2D(layers.Layer):
-    def __init__(self, out_channels, kshape=(3, 3)):
+    def __init__(self, out_channels, kshape=(3, 3), **kwargs):
         super(CompConv2D, self).__init__()
         self.convreal = layers.Conv2D(
             out_channels, kshape, activation="relu", padding="same"
@@ -171,6 +171,17 @@ class CompConv2D(layers.Layer):
         oimag = self.convimag(ureal) + self.convreal(uimag)
         x = tf.concat([oreal, oimag], axis=3)
         return x
+
+    def get_config(self):
+
+        config = super(CompConv2D, self).get_config()
+        config.update(
+            {
+                "convreal": self.convreal,
+                "convimag": self.convimag,
+            }
+        )
+        return config
 
 
 # U-Net model. Includes kspace domain U-Net and IFFT.

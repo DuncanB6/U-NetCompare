@@ -6,11 +6,10 @@
 # Will need significant updates to deploy at larger scale.
 
 # To do:
-# Determine and implement evalutation methods
+# Determine and implement evalutation methods (actually we sould be able to do this with the saved
+# models later)
 # Log data while training (eg. accuracy, loss)
-# Make YAML configs easier to use
-# Integrate pathing with YAML configs
-# Instead of saving images, save the model
+# Find out how to load models with custom layers and functions
 # + Mike's other stuff
 
 if __name__ == "__main__":
@@ -22,6 +21,8 @@ if __name__ == "__main__":
     import time
     from datetime import datetime
     import tensorflow.compat.v1 as tf
+    import keras as ks
+    from keras import layers
     import matplotlib.pyplot as plt
     import logging
     import yaml
@@ -47,7 +48,7 @@ if __name__ == "__main__":
 
     # Initializes logging
     logging.basicConfig(
-        filename=str(ADDR / "Data/CompUNet.log"),
+        filename=str(ADDR / set["addrs"]["IMLOG_ADDR"]),
         filemode="w",
         format="%(name)s - %(levelname)s - %(message)s",
         level=logging.DEBUG,
@@ -85,6 +86,9 @@ if __name__ == "__main__":
         batch_size=set["params"]["BATCH_SIZE"],
         epochs=set["params"]["EPOCHS"],
     )
+
+    # Saves model
+    model.save(ADDR / set["addrs"]["IMMODEL_ADDR"])
 
     # Makes predictions
     logging.debug("Evaluating UNet")
