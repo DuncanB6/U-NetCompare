@@ -21,4 +21,7 @@ addrs:
   RECHEC_ADDR: Outputs/recheck
   IMCSV_ADDR: Outputs/CompUNet_Train.log
   RECSV_ADDR: Outputs/UNet_Train.log
+Hydra:
+  run:
+    dir: ./UofC2022/Outputs/CompUNet
 

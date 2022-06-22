@@ -5,7 +5,6 @@
 if __name__ == "__main__":
 
     # Imports
-    import os
     import time
     from datetime import datetime
     import tensorflow as tf
@@ -25,9 +24,6 @@ if __name__ == "__main__":
     def main(cfg: DictConfig) -> None:
         set = cfg
 
-        # This line may be necessary for logging
-        # os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
-
         # Finds root address, will need to be checked in ARC.
         ADDR = Path.cwd()  # /Users/duncan.boyd/Documents/WorkCode/workvenv
         ADDR = ADDR / "UofC2022"
@@ -36,19 +32,11 @@ if __name__ == "__main__":
         sys.path.append(str(ADDR / set["addrs"]["FUNC_ADDR"]))
         from Functions import get_brains, re_u_net, nrmse, schedule
 
-        """# Initializes logging
-        logging.basicConfig(
-            filename=str(ADDR / set["addrs"]["RELOG_ADDR"]),
-            filemode="w",
-            format="%(name)s - %(levelname)s - %(message)s",
-            level=logging.DEBUG,
-        )
-        logging.getLogger("matplotlib").setLevel(logging.WARNING)"""
-        logging.debug("Initialized re UNet")
+        logging.info("Initialized re UNet")
         init_time = time.time()
 
         # Loads data
-        logging.debug("Loading data")
+        logging.info("Loading data")
         (
             stats,
             kspace_train,
@@ -60,7 +48,7 @@ if __name__ == "__main__":
         ) = get_brains(set, ADDR)
 
         # Declares, compiles, fits the model.
-        logging.debug("Compiling UNet")
+        logging.info("Compiling UNet")
         model = re_u_net(stats[0], stats[1], stats[2], stats[3])
         opt = tf.keras.optimizers.Adam(lr=1e-3, decay=1e-7)
         model.compile(optimizer=opt, loss=nrmse)
@@ -81,7 +69,7 @@ if __name__ == "__main__":
         )
 
         # Fits model using training data, validation data
-        logging.debug("Fitting UNet")
+        logging.info("Fitting UNet")
         model.fit(
             kspace_train,
             image_train,
@@ -96,7 +84,7 @@ if __name__ == "__main__":
         model.save(ADDR / set["addrs"]["REMODEL_ADDR"])
 
         # Makes predictions
-        logging.debug("Evaluating UNet")
+        logging.info("Evaluating UNet")
         predictions = model.predict(kspace_test)
         print(predictions.shape)
 
@@ -117,7 +105,7 @@ if __name__ == "__main__":
         # plt.savefig(str(ADDR / 'Outputs' / file_name))
         plt.show()
 
-        logging.debug("Done")
+        logging.info("Done")
 
         return
 

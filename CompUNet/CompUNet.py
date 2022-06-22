@@ -12,14 +12,12 @@
 # Find out how to load models with custom layers and functions
 # Data augmentation ( from keras.preprocessing.image import ImageDataGenerator) )
 # Revise scheduler
-# Fix logging, integrate with hydra
 # Unit testing, containerization, turning code into package
 
 # Name guard
 if __name__ == "__main__":
 
     # Imports
-    import os
     import time
     from datetime import datetime
     import tensorflow as tf
@@ -36,11 +34,8 @@ if __name__ == "__main__":
         config_path="../Inputs",
         config_name="settings",
     )
-    def main(cfg: DictConfig) -> None:
+    def main(cfg: DictConfig):
         set = cfg
-
-        # This line may be necessary for logging
-        # os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
 
         # Finds root address, will need to be checked in ARC.
         ADDR = Path.cwd()  # /Users/duncan.boyd/Documents/WorkCode/workvenv
@@ -50,19 +45,10 @@ if __name__ == "__main__":
         sys.path.append(str(ADDR / set["addrs"]["FUNC_ADDR"]))
         from Functions import get_brains, im_u_net, nrmse, schedule
 
-        """# Initializes logging
-        logging.basicConfig(
-            filename=str(ADDR / set["addrs"]["IMLOG_ADDR"]),
-            filemode="w",
-            format="%(name)s - %(levelname)s - %(message)s",
-            level=logging.DEBUG,
-        )
-        logging.getLogger("matplotlib").setLevel(logging.WARNING)"""
-        logging.debug("Initialized im UNet")
         init_time = time.time()
 
         # Loads data
-        logging.debug("Loading data")
+        logging.info("Loading data")
         (
             stats,
             kspace_train,
@@ -74,7 +60,7 @@ if __name__ == "__main__":
         ) = get_brains(set, ADDR)
 
         # Declares, compiles, fits the model.
-        logging.debug("Compiling UNet")
+        logging.info("Compiling UNet")
         model = im_u_net(stats[0], stats[1], stats[2], stats[3], set)
         opt = tf.keras.optimizers.Adam(lr=1e-3, decay=1e-7)
         model.compile(optimizer=opt, loss=nrmse)
@@ -95,7 +81,7 @@ if __name__ == "__main__":
         )
 
         # Fits model using training data, validation data
-        logging.debug("Fitting UNet")
+        logging.info("Fitting UNet")
         model.fit(
             kspace_train,
             image_train,
@@ -110,7 +96,7 @@ if __name__ == "__main__":
         model.save(ADDR / set["addrs"]["IMMODEL_ADDR"])
 
         # Makes predictions
-        logging.debug("Evaluating UNet")
+        logging.info("Evaluating UNet")
         predictions = model.predict(kspace_test)
         print(predictions.shape)
 
@@ -131,9 +117,7 @@ if __name__ == "__main__":
         # plt.savefig(str(ADDR / 'Outputs' / file_name))
         plt.show()
 
-        logging.debug("Done")
-
-        return
+        logging.info("Done")
 
     # Runs the main program above
     main()
