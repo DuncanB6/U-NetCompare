@@ -82,6 +82,9 @@ if __name__ == "__main__":
         # Saves model
         # Note: Loading does not work due to custom layers
         model.save(ADDR / set["addrs"]["REMODEL_ADDR"])
+        model = tf.keras.models.load_model(
+            ADDR / set["addrs"]["REMODEL_ADDR"], custom_objects={"nrmse": nrmse}
+        )
 
         # Makes predictions
         logging.info("Evaluating UNet")

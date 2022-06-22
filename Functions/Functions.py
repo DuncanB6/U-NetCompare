@@ -10,6 +10,7 @@ from keras import backend as K
 from keras.models import Model
 import random
 import logging
+from keras.preprocessing.image import ImageDataGenerator
 
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
 tf.disable_v2_behavior()

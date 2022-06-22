@@ -5,10 +5,11 @@
 # Hopefully poor quality is due to training practices limited by local hardware and not by method.
 
 # To do:
-# Find out how to load models with custom layers and functions
-# Data augmentation ( from keras.preprocessing.image import ImageDataGenerator) )
-# Revise scheduler
-# Unit testing, containerization, turning code into package
+# Find out how to load models with custom layers and functions (error due to modifyable channels out)
+# Data augmentation (currently unavailable as rec images are real only)
+# Revise scheduler (unsure what this should be doing)
+# Unit testing, containerization, turning code into package (optional, would like to review with mike)
+# Determine the actual experiments/training to be done on ARC (once other tasks are complete)
 
 # Name guard
 if __name__ == "__main__":
@@ -39,8 +40,9 @@ if __name__ == "__main__":
 
         # Imports functions
         sys.path.append(str(ADDR / set["addrs"]["FUNC_ADDR"]))
-        from Functions import get_brains, im_u_net, nrmse, schedule
+        from Functions import get_brains, im_u_net, nrmse, schedule, CompConv2D
 
+        logging.info("Initialized im UNet")
         init_time = time.time()
 
         # Loads data
@@ -88,8 +90,13 @@ if __name__ == "__main__":
         )
 
         # Saves model
-        # Note: Loading does not work due to custom layers
+        # Note: Loading does not work due to custom layers. It want an unpit for out_channels
+        # while loading, but this is determined in the UNet.
         model.save(ADDR / set["addrs"]["IMMODEL_ADDR"])
+        """model = tf.keras.models.load_model(
+            ADDR / set["addrs"]["IMMODEL_ADDR"],
+            custom_objects={"nrmse": nrmse, "CompConv2D": CompConv2D},
+        )"""
 
         # Makes predictions
         logging.info("Evaluating UNet")
