@@ -11,7 +11,7 @@ towards sending larger scale jobs to ARC. I've registered for an account, but ha
 the account isn't working yet. 
 
 To do:
-Find out how to load models with custom layers and functions
+Find out how to load models with custom layers and functions /n
 Data augmentation ( from keras.preprocessing.image import ImageDataGenerator) )
 Revise scheduler
 Unit testing, containerization, turning code into package
