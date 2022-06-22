@@ -1,5 +1,5 @@
 # Basic Unet model that mirrors the complex Unet, but does not use the CompConv2D layer.
-# June 20, 2022
+# June 21, 2022
 
 if __name__ == "__main__":
 

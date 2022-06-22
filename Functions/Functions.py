@@ -1,7 +1,6 @@
-# Functions that support both UNets.
+# Functions that support both UNets. Includes the UNets themselves and the custom layers.
 
 import os
-
 import tensorflow.compat.v1 as tf
 from keras import layers
 from keras.layers import Input, Conv2D, MaxPooling2D, concatenate, UpSampling2D
