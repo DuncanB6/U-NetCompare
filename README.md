@@ -10,6 +10,13 @@ Status: Currently working to improve usabiity and ready it for large scale testi
 towards sending larger scale jobs to ARC. I've registered for an account, but have been unable to connect to ARC so maybe
 the account isn't working yet. 
 
+To do:
+Find out how to load models with custom layers and functions
+Data augmentation ( from keras.preprocessing.image import ImageDataGenerator) )
+Revise scheduler
+Unit testing, containerization, turning code into package
+Determine the actual experiments/training to be done on ARC
+
 ---
 
 Reminder for Duncan: 
