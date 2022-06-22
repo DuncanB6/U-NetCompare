@@ -1,6 +1,7 @@
 # Basic Unet model that mirrors the complex Unet, but does not use the CompConv2D layer.
 # June 21, 2022
 
+# Name guard
 if __name__ == "__main__":
 
     # Imports
@@ -10,102 +11,115 @@ if __name__ == "__main__":
     import tensorflow as tf
     import matplotlib.pyplot as plt
     import logging
-    import yaml
     import sys
     from pathlib import Path
+    import hydra
+    from omegaconf import DictConfig
 
-    # from keras.preprocessing.image import ImageDataGenerator
-
-    os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
-
-    # Finds root address, will need to be checked in ARC.
-    ADDR = Path.cwd()  # /Users/duncan.boyd/Documents/WorkCode/workvenv
-    ADDR = ADDR / "UofC2022"
-
-    # Imports global vars from settings YAML file.
-    with open(ADDR / "Inputs/settings.yaml", "r") as yamlfile:
-        set = yaml.load(yamlfile, Loader=yaml.FullLoader)
-
-    # Imports functions
-    sys.path.append(str(ADDR / set["addrs"]["FUNC_ADDR"]))
-    from Functions import get_brains, re_u_net, nrmse, schedule
-
-    # Initializes logging
-    logging.basicConfig(
-        filename=str(ADDR / set["addrs"]["RELOG_ADDR"]),
-        filemode="w",
-        format="%(name)s - %(levelname)s - %(message)s",
-        level=logging.DEBUG,
+    # Import settings with hydra
+    @hydra.main(
+        version_base=None,
+        config_path="../Inputs",
+        config_name="settings",
     )
-    logging.getLogger("matplotlib").setLevel(logging.WARNING)
-    logging.debug("Initialized re UNet")
-    init_time = time.time()
+    def main(cfg: DictConfig) -> None:
+        set = cfg
 
-    # Loads data
-    logging.debug("Loading data")
-    (
-        stats,
-        kspace_train,
-        image_train,
-        kspace_val,
-        image_val,
-        kspace_test,
-        image_test,
-    ) = get_brains(set, ADDR)
+        # This line may be necessary for logging
+        # os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
 
-    # Declare, compile, fit the model.
-    logging.debug("Compiling UNet")
-    model = re_u_net(stats[0], stats[1], stats[2], stats[3])
-    opt = tf.keras.optimizers.Adam(lr=1e-3, decay=1e-7)
-    model.compile(optimizer=opt, loss=nrmse)
+        # Finds root address, will need to be checked in ARC.
+        ADDR = Path.cwd()  # /Users/duncan.boyd/Documents/WorkCode/workvenv
+        ADDR = ADDR / "UofC2022"
 
-    # Some tools are skipped here (model loading, early stopping) as they aren't effective/necessary for small scale testing.
-    lrs = tf.keras.callbacks.LearningRateScheduler(schedule)
-    mc = tf.keras.callbacks.ModelCheckpoint(
-        filepath=str(ADDR / set["addrs"]["RECHEC_ADDR"]),
-        mode="min",
-        monitor="val_loss",
-        save_best_only=True,
-    )
-    es = tf.keras.callbacks.EarlyStopping(monitor="val_loss", patience=20, mode="min")
-    csvl = tf.keras.callbacks.CSVLogger(
-        str(ADDR / set["addrs"]["RECSV_ADDR"]), append=True, separator="|"
-    )
+        # Imports functions
+        sys.path.append(str(ADDR / set["addrs"]["FUNC_ADDR"]))
+        from Functions import get_brains, re_u_net, nrmse, schedule
 
-    # Fits model using training data, validation data.
-    logging.debug("Fitting UNet")
-    model.fit(
-        kspace_train,
-        image_train,
-        validation_data=(kspace_val, image_val),
-        batch_size=set["params"]["BATCH_SIZE"],
-        epochs=set["params"]["EPOCHS"],
-        callbacks=[lrs, mc, es],
-    )
+        """# Initializes logging
+        logging.basicConfig(
+            filename=str(ADDR / set["addrs"]["RELOG_ADDR"]),
+            filemode="w",
+            format="%(name)s - %(levelname)s - %(message)s",
+            level=logging.DEBUG,
+        )
+        logging.getLogger("matplotlib").setLevel(logging.WARNING)"""
+        logging.debug("Initialized re UNet")
+        init_time = time.time()
 
-    # Save model
-    model.save(ADDR / set["addrs"]["REMODEL_ADDR"])
+        # Loads data
+        logging.debug("Loading data")
+        (
+            stats,
+            kspace_train,
+            image_train,
+            kspace_val,
+            image_val,
+            kspace_test,
+            image_test,
+        ) = get_brains(set, ADDR)
 
-    # Makes predictions
-    logging.debug("Evaluating UNet")
-    predictions = model.predict(kspace_test)
-    print(predictions.shape)
+        # Declares, compiles, fits the model.
+        logging.debug("Compiling UNet")
+        model = re_u_net(stats[0], stats[1], stats[2], stats[3])
+        opt = tf.keras.optimizers.Adam(lr=1e-3, decay=1e-7)
+        model.compile(optimizer=opt, loss=nrmse)
 
-    # Provides endtime logging info
-    end_time = time.time()
-    now = datetime.now()
-    time_finished = now.strftime("%d/%m/%Y %H:%M:%S")
-    logging.info("total time: " + str(int(end_time - init_time)))
-    logging.info("time completed: " + time_finished)
+        # Callbacks to manage training
+        lrs = tf.keras.callbacks.LearningRateScheduler(schedule)
+        mc = tf.keras.callbacks.ModelCheckpoint(
+            filepath=str(ADDR / set["addrs"]["RECHEC_ADDR"]),
+            mode="min",
+            monitor="val_loss",
+            save_best_only=True,
+        )
+        es = tf.keras.callbacks.EarlyStopping(
+            monitor="val_loss", patience=20, mode="min"
+        )
+        csvl = tf.keras.callbacks.CSVLogger(
+            str(ADDR / set["addrs"]["RECSV_ADDR"]), append=False, separator="|"
+        )
 
-    # Displays predictions
-    plt.figure(figsize=(15, 15))
-    plt.subplot(1, 2, 1)
-    plt.imshow((255.0 - image_test[0]), cmap="Greys")
-    plt.subplot(1, 2, 2)
-    plt.imshow((255.0 - predictions[0]), cmap="Greys")
-    file_name = "re_" + str(int(end_time - init_time)) + ".jpg"
-    # plt.savefig(str(ADDR / 'Outputs' / file_name))
-    plt.show()
+        # Fits model using training data, validation data
+        logging.debug("Fitting UNet")
+        model.fit(
+            kspace_train,
+            image_train,
+            validation_data=(kspace_val, image_val),
+            batch_size=set["params"]["BATCH_SIZE"],
+            epochs=set["params"]["EPOCHS"],
+            callbacks=[lrs, mc, es, csvl],
+        )
 
-    logging.debug("Done")
+        # Saves model
+        # Note: Loading does not work due to custom layers
+        model.save(ADDR / set["addrs"]["REMODEL_ADDR"])
+
+        # Makes predictions
+        logging.debug("Evaluating UNet")
+        predictions = model.predict(kspace_test)
+        print(predictions.shape)
+
+        # Provides endtime logging info
+        end_time = time.time()
+        now = datetime.now()
+        time_finished = now.strftime("%d/%m/%Y %H:%M:%S")
+        logging.info("total time: " + str(int(end_time - init_time)))
+        logging.info("time completed: " + time_finished)
+
+        # Displays predictions (Not necessary for ARC)
+        plt.figure(figsize=(15, 15))
+        plt.subplot(1, 2, 1)
+        plt.imshow((255.0 - image_test[0]), cmap="Greys")
+        plt.subplot(1, 2, 2)
+        plt.imshow((255.0 - predictions[0]), cmap="Greys")
+        file_name = "im_" + str(int(end_time - init_time)) + ".jpg"
+        # plt.savefig(str(ADDR / 'Outputs' / file_name))
+        plt.show()
+
+        logging.debug("Done")
+
+        return
+
+    # Runs the main program above
+    main()

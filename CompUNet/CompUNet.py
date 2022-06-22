@@ -1,18 +1,21 @@
-# June 21, 2022
+# June 22, 2022
 
-# Status: This is the beginning of a complex U-Net. Code is written, returns poor quality images.
+# Status:
+# This is the beginning of a complex U-Net. Code is written, returns poor quality images.
 # Hopefully poor quality is due to training practices limited by local hardware and not by method.
 
 # This branch has hydra implemente for the config file. However,
 # Hydra's logging is blocking my own and doesn't seem to be working.
-# May need help resolving this.
+# Otherwise, code functions well.
 
 # To do:
 # Find out how to load models with custom layers and functions
-# Data augmentation?
+# Data augmentation ( from keras.preprocessing.image import ImageDataGenerator) )
 # Revise scheduler
-# + Mike's other stuff
+# Fix logging, integrate with hydra
+# Unit testing, containerization, turning code into package
 
+# Name guard
 if __name__ == "__main__":
 
     # Imports
@@ -27,8 +30,7 @@ if __name__ == "__main__":
     import hydra
     from omegaconf import DictConfig
 
-    # from keras.preprocessing.image import ImageDataGenerator
-
+    # Import settings with hydra
     @hydra.main(
         version_base=None,
         config_path="../Inputs",
@@ -37,12 +39,12 @@ if __name__ == "__main__":
     def main(cfg: DictConfig) -> None:
         set = cfg
 
-        os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
+        # This line may be necessary for logging
+        # os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
 
         # Finds root address, will need to be checked in ARC.
         ADDR = Path.cwd()  # /Users/duncan.boyd/Documents/WorkCode/workvenv
         ADDR = ADDR / "UofC2022"
-        print(ADDR)
 
         # Imports functions
         sys.path.append(str(ADDR / set["addrs"]["FUNC_ADDR"]))
@@ -71,7 +73,7 @@ if __name__ == "__main__":
             image_test,
         ) = get_brains(set, ADDR)
 
-        # Declare, compile, fit the model.
+        # Declares, compiles, fits the model.
         logging.debug("Compiling UNet")
         model = im_u_net(stats[0], stats[1], stats[2], stats[3], set)
         opt = tf.keras.optimizers.Adam(lr=1e-3, decay=1e-7)
@@ -92,7 +94,7 @@ if __name__ == "__main__":
             str(ADDR / set["addrs"]["IMCSV_ADDR"]), append=False, separator="|"
         )
 
-        # Fits model using training data, validation data.
+        # Fits model using training data, validation data
         logging.debug("Fitting UNet")
         model.fit(
             kspace_train,
@@ -104,6 +106,7 @@ if __name__ == "__main__":
         )
 
         # Saves model
+        # Note: Loading does not work due to custom layers
         model.save(ADDR / set["addrs"]["IMMODEL_ADDR"])
 
         # Makes predictions
@@ -118,7 +121,7 @@ if __name__ == "__main__":
         logging.info("total time: " + str(int(end_time - init_time)))
         logging.info("time completed: " + time_finished)
 
-        # Displays predictions
+        # Displays predictions (Not necessary for ARC)
         plt.figure(figsize=(15, 15))
         plt.subplot(1, 2, 1)
         plt.imshow((255.0 - image_test[0]), cmap="Greys")
@@ -132,4 +135,5 @@ if __name__ == "__main__":
 
         return
 
+    # Runs the main program above
     main()
