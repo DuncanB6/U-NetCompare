@@ -4,10 +4,6 @@
 # This is the beginning of a complex U-Net. Code is written, returns poor quality images.
 # Hopefully poor quality is due to training practices limited by local hardware and not by method.
 
-# This branch has hydra implemente for the config file. However,
-# Hydra's logging is blocking my own and doesn't seem to be working.
-# Otherwise, code functions well.
-
 # To do:
 # Find out how to load models with custom layers and functions
 # Data augmentation ( from keras.preprocessing.image import ImageDataGenerator) )
