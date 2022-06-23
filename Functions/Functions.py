@@ -15,7 +15,7 @@ from keras.preprocessing.image import ImageDataGenerator
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
 tf.disable_v2_behavior()
 
-
+# Generates augmented images
 def data_aug(image_train, mask, stats, set):
     seed = 905
     image_datagen = ImageDataGenerator(
@@ -74,7 +74,6 @@ def ifft_layer(kspace):
 
 
 # Upgraded version, returns fewer arrays but with a faster and more efficient method.
-# Still need to figure out the imaginary image domain stuff.
 def get_brains(set, ADDR):
 
     # Note: In train, one file is (174, 256, 256).
@@ -91,76 +90,100 @@ def get_brains(set, ADDR):
     shape = (256, 256)
     norm = np.sqrt(shape[0] * shape[1])
 
-    image_train = []
-    kspace_train = []
-    count = 0
-    for i in random.sample(range(0, len(kspace_files_train)), len(kspace_files_train)):
-        brain = np.load(kspace_files_train[i]) / norm
-        if count >= set["params"]["NUM_TRAIN"]:
-            break
-        for i in random.sample(range(0, brain.shape[0]), brain.shape[0]):
-            image_train.append(
-                np.abs(np.fft.ifft2(brain[i, :, :, 0] + 1j * brain[i, :, :, 1])).astype(
-                    np.float64
-                )
-            )
-            brain[i, mask, :] = 0
-            kspace_train.append(brain[i].astype(np.float64))
-            count += 1
-            if count >= set["params"]["NUM_TRAIN"]:
-                break
-    kspace_train = np.asarray(kspace_train)
+    # Get number of samples
+    ntrain = 0
+    for ii in range(len(kspace_files_train)):
+        ntrain += np.load(kspace_files_train[ii]).shape[0]
+
+    # Load train data
+    image_train = np.zeros((ntrain, shape[0], shape[1], 2))
+    kspace_train = np.zeros((ntrain, shape[0], shape[1], 2))
+    aux_counter = 0
+    for ii in range(len(kspace_files_train)):
+        aux_kspace = np.load(kspace_files_train[ii]) / norm
+        aux = aux_kspace.shape[0]
+        aux2 = np.fft.ifft2(aux_kspace[:, :, :, 0] + 1j * aux_kspace[:, :, :, 1])
+        image_train[aux_counter : aux_counter + aux, :, :, 0] = aux2.real
+        image_train[aux_counter : aux_counter + aux, :, :, 1] = aux2.imag
+        kspace_train[aux_counter : aux_counter + aux, :, :, 0] = aux_kspace[:, :, :, 0]
+        kspace_train[aux_counter : aux_counter + aux, :, :, 1] = aux_kspace[:, :, :, 1]
+        aux_counter += aux
+
+    # Shuffle training
+    indexes = np.arange(image_train.shape[0], dtype=int)
+    np.random.shuffle(indexes)
+    image_train = image_train[indexes]
+    kspace_train = kspace_train[indexes]
+    kspace_train[:, mask, :] = 0
+
+    kspace_train = kspace_train[: set["params"]["NUM_TRAIN"], :, :, :]
+    image_train = image_train[: set["params"]["NUM_TRAIN"], :, :, :]
+
     logging.info("kspace train: " + str(kspace_train.shape))
-    image_train = np.asarray(image_train)
-    image_train = np.expand_dims(image_train, axis=3)
     logging.info("image train: " + str(image_train.shape))
 
-    image_val = []
-    kspace_val = []
-    count = 0
-    for i in random.sample(range(0, len(kspace_files_val)), len(kspace_files_val)):
-        brain = np.load(kspace_files_val[i]) / norm
-        if count >= set["params"]["NUM_VAL"]:
-            break
-        for i in random.sample(range(0, brain.shape[0]), brain.shape[0]):
-            image_val.append(
-                np.abs(np.fft.ifft2(brain[i, :, :, 0] + 1j * brain[i, :, :, 1])).astype(
-                    np.float64
-                )
-            )
-            brain[i, mask, :] = 0
-            kspace_val.append(brain[i].astype(np.float64))
-            count += 1
-            if count >= set["params"]["NUM_VAL"]:
-                break
-    kspace_val = np.asarray(kspace_val)
+    # Get number of samples
+    nval = 0
+    for ii in range(len(kspace_files_val)):
+        nval += np.load(kspace_files_val[ii]).shape[0]
+
+    # Load val data
+    image_val = np.zeros((nval, shape[0], shape[1], 2))
+    kspace_val = np.zeros((nval, shape[0], shape[1], 2))
+    aux_counter = 0
+    for ii in range(len(kspace_files_val)):
+        aux_kspace = np.load(kspace_files_val[ii]) / norm
+        aux = aux_kspace.shape[0]
+        aux2 = np.fft.ifft2(aux_kspace[:, :, :, 0] + 1j * aux_kspace[:, :, :, 1])
+        image_val[aux_counter : aux_counter + aux, :, :, 0] = aux2.real
+        image_val[aux_counter : aux_counter + aux, :, :, 1] = aux2.imag
+        kspace_val[aux_counter : aux_counter + aux, :, :, 0] = aux_kspace[:, :, :, 0]
+        kspace_val[aux_counter : aux_counter + aux, :, :, 1] = aux_kspace[:, :, :, 1]
+        aux_counter += aux
+
+    # Shuffle valing
+    indexes = np.arange(image_val.shape[0], dtype=int)
+    np.random.shuffle(indexes)
+    image_val = image_val[indexes]
+    kspace_val = kspace_val[indexes]
+    kspace_val[:, mask, :] = 0
+
+    kspace_val = kspace_val[: set["params"]["NUM_VAL"], :, :, :]
+    image_val = image_val[: set["params"]["NUM_VAL"], :, :, :]
+
     logging.info("kspace val: " + str(kspace_val.shape))
-    image_val = np.asarray(image_val)
-    image_val = np.expand_dims(image_val, axis=3)
     logging.info("image val: " + str(image_val.shape))
 
-    image_test = []
-    kspace_test = []
-    count = 0
-    for i in random.sample(range(0, len(kspace_files_test)), len(kspace_files_test)):
-        brain = np.load(kspace_files_test[i]) / norm
-        if count >= set["params"]["NUM_TEST"]:
-            break
-        for i in random.sample(range(0, brain.shape[0]), brain.shape[0]):
-            image_test.append(
-                np.abs(np.fft.ifft2(brain[i, :, :, 0] + 1j * brain[i, :, :, 1])).astype(
-                    np.float64
-                )
-            )
-            brain[i, mask, :] = 0
-            kspace_test.append(brain[i].astype(np.float64))
-            count += 1
-            if count >= set["params"]["NUM_TEST"]:
-                break
-    kspace_test = np.asarray(kspace_test)
+    # Get number of samples
+    ntest = 0
+    for ii in range(len(kspace_files_test)):
+        ntest += np.load(kspace_files_test[ii]).shape[0]
+
+    # Load test data
+    image_test = np.zeros((ntest, shape[0], shape[1], 2))
+    kspace_test = np.zeros((ntest, shape[0], shape[1], 2))
+    aux_counter = 0
+    for ii in range(len(kspace_files_test)):
+        aux_kspace = np.load(kspace_files_test[ii]) / norm
+        aux = aux_kspace.shape[0]
+        aux2 = np.fft.ifft2(aux_kspace[:, :, :, 0] + 1j * aux_kspace[:, :, :, 1])
+        image_test[aux_counter : aux_counter + aux, :, :, 0] = aux2.real
+        image_test[aux_counter : aux_counter + aux, :, :, 1] = aux2.imag
+        kspace_test[aux_counter : aux_counter + aux, :, :, 0] = aux_kspace[:, :, :, 0]
+        kspace_test[aux_counter : aux_counter + aux, :, :, 1] = aux_kspace[:, :, :, 1]
+        aux_counter += aux
+
+    # Shuffle testing
+    indexes = np.arange(image_test.shape[0], dtype=int)
+    np.random.shuffle(indexes)
+    image_test = image_test[indexes]
+    kspace_test = kspace_test[indexes]
+    kspace_test[:, mask, :] = 0
+
+    kspace_test = kspace_test[: set["params"]["NUM_TEST"], :, :, :]
+    image_test = image_test[: set["params"]["NUM_TEST"], :, :, :]
+
     logging.info("kspace test: " + str(kspace_test.shape))
-    image_test = np.asarray(image_test)
-    image_test = np.expand_dims(image_test, axis=3)
     logging.info("image test: " + str(image_test.shape))
 
     logging.debug("Scans formatted")
@@ -168,16 +191,16 @@ def get_brains(set, ADDR):
     # Question: image_train seems to be the reconstructed images here, but it's imaginary. Why is image domain imaginary?
     # Especially since the WNet returns a real image. Does the imaginary part in image domain yield any valuable information?
     # For the time being, I'm just going to load the stats manually.
-    stats = np.load(str(ADDR / set["addrs"]["STATS_ADDR"]))
+    # stats = np.load(str(ADDR / set["addrs"]["STATS_ADDR"]))
 
-    """# save k-space and image domain stats
+    # save k-space and image domain stats
     stats = np.zeros(4)
     stats[0] = kspace_train.mean()
     stats[1] = kspace_train.std()
-    aux = np.abs(image_train[:,:,:,0] +1j*image_train[:,:,:,1])
+    aux = np.abs(image_train[:, :, :, 0] + 1j * image_train[:, :, :, 1])
     stats[2] = aux.mean()
     stats[3] = aux.std()
-    np.save(STATS_ADDR, stats)"""
+    np.save(str(ADDR / set["addrs"]["STATS_ADDR"]), stats)
 
     return (
         mask,

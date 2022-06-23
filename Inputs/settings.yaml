@@ -11,7 +11,7 @@ addrs:
   TRAIN_ADDR: Train/*.npy
   VAL_ADDR: Val/*.npy
   MASK_ADDR: Inputs/mask.npy
-  STATS_ADDR: Inputs/stats.npy
+  STATS_ADDR: Outputs/stats.npy
   IMMODEL_ADDR: Outputs/immodel
   REMODEL_ADDR: Outputs/remodel
   IMLOG_ADDR: Outputs/CompUNet.log

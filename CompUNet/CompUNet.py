@@ -11,6 +11,10 @@
 # Unit testing, containerization, turning code into package (optional, would like to review with mike)
 # Determine the actual experiments/training to be done on ARC (once other tasks are complete)
 
+# Questions:
+# Is data aug necessary?
+#
+
 # Imports
 import time
 from datetime import datetime
@@ -56,8 +60,13 @@ def main(cfg: DictConfig):
         image_test,
     ) = get_brains(set, ADDR)
 
-    kspace = np.fft.fft2(image_train[0])
-    image = np.abs(np.fft.ifft2(kspace))
+    # Block that reverts arrays to the way my code processes them.
+    image_train = image_train[:, :, :, 0]
+    image_train = np.expand_dims(image_train, axis=3)
+    image_val = image_val[:, :, :, 0]
+    image_val = np.expand_dims(image_val, axis=3)
+    image_test = image_test[:, :, :, 0]
+    image_test = np.expand_dims(image_test, axis=3)
 
     # Declares, compiles, fits the model.
     logging.info("Compiling UNet")
@@ -77,7 +86,7 @@ def main(cfg: DictConfig):
     csvl = tf.keras.callbacks.CSVLogger(
         str(ADDR / set["addrs"]["IMCSV_ADDR"]), append=False, separator="|"
     )
-    image_gen = data_aug(image_train, mask, stats, set)
+    # image_gen = data_aug(image_train, mask, stats, set)
 
     # Fits model using training data, validation data
     logging.info("Fitting UNet")
