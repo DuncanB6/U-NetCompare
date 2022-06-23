@@ -1,7 +1,7 @@
-Duncan Boyd, June 14, 2022
+Duncan Boyd, June 22, 2022
 
 Description: This repository is for all code written as a summer student in the Seaman MRI Center 2022. 
-Comp UNet is the code I'm working on, and is as suggested a complex UNet.
+Comp UNet is the code I'm working on, and is as suggested a complex UNet, as well as a regular UNet.
 The other UNet is a regular UNet.
 
 ---
