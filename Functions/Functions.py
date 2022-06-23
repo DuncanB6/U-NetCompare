@@ -15,6 +15,40 @@ from keras.preprocessing.image import ImageDataGenerator
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
 tf.disable_v2_behavior()
 
+
+def data_aug(image_train, mask, stats, set):
+    seed = 905
+    image_datagen = ImageDataGenerator(
+        rotation_range=40,
+        width_shift_range=0.075,
+        height_shift_range=0.075,
+        shear_range=0.25,
+        zoom_range=0.25,
+        horizontal_flip=True,
+        vertical_flip=True,
+        fill_mode="nearest",
+    )
+
+    image_datagen.fit(image_train, augment=True)
+
+    image_generator = image_datagen.flow(
+        image_train, batch_size=set["params"]["BATCH_SIZE"]
+    )
+
+    def generator(gen, mask, stats):
+        while True:
+            image = gen.next()
+            kspace = np.fft.fft2(image)
+            kspace[:, mask, :] = 0
+            kspace = (kspace - stats[0]) / stats[1]
+            print("Kspace:", np.max(kspace))
+            print("Image:", image.shape)
+            yield (kspace, image)
+
+    # combine generators into one which yields image and masks
+    return generator(image_generator, mask, stats)
+
+
 # Scheduler, currently just a stolen one as I don't know what I should be going for.
 def schedule(epoch, lr):
     if epoch < 10:
@@ -53,7 +87,7 @@ def get_brains(set, ADDR):
     logging.info("test scans: " + str(len(kspace_files_test)))
     logging.debug("Scans loaded")
 
-    samp_mask = np.load(str(ADDR / set["addrs"]["MASK_ADDR"]))
+    mask = np.load(str(ADDR / set["addrs"]["MASK_ADDR"]))
     shape = (256, 256)
     norm = np.sqrt(shape[0] * shape[1])
 
@@ -70,7 +104,7 @@ def get_brains(set, ADDR):
                     np.float64
                 )
             )
-            brain[i, samp_mask, :] = 0
+            brain[i, mask, :] = 0
             kspace_train.append(brain[i].astype(np.float64))
             count += 1
             if count >= set["params"]["NUM_TRAIN"]:
@@ -94,7 +128,7 @@ def get_brains(set, ADDR):
                     np.float64
                 )
             )
-            brain[i, samp_mask, :] = 0
+            brain[i, mask, :] = 0
             kspace_val.append(brain[i].astype(np.float64))
             count += 1
             if count >= set["params"]["NUM_VAL"]:
@@ -118,7 +152,7 @@ def get_brains(set, ADDR):
                     np.float64
                 )
             )
-            brain[i, samp_mask, :] = 0
+            brain[i, mask, :] = 0
             kspace_test.append(brain[i].astype(np.float64))
             count += 1
             if count >= set["params"]["NUM_TEST"]:
@@ -146,6 +180,7 @@ def get_brains(set, ADDR):
     np.save(STATS_ADDR, stats)"""
 
     return (
+        mask,
         stats,
         kspace_train,
         image_train,
