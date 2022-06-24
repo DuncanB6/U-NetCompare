@@ -6,14 +6,13 @@
 
 # To do:
 # Find out how to load models with custom layers and functions (error due to modifyable channels out)
-# Data augmentation
 # Revise scheduler (unsure what this should be doing)
 # Unit testing, containerization, turning code into package (optional, would like to review with mike)
 # Determine the actual experiments/training to be done on ARC (once other tasks are complete)
 
 # Questions:
 # Can randomization of datasets be kept for ARC testing, or should this be scrapped as
-# to give both UNets an identical dataset?
+# to give both UNets an identical dataset? (Yes, but make sure it's the same for both.)
 
 # Imports
 import time
@@ -23,22 +22,10 @@ import matplotlib.pyplot as plt
 import logging
 import sys
 from pathlib import Path
-import hydra
-from omegaconf import DictConfig
 import numpy as np
 
-# Import settings with hydra
-@hydra.main(
-    version_base=None,
-    config_path="../Inputs",
-    config_name="settings",
-)
-def main(cfg: DictConfig):
-    set = cfg
 
-    # Finds root address, will need to be checked in ARC.
-    ADDR = Path.cwd()  # /Users/duncan.boyd/Documents/WorkCode/workvenv
-    ADDR = ADDR / "UofC2022"
+def immain(set, ADDR):
 
     # Imports functions
     sys.path.append(str(ADDR / set["addrs"]["FUNC_ADDR"]))
@@ -99,6 +86,7 @@ def main(cfg: DictConfig):
         validation_data=(kspace_val, image_val),
         callbacks=[lrs, mc, es, csvl],
     )
+    model.summary()
 
     # Saves model
     # Note: Loading does not work due to custom layers. It want an unpit for out_channels
@@ -141,4 +129,4 @@ def main(cfg: DictConfig):
 if __name__ == "__main__":
 
     # Runs the main program above
-    main()
+    immain()

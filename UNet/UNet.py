@@ -14,18 +14,8 @@ import hydra
 from omegaconf import DictConfig
 import numpy as np
 
-# Import settings with hydra
-@hydra.main(
-    version_base=None,
-    config_path="../Inputs",
-    config_name="settings",
-)
-def main(cfg: DictConfig) -> None:
-    set = cfg
 
-    # Finds root address, will need to be checked in ARC.
-    ADDR = Path.cwd()  # /Users/duncan.boyd/Documents/WorkCode/workvenv
-    ADDR = ADDR / "UofC2022"
+def remain(set, ADDR):
 
     # Imports functions
     sys.path.append(str(ADDR / set["addrs"]["FUNC_ADDR"]))
@@ -86,6 +76,7 @@ def main(cfg: DictConfig) -> None:
         validation_data=(kspace_val, image_val),
         callbacks=[lrs, mc, es, csvl],
     )
+    model.summary()
 
     # Saves model
     # Note: Loading does not work due to custom layers
@@ -126,4 +117,4 @@ def main(cfg: DictConfig) -> None:
 if __name__ == "__main__":
 
     # Runs the main program above
-    main()
+    remain()
