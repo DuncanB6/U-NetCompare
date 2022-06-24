@@ -7,8 +7,7 @@ The other UNet is a regular UNet.
 ---
 
 Status: Currently working to improve usabiity and ready it for large scale testing. Once that's done, I'll be working 
-towards sending larger scale jobs to ARC. I've registered for an account, but have been unable to connect to ARC so maybe
-the account isn't working yet. 
+towards sending larger scale jobs to ARC.
 
 ---
 
