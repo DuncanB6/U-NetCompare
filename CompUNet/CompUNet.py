@@ -1,19 +1,19 @@
-# June 22, 2022
+# June 24, 2022
 
 # Status:
-# This is the beginning of a complex U-Net. Code is written, returns poor quality images.
+# This is the beginning of a complex U-Net. Returns poor quality images.
 # Hopefully poor quality is due to training practices limited by local hardware and not by method.
 
 # To do:
 # Find out how to load models with custom layers and functions (error due to modifyable channels out)
-# Data augmentation (currently unavailable as rec images are real only)
+# Data augmentation
 # Revise scheduler (unsure what this should be doing)
 # Unit testing, containerization, turning code into package (optional, would like to review with mike)
 # Determine the actual experiments/training to be done on ARC (once other tasks are complete)
 
 # Questions:
-# Is data aug necessary?
-#
+# Can randomization of datasets be kept for ARC testing, or should this be scrapped as
+# to give both UNets an identical dataset?
 
 # Imports
 import time
@@ -61,6 +61,7 @@ def main(cfg: DictConfig):
     ) = get_brains(set, ADDR)
 
     # Block that reverts arrays to the way my code processes them.
+    rec_train = np.copy(image_train)
     image_train = image_train[:, :, :, 0]
     image_train = np.expand_dims(image_train, axis=3)
     image_val = image_val[:, :, :, 0]
@@ -86,22 +87,23 @@ def main(cfg: DictConfig):
     csvl = tf.keras.callbacks.CSVLogger(
         str(ADDR / set["addrs"]["IMCSV_ADDR"]), append=False, separator="|"
     )
-    # image_gen = data_aug(image_train, mask, stats, set)
+    combined = data_aug(rec_train, mask, stats, set)
 
     # Fits model using training data, validation data
     logging.info("Fitting UNet")
     model.fit(
-        kspace_train,
-        image_train,
-        validation_data=(kspace_val, image_val),
-        batch_size=set["params"]["BATCH_SIZE"],
+        combined,
         epochs=set["params"]["EPOCHS"],
+        steps_per_epoch=rec_train.shape[0] / set["params"]["BATCH_SIZE"],
+        verbose=1,
+        validation_data=(kspace_val, image_val),
         callbacks=[lrs, mc, es, csvl],
     )
 
     # Saves model
     # Note: Loading does not work due to custom layers. It want an unpit for out_channels
     # while loading, but this is determined in the UNet.
+    # Note: Code below this point will be removed for ARC testing
     model.save(ADDR / set["addrs"]["IMMODEL_ADDR"])
     """model = tf.keras.models.load_model(
         ADDR / set["addrs"]["IMMODEL_ADDR"],

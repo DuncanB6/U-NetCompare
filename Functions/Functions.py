@@ -8,7 +8,6 @@ import numpy as np
 import glob
 from keras import backend as K
 from keras.models import Model
-import random
 import logging
 from keras.preprocessing.image import ImageDataGenerator
 
@@ -16,9 +15,9 @@ os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
 tf.disable_v2_behavior()
 
 # Generates augmented images
-def data_aug(image_train, mask, stats, set):
+def data_aug(rec_train, mask, stats, set):
     seed = 905
-    image_datagen = ImageDataGenerator(
+    image_datagen1 = ImageDataGenerator(
         rotation_range=40,
         width_shift_range=0.075,
         height_shift_range=0.075,
@@ -29,24 +28,47 @@ def data_aug(image_train, mask, stats, set):
         fill_mode="nearest",
     )
 
-    image_datagen.fit(image_train, augment=True)
-
-    image_generator = image_datagen.flow(
-        image_train, batch_size=set["params"]["BATCH_SIZE"]
+    image_datagen2 = ImageDataGenerator(
+        rotation_range=40,
+        width_shift_range=0.075,
+        height_shift_range=0.075,
+        shear_range=0.25,
+        zoom_range=0.25,
+        horizontal_flip=True,
+        vertical_flip=True,
+        fill_mode="nearest",
     )
 
-    def generator(gen, mask, stats):
+    image_datagen1.fit(rec_train[:, :, :, 0, np.newaxis], augment=True, seed=seed)
+    image_datagen2.fit(rec_train[:, :, :, 1, np.newaxis], augment=True, seed=seed)
+
+    image_gen1 = image_datagen1.flow(
+        rec_train[:, :, :, 0, np.newaxis],
+        batch_size=set["params"]["BATCH_SIZE"],
+        seed=seed,
+    )
+    image_gen2 = image_datagen1.flow(
+        rec_train[:, :, :, 1, np.newaxis],
+        batch_size=set["params"]["BATCH_SIZE"],
+        seed=seed,
+    )
+
+    def combine_generator(gen1, gen2, mask, stats):
         while True:
-            image = gen.next()
-            kspace = np.fft.fft2(image)
-            kspace[:, mask, :] = 0
-            kspace = (kspace - stats[0]) / stats[1]
-            print("Kspace:", np.max(kspace))
-            print("Image:", image.shape)
-            yield (kspace, image)
+            rec_real = gen1.next()
+            rec_imag = gen2.next()
+            kspace = np.fft.fft2(rec_real[:, :, :, 0] + 1j * rec_imag[:, :, :, 0])
+            kspace2 = np.zeros((kspace.shape[0], kspace.shape[1], kspace.shape[2], 2))
+            kspace2[:, :, :, 0] = kspace.real
+            kspace2[:, :, :, 1] = kspace.imag
+            kspace2[:, mask, :] = 0
+            kspace2 = (kspace2 - stats[0]) / stats[1]
+            rec = rec_real[:, :, :, 0]
+            rec = np.expand_dims(rec, axis=3)
+            yield (kspace2, rec)
 
     # combine generators into one which yields image and masks
-    return generator(image_generator, mask, stats)
+    return combine_generator(image_gen1, image_gen2, mask, stats)
 
 
 # Scheduler, currently just a stolen one as I don't know what I should be going for.
@@ -188,12 +210,7 @@ def get_brains(set, ADDR):
 
     logging.debug("Scans formatted")
 
-    # Question: image_train seems to be the reconstructed images here, but it's imaginary. Why is image domain imaginary?
-    # Especially since the WNet returns a real image. Does the imaginary part in image domain yield any valuable information?
-    # For the time being, I'm just going to load the stats manually.
-    # stats = np.load(str(ADDR / set["addrs"]["STATS_ADDR"]))
-
-    # save k-space and image domain stats
+    # Save k-space and image domain stats
     stats = np.zeros(4)
     stats[0] = kspace_train.mean()
     stats[1] = kspace_train.std()

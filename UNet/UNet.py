@@ -12,6 +12,7 @@ import sys
 from pathlib import Path
 import hydra
 from omegaconf import DictConfig
+import numpy as np
 
 # Import settings with hydra
 @hydra.main(
@@ -28,7 +29,7 @@ def main(cfg: DictConfig) -> None:
 
     # Imports functions
     sys.path.append(str(ADDR / set["addrs"]["FUNC_ADDR"]))
-    from Functions import get_brains, re_u_net, nrmse, schedule
+    from Functions import get_brains, re_u_net, nrmse, schedule, data_aug
 
     logging.info("Initialized re UNet")
     init_time = time.time()
@@ -36,6 +37,7 @@ def main(cfg: DictConfig) -> None:
     # Loads data
     logging.info("Loading data")
     (
+        mask,
         stats,
         kspace_train,
         image_train,
@@ -44,6 +46,15 @@ def main(cfg: DictConfig) -> None:
         kspace_test,
         image_test,
     ) = get_brains(set, ADDR)
+
+    # Block that reverts arrays to the way my code processes them.
+    rec_train = np.copy(image_train)
+    image_train = image_train[:, :, :, 0]
+    image_train = np.expand_dims(image_train, axis=3)
+    image_val = image_val[:, :, :, 0]
+    image_val = np.expand_dims(image_val, axis=3)
+    image_test = image_test[:, :, :, 0]
+    image_test = np.expand_dims(image_test, axis=3)
 
     # Declares, compiles, fits the model.
     logging.info("Compiling UNet")
@@ -63,20 +74,22 @@ def main(cfg: DictConfig) -> None:
     csvl = tf.keras.callbacks.CSVLogger(
         str(ADDR / set["addrs"]["RECSV_ADDR"]), append=False, separator="|"
     )
+    combined = data_aug(rec_train, mask, stats, set)
 
     # Fits model using training data, validation data
     logging.info("Fitting UNet")
     model.fit(
-        kspace_train,
-        image_train,
-        validation_data=(kspace_val, image_val),
-        batch_size=set["params"]["BATCH_SIZE"],
+        combined,
         epochs=set["params"]["EPOCHS"],
+        steps_per_epoch=rec_train.shape[0] / set["params"]["BATCH_SIZE"],
+        verbose=1,
+        validation_data=(kspace_val, image_val),
         callbacks=[lrs, mc, es, csvl],
     )
 
     # Saves model
     # Note: Loading does not work due to custom layers
+    # Note: Code below this point will be removed for ARC testing
     model.save(ADDR / set["addrs"]["REMODEL_ADDR"])
     model = tf.keras.models.load_model(
         ADDR / set["addrs"]["REMODEL_ADDR"], custom_objects={"nrmse": nrmse}
