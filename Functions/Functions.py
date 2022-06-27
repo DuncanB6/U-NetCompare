@@ -10,9 +10,48 @@ from keras import backend as K
 from keras.models import Model
 import logging
 from keras.preprocessing.image import ImageDataGenerator
+import random
+import sigpy.mri as sp
 
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
 tf.disable_v2_behavior()
+
+# Creates a number of masks (modifiable in settings) with a 22% poisson disk.
+def mask_gen(ADDR, cfg):
+
+    files = glob.glob(str(ADDR / cfg["addrs"]["MASKS_ADDR"]))
+    for f in files:
+        os.remove(f)
+
+    for k in range(cfg["params"]["NUM_MASKS"]):
+        mask = sp.poisson(
+            img_shape=(256, 256),
+            accel=5.5,
+            dtype=int,
+            crop_corner=True,
+        )
+
+        ones = 0
+        zeros = 0
+
+        for i in range(256):
+            for j in range(256):
+                if mask[i][j] > 0:
+                    ones += 1
+                else:
+                    zeros += 1
+
+        ratio = ones / zeros * 100.0
+        ratio = float(f"{ratio:.4f}")
+
+        print(ones, zeros, ratio)
+        # addr = "UofC/Inputs/Masks/mask" + str(int(k)) + "_" + str(ratio) + ".npy"
+        np.save(
+            "UofC2022/Inputs/Masks/mask" + str(int(k)) + "_" + str(ratio) + ".npy", mask
+        )
+
+    return
+
 
 # Generates augmented images
 def data_aug(rec_train, mask, stats, cfg):
@@ -61,7 +100,9 @@ def data_aug(rec_train, mask, stats, cfg):
             kspace2 = np.zeros((kspace.shape[0], kspace.shape[1], kspace.shape[2], 2))
             kspace2[:, :, :, 0] = kspace.real
             kspace2[:, :, :, 1] = kspace.imag
-            kspace2[:, mask, :] = 0
+            kspace2[
+                :, mask[int(random.randint(0, (cfg["params"]["NUM_MASKS"] - 1)))], :
+            ] = 0
             kspace2 = (kspace2 - stats[0]) / stats[1]
             rec = rec_real[:, :, :, 0]
             rec = np.expand_dims(rec, axis=3)
@@ -108,9 +149,16 @@ def get_brains(cfg, ADDR):
     logging.info("test scans: " + str(len(kspace_files_test)))
     logging.debug("Scans loaded")
 
-    mask = np.load(str(ADDR / cfg["addrs"]["MASK_ADDR"]))
     shape = (256, 256)
     norm = np.sqrt(shape[0] * shape[1])
+
+    mask = np.zeros((cfg["params"]["NUM_MASKS"], shape[0], shape[1]))
+    masks = np.asarray(glob.glob(str(ADDR / cfg["addrs"]["MASKS_ADDR"])))
+    for i in range(len(masks)):
+        mask[i] = np.load(masks[i])
+    mask = mask.astype(int)
+    logging.info("masks: " + str(len(mask)))
+    # mask = np.load(str(ADDR / cfg["addrs"]["MASK_ADDR"]))
 
     # Get number of samples
     ntrain = 0
@@ -136,7 +184,7 @@ def get_brains(cfg, ADDR):
     np.random.shuffle(indexes)
     image_train = image_train[indexes]
     kspace_train = kspace_train[indexes]
-    kspace_train[:, mask, :] = 0
+    kspace_train[:, mask[int(random.randint(0, cfg["params"]["NUM_MASKS"] - 1))], :] = 0
 
     kspace_train = kspace_train[: cfg["params"]["NUM_TRAIN"], :, :, :]
     image_train = image_train[: cfg["params"]["NUM_TRAIN"], :, :, :]
@@ -168,7 +216,7 @@ def get_brains(cfg, ADDR):
     np.random.shuffle(indexes)
     image_val = image_val[indexes]
     kspace_val = kspace_val[indexes]
-    kspace_val[:, mask, :] = 0
+    kspace_train[:, mask[int(random.randint(0, cfg["params"]["NUM_MASKS"] - 1))], :] = 0
 
     kspace_val = kspace_val[: cfg["params"]["NUM_VAL"], :, :, :]
     image_val = image_val[: cfg["params"]["NUM_VAL"], :, :, :]
@@ -200,7 +248,9 @@ def get_brains(cfg, ADDR):
     np.random.shuffle(indexes)
     image_test = image_test[indexes]
     kspace_test = kspace_test[indexes]
-    kspace_test[:, mask, :] = 0
+    kspace_train[
+        :, mask[int(random.randint(0, (cfg["params"]["NUM_MASKS"] - 1)))], :
+    ] = 0
 
     kspace_test = kspace_test[: cfg["params"]["NUM_TEST"], :, :, :]
     image_test = image_test[: cfg["params"]["NUM_TEST"], :, :, :]
@@ -312,7 +362,7 @@ def im_u_net(mu1, sigma1, mu2, sigma2, cfg, H=256, W=256, channels=2, kshape=(3,
     conv7 = CompConv2D(24 * MOD)(conv7)
     conv7 = CompConv2D(24 * MOD)(conv7)
 
-    # conv8 = layers.Conv2D(2, (1, 1), activation='linear')(conv7)
+    # conv8 = layers.Conv2D(2, (1, 1), activation="linear")(conv7)
     conv8 = CompConv2D(1)(conv7)
     res1 = layers.Add()([conv8, inputs])
     res1_scaled = layers.Lambda(lambda res1: (res1 * sigma1 + mu1))(res1)
@@ -323,9 +373,8 @@ def im_u_net(mu1, sigma1, mu2, sigma2, cfg, H=256, W=256, channels=2, kshape=(3,
     model = Model(inputs=inputs, outputs=final)
     return model
 
-    # U-Net model.
 
-
+# U-Net model.
 def re_u_net(mu1, sigma1, mu2, sigma2, H=256, W=256, channels=2, kshape=(3, 3)):
 
     inputs = Input(shape=(H, W, channels))

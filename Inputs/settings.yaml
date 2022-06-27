@@ -6,11 +6,11 @@ params:
   NUM_TRAIN: 10 # max 4254
   NUM_VAL: 5 # max 1700
   NUM_TEST: 5 # max 1700
+  NUM_MASKS: 10
 addrs:
   TEST_ADDR: Test/*.npy
   TRAIN_ADDR: Train/*.npy
   VAL_ADDR: Val/*.npy
-  MASK_ADDR: Inputs/mask.npy
   STATS_ADDR: Outputs/stats.npy
   IMMODEL_ADDR: Outputs/immodel
   REMODEL_ADDR: Outputs/remodel
@@ -21,4 +21,5 @@ addrs:
   RECHEC_ADDR: Outputs/recheck
   IMCSV_ADDR: Outputs/CompUNet_Train.log
   RECSV_ADDR: Outputs/UNet_Train.log
+  MASKS_ADDR: Inputs/Masks/*.npy
 

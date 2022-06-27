@@ -1,6 +1,4 @@
 # Basic Unet model that mirrors the complex Unet, but does not use the CompConv2D layer.
-# June 21, 2022
-
 
 # Imports
 import time
@@ -9,10 +7,6 @@ import tensorflow as tf
 import matplotlib.pyplot as plt
 import logging
 import sys
-from pathlib import Path
-import hydra
-from omegaconf import DictConfig
-import numpy as np
 
 
 def remain(
@@ -26,6 +20,7 @@ def remain(
     image_val,
     kspace_test,
     image_test,
+    rec_train,
 ):
 
     # Imports functions
@@ -34,15 +29,6 @@ def remain(
 
     logging.info("Initialized re UNet")
     init_time = time.time()
-
-    # Block that reverts arrays to the way my code processes them.
-    rec_train = np.copy(image_train)
-    image_train = image_train[:, :, :, 0]
-    image_train = np.expand_dims(image_train, axis=3)
-    image_val = image_val[:, :, :, 0]
-    image_val = np.expand_dims(image_val, axis=3)
-    image_test = image_test[:, :, :, 0]
-    image_test = np.expand_dims(image_test, axis=3)
 
     # Declares, compiles, fits the model.
     logging.info("Compiling UNet")
