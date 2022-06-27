@@ -15,27 +15,25 @@ from omegaconf import DictConfig
 import numpy as np
 
 
-def remain(set, ADDR):
+def remain(
+    cfg,
+    ADDR,
+    mask,
+    stats,
+    kspace_train,
+    image_train,
+    kspace_val,
+    image_val,
+    kspace_test,
+    image_test,
+):
 
     # Imports functions
-    sys.path.append(str(ADDR / set["addrs"]["FUNC_ADDR"]))
-    from Functions import get_brains, re_u_net, nrmse, schedule, data_aug
+    sys.path.append(str(ADDR / cfg["addrs"]["FUNC_ADDR"]))
+    from Functions import re_u_net, nrmse, schedule, data_aug
 
     logging.info("Initialized re UNet")
     init_time = time.time()
-
-    # Loads data
-    logging.info("Loading data")
-    (
-        mask,
-        stats,
-        kspace_train,
-        image_train,
-        kspace_val,
-        image_val,
-        kspace_test,
-        image_test,
-    ) = get_brains(set, ADDR)
 
     # Block that reverts arrays to the way my code processes them.
     rec_train = np.copy(image_train)
@@ -55,23 +53,23 @@ def remain(set, ADDR):
     # Callbacks to manage training
     lrs = tf.keras.callbacks.LearningRateScheduler(schedule)
     mc = tf.keras.callbacks.ModelCheckpoint(
-        filepath=str(ADDR / set["addrs"]["RECHEC_ADDR"]),
+        filepath=str(ADDR / cfg["addrs"]["RECHEC_ADDR"]),
         mode="min",
         monitor="val_loss",
         save_best_only=True,
     )
     es = tf.keras.callbacks.EarlyStopping(monitor="val_loss", patience=20, mode="min")
     csvl = tf.keras.callbacks.CSVLogger(
-        str(ADDR / set["addrs"]["RECSV_ADDR"]), append=False, separator="|"
+        str(ADDR / cfg["addrs"]["RECSV_ADDR"]), append=False, separator="|"
     )
-    combined = data_aug(rec_train, mask, stats, set)
+    combined = data_aug(rec_train, mask, stats, cfg)
 
     # Fits model using training data, validation data
     logging.info("Fitting UNet")
     model.fit(
         combined,
-        epochs=set["params"]["EPOCHS"],
-        steps_per_epoch=rec_train.shape[0] / set["params"]["BATCH_SIZE"],
+        epochs=cfg["params"]["EPOCHS"],
+        steps_per_epoch=rec_train.shape[0] / cfg["params"]["BATCH_SIZE"],
         verbose=1,
         validation_data=(kspace_val, image_val),
         callbacks=[lrs, mc, es, csvl],
@@ -81,9 +79,9 @@ def remain(set, ADDR):
     # Saves model
     # Note: Loading does not work due to custom layers
     # Note: Code below this point will be removed for ARC testing
-    model.save(ADDR / set["addrs"]["REMODEL_ADDR"])
+    model.save(ADDR / cfg["addrs"]["REMODEL_ADDR"])
     model = tf.keras.models.load_model(
-        ADDR / set["addrs"]["REMODEL_ADDR"], custom_objects={"nrmse": nrmse}
+        ADDR / cfg["addrs"]["REMODEL_ADDR"], custom_objects={"nrmse": nrmse}
     )
 
     # Makes predictions
@@ -110,11 +108,4 @@ def remain(set, ADDR):
 
     logging.info("Done")
 
-    return
-
-
-# Name guard
-if __name__ == "__main__":
-
-    # Runs the main program above
-    remain()
+    return model

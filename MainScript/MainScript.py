@@ -20,11 +20,47 @@ def main(cfg: DictConfig):
     # Imports both UNets
     sys.path.append(str(READDR))
     sys.path.append(str(IMADDR))
+    sys.path.append(str(ADDR / cfg["addrs"]["FUNC_ADDR"]))
     from UNet import remain
     from CompUNet import immain
+    from Functions import get_brains
 
-    immain(cfg, ADDR)
-    remain(cfg, ADDR)
+    # Loads data
+    (
+        mask,
+        stats,
+        kspace_train,
+        image_train,
+        kspace_val,
+        image_val,
+        kspace_test,
+        image_test,
+    ) = get_brains(cfg, ADDR)
+
+    immodel = immain(
+        cfg,
+        ADDR,
+        mask,
+        stats,
+        kspace_train,
+        image_train,
+        kspace_val,
+        image_val,
+        kspace_test,
+        image_test,
+    )
+    remodel = remain(
+        cfg,
+        ADDR,
+        mask,
+        stats,
+        kspace_train,
+        image_train,
+        kspace_val,
+        image_val,
+        kspace_test,
+        image_test,
+    )
     return
 
 

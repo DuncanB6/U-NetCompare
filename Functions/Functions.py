@@ -15,7 +15,7 @@ os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
 tf.disable_v2_behavior()
 
 # Generates augmented images
-def data_aug(rec_train, mask, stats, set):
+def data_aug(rec_train, mask, stats, cfg):
     seed = 905
     image_datagen1 = ImageDataGenerator(
         rotation_range=40,
@@ -44,12 +44,12 @@ def data_aug(rec_train, mask, stats, set):
 
     image_gen1 = image_datagen1.flow(
         rec_train[:, :, :, 0, np.newaxis],
-        batch_size=set["params"]["BATCH_SIZE"],
+        batch_size=cfg["params"]["BATCH_SIZE"],
         seed=seed,
     )
     image_gen2 = image_datagen1.flow(
         rec_train[:, :, :, 1, np.newaxis],
-        batch_size=set["params"]["BATCH_SIZE"],
+        batch_size=cfg["params"]["BATCH_SIZE"],
         seed=seed,
     )
 
@@ -96,19 +96,19 @@ def ifft_layer(kspace):
 
 
 # Upgraded version, returns fewer arrays but with a faster and more efficient method.
-def get_brains(set, ADDR):
+def get_brains(cfg, ADDR):
 
     # Note: In train, one file is (174, 256, 256).
-    kspace_files_train = np.asarray(glob.glob(str(ADDR / set["addrs"]["TRAIN_ADDR"])))
-    kspace_files_val = np.asarray(glob.glob(str(ADDR / set["addrs"]["VAL_ADDR"])))
-    kspace_files_test = np.asarray(glob.glob(str(ADDR / set["addrs"]["TEST_ADDR"])))
+    kspace_files_train = np.asarray(glob.glob(str(ADDR / cfg["addrs"]["TRAIN_ADDR"])))
+    kspace_files_val = np.asarray(glob.glob(str(ADDR / cfg["addrs"]["VAL_ADDR"])))
+    kspace_files_test = np.asarray(glob.glob(str(ADDR / cfg["addrs"]["TEST_ADDR"])))
 
     logging.info("train scans: " + str(len(kspace_files_train)))
     logging.info("val scans: " + str(len(kspace_files_val)))
     logging.info("test scans: " + str(len(kspace_files_test)))
     logging.debug("Scans loaded")
 
-    mask = np.load(str(ADDR / set["addrs"]["MASK_ADDR"]))
+    mask = np.load(str(ADDR / cfg["addrs"]["MASK_ADDR"]))
     shape = (256, 256)
     norm = np.sqrt(shape[0] * shape[1])
 
@@ -138,8 +138,8 @@ def get_brains(set, ADDR):
     kspace_train = kspace_train[indexes]
     kspace_train[:, mask, :] = 0
 
-    kspace_train = kspace_train[: set["params"]["NUM_TRAIN"], :, :, :]
-    image_train = image_train[: set["params"]["NUM_TRAIN"], :, :, :]
+    kspace_train = kspace_train[: cfg["params"]["NUM_TRAIN"], :, :, :]
+    image_train = image_train[: cfg["params"]["NUM_TRAIN"], :, :, :]
 
     logging.info("kspace train: " + str(kspace_train.shape))
     logging.info("image train: " + str(image_train.shape))
@@ -170,8 +170,8 @@ def get_brains(set, ADDR):
     kspace_val = kspace_val[indexes]
     kspace_val[:, mask, :] = 0
 
-    kspace_val = kspace_val[: set["params"]["NUM_VAL"], :, :, :]
-    image_val = image_val[: set["params"]["NUM_VAL"], :, :, :]
+    kspace_val = kspace_val[: cfg["params"]["NUM_VAL"], :, :, :]
+    image_val = image_val[: cfg["params"]["NUM_VAL"], :, :, :]
 
     logging.info("kspace val: " + str(kspace_val.shape))
     logging.info("image val: " + str(image_val.shape))
@@ -202,8 +202,8 @@ def get_brains(set, ADDR):
     kspace_test = kspace_test[indexes]
     kspace_test[:, mask, :] = 0
 
-    kspace_test = kspace_test[: set["params"]["NUM_TEST"], :, :, :]
-    image_test = image_test[: set["params"]["NUM_TEST"], :, :, :]
+    kspace_test = kspace_test[: cfg["params"]["NUM_TEST"], :, :, :]
+    image_test = image_test[: cfg["params"]["NUM_TEST"], :, :, :]
 
     logging.info("kspace test: " + str(kspace_test.shape))
     logging.info("image test: " + str(image_test.shape))
@@ -217,7 +217,7 @@ def get_brains(set, ADDR):
     aux = np.abs(image_train[:, :, :, 0] + 1j * image_train[:, :, :, 1])
     stats[2] = aux.mean()
     stats[3] = aux.std()
-    np.save(str(ADDR / set["addrs"]["STATS_ADDR"]), stats)
+    np.save(str(ADDR / cfg["addrs"]["STATS_ADDR"]), stats)
 
     return (
         mask,
@@ -273,8 +273,8 @@ class CompConv2D(layers.Layer):
 # A variable (MOD) was added to make testing easier. At small scale, MOD = 1 worked best.
 # Question: Can a purely kspace model be trained, with no reference to image domain? For this code, I've assumed no (also just for convenience viewing results).
 # I'm pretty sure it can though.
-def im_u_net(mu1, sigma1, mu2, sigma2, set, H=256, W=256, channels=2, kshape=(3, 3)):
-    MOD = set["params"]["MOD"]
+def im_u_net(mu1, sigma1, mu2, sigma2, cfg, H=256, W=256, channels=2, kshape=(3, 3)):
+    MOD = cfg["params"]["MOD"]
 
     inputs = layers.Input(shape=(H, W, channels))
 
