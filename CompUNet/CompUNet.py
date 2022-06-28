@@ -33,7 +33,7 @@ def immain(
     # Declares, compiles, fits the model.
     logging.info("Compiling UNet")
     model = im_u_net(stats[0], stats[1], stats[2], stats[3], cfg)
-    opt = tf.keras.optimizers.Adam(lr=5, decay=10)
+    opt = tf.keras.optimizers.Adam(lr=1e-3, decay=1e-7)
     model.compile(optimizer=opt, loss=nrmse)
 
     # Callbacks to manage training
@@ -67,10 +67,10 @@ def immain(
     # while loading, but this is determined in the UNet.
     # Note: Code below this point will be removed for ARC testing
     model.save(ADDR / cfg["addrs"]["IMMODEL_ADDR"])
-    """model = tf.keras.models.load_model(
+    model = tf.keras.models.load_model(
         ADDR / cfg["addrs"]["IMMODEL_ADDR"],
         custom_objects={"nrmse": nrmse, "CompConv2D": CompConv2D},
-    )"""
+    )
 
     # Makes predictions
     logging.info("Evaluating UNet")
