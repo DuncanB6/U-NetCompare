@@ -83,7 +83,7 @@ def remain(
     logging.info("time completed: " + time_finished)
 
     # Displays predictions (Not necessary for ARC)
-    plt.figure(figsize=(15, 15))
+    plt.figure(figsize=(10, 10))
     plt.subplot(1, 2, 1)
     plt.imshow((255.0 - image_test[0]), cmap="Greys")
     plt.subplot(1, 2, 2)

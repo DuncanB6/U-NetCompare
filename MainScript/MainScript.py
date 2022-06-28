@@ -64,7 +64,7 @@ def main(cfg: DictConfig):
     image_test = image_test[:, :, :, 0]
     image_test = np.expand_dims(image_test, axis=3)
 
-    plt.figure(figsize=(15, 15))
+    plt.figure(figsize=(10, 10))
     plt.subplot(1, 2, 1)
     plt.imshow(
         np.abs(np.fft.ifft2(kspace_train[0, :, :, 0] + 1j * kspace_train[0, :, :, 1])),
