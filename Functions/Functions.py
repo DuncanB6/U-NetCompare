@@ -292,6 +292,7 @@ def get_brains(cfg, ADDR):
 class CompConv2D(layers.Layer):
     def __init__(self, out_channels, kshape=(3, 3), **kwargs):
         super(CompConv2D, self).__init__()
+        self.out_channels = out_channels
         self.convreal = layers.Conv2D(
             out_channels, kshape, activation="relu", padding="same"
         )
@@ -307,15 +308,13 @@ class CompConv2D(layers.Layer):
         return x
 
     def get_config(self):
-
-        config = super(CompConv2D, self).get_config()
-        config.update(
-            {
-                "convreal": self.convreal,
-                "convimag": self.convimag,
-            }
-        )
-        return config
+        config = {
+            "convreal": self.convreal,
+            "convimag": self.convimag,
+            "out_channels": self.out_channels,
+        }
+        base_config = super(CompConv2D, self).get_config()
+        return dict(list(base_config.items()) + list(config.items()))
 
 
 # U-Net model. Includes kspace domain U-Net and IFFT.

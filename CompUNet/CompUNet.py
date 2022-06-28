@@ -25,7 +25,7 @@ def immain(
 
     # Imports functions
     sys.path.append(str(ADDR / cfg["addrs"]["FUNC_ADDR"]))
-    from Functions import im_u_net, nrmse, schedule, data_aug
+    from Functions import im_u_net, nrmse, schedule, data_aug, CompConv2D
 
     logging.info("Initialized im UNet")
     init_time = time.time()
@@ -33,7 +33,7 @@ def immain(
     # Declares, compiles, fits the model.
     logging.info("Compiling UNet")
     model = im_u_net(stats[0], stats[1], stats[2], stats[3], cfg)
-    opt = tf.keras.optimizers.Adam(lr=1e-3, decay=1e-7)
+    opt = tf.keras.optimizers.Adam(lr=5, decay=10)
     model.compile(optimizer=opt, loss=nrmse)
 
     # Callbacks to manage training

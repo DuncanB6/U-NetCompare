@@ -64,7 +64,7 @@ def main(cfg: DictConfig):
     image_test = image_test[:, :, :, 0]
     image_test = np.expand_dims(image_test, axis=3)
 
-    plt.figure(figsize=(10, 10))
+    """plt.figure(figsize=(10, 10))
     plt.subplot(1, 2, 1)
     plt.imshow(
         np.abs(np.fft.ifft2(kspace_train[0, :, :, 0] + 1j * kspace_train[0, :, :, 1])),
@@ -72,7 +72,7 @@ def main(cfg: DictConfig):
     )
     plt.subplot(1, 2, 2)
     plt.imshow(image_train[0], cmap="Greys")
-    plt.show()
+    plt.show()"""
 
     # Calls both models
 
