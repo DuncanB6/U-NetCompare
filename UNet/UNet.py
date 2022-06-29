@@ -88,8 +88,8 @@ def remain(
     plt.imshow((255.0 - image_test[0]), cmap="Greys")
     plt.subplot(1, 2, 2)
     plt.imshow((255.0 - predictions[0]), cmap="Greys")
-    file_name = "im_" + str(int(end_time - init_time)) + ".jpg"
-    # plt.savefig(str(ADDR / 'Outputs' / file_name))
+    file_name = "re_" + str(int(end_time - init_time)) + ".jpg"
+    plt.savefig(str(ADDR / "Outputs" / file_name))
     plt.show()
 
     logging.info("Done")

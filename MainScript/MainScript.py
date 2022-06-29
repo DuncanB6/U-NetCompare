@@ -5,8 +5,6 @@
 # Variable results most likely due to small sample sizes.
 
 # To do:
-# Stupid CompUNet keeps returning black images :(
-# Find out how to load models with custom layers and functions (error due to modifyable channels out)
 # Revise scheduler (unsure what this should be doing)
 # Unit testing, containerization, turning code into package (optional, would like to review with mike)
 # Determine the actual experiments/training to be done on ARC (once other tasks are complete)
