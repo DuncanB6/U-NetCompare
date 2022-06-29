@@ -6,7 +6,8 @@ params:
   NUM_TRAIN: 10 # max 4254
   NUM_VAL: 5 # max 1700
   NUM_TEST: 5 # max 1700
-  NUM_MASKS: 1
+  NUM_MASKS: 4
+  UNIT_CONFIRM: 66
 addrs:
   TEST_ADDR: Test/*.npy
   TRAIN_ADDR: Train/*.npy

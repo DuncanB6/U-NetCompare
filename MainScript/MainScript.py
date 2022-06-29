@@ -6,7 +6,7 @@
 
 # To do:
 # Revise scheduler (unsure what this should be doing)
-# Unit testing, containerization, turning code into package (optional, would like to review with mike)
+# Unit testing, containerization, turning code into package
 # Determine the actual experiments/training to be done on ARC (once other tasks are complete)
 
 # Imports
@@ -15,6 +15,7 @@ import hydra
 from omegaconf import DictConfig
 import numpy as np
 import matplotlib.pyplot as plt
+import this
 
 # Import settings with hydra
 @hydra.main(
