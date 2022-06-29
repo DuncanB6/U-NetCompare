@@ -1,0 +1,18 @@
+# Imports
+import time
+from datetime import datetime
+import tensorflow as tf
+import matplotlib.pyplot as plt
+import logging
+import sys
+
+# Imports functions
+sys.path.append("/Users/duncan.boyd/Documents/WorkCode/workvenv/UofC2022/Functions")
+from Functions import nrmse, CompConv2D
+
+model = tf.keras.models.load_model(
+    "/Users/duncan.boyd/Documents/WorkCode/workvenv/UofC2022/Outputs/immodel",
+    custom_objects={"nrmse": nrmse, "CompConv2D": CompConv2D},
+)
+
+print("model loaded")
