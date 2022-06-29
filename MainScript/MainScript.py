@@ -11,7 +11,6 @@
 
 # Imports
 from pathlib import Path
-import sys
 import hydra
 from omegaconf import DictConfig
 import numpy as np
@@ -24,19 +23,13 @@ import matplotlib.pyplot as plt
     config_name="settings",
 )
 def main(cfg: DictConfig):
-    # Finds root address, will need to be checked in ARC.
-    ADDR = Path.cwd()  # /Users/duncan.boyd/Documents/WorkCode/workvenv
-    ADDR = ADDR / "UofC2022"
-    READDR = ADDR / "UNet"
-    IMADDR = ADDR / "CompUNet"
 
-    # Imports both UNets
-    sys.path.append(str(READDR))
-    sys.path.append(str(IMADDR))
-    sys.path.append(str(ADDR / cfg["addrs"]["FUNC_ADDR"]))
-    from UNet import remain
-    from CompUNet import immain
-    from Functions import get_brains, mask_gen
+    # Finds root address, will need to be checked in ARC.
+    ADDR = Path.cwd()  # /Users/duncan.boyd/Documents/WorkCode/workvenv/UofC2022
+
+    from comp_unet.UNet import remain
+    from comp_unet.CompUNet import immain
+    from comp_unet.Functions import get_brains, mask_gen
 
     # Creates masks
     mask_gen(ADDR, cfg)

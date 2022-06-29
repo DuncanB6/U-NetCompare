@@ -46,9 +46,7 @@ def mask_gen(ADDR, cfg):
 
         print(ones, zeros, ratio)
         # addr = "UofC/Inputs/Masks/mask" + str(int(k)) + "_" + str(ratio) + ".npy"
-        np.save(
-            "UofC2022/Inputs/Masks/mask" + str(int(k)) + "_" + str(ratio) + ".npy", mask
-        )
+        np.save("Inputs/Masks/mask" + str(int(k)) + "_" + str(ratio) + ".npy", mask)
 
     return
 
