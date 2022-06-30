@@ -56,7 +56,6 @@ def real_main(
         validation_data=(kspace_val, image_val),
         callbacks=[lrs, mc, es, csvl],
     )
-    model.summary()
 
     # Saves model
     # Note: Loading does not work due to custom layers

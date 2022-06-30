@@ -6,9 +6,9 @@
 
 # To do:
 # Revise scheduler (unsure what this should be doing)
-# How to use different yaml files for different runs of the program
-# Expand on unit tests
-# Leanr how to set up your code in ARC, including imports
+# Determine acceleration rates
+# Expand on unit tests (optional)
+# Learn how to set up your code in ARC, including imports
 # Determine the actual experiments/training to be done on ARC (once other tasks are complete)
 
 # Imports
@@ -17,18 +17,28 @@ import hydra
 from omegaconf import DictConfig
 import numpy as np
 import matplotlib.pyplot as plt
-import this
 from unet_compare.real_unet import real_main
 from unet_compare.comp_unet import comp_main
 from unet_compare.functions import get_brains, mask_gen
 
 # Import settings with hydra
+
+# For debugging:
+# config_path="../UofC2022/inputs/configs",
+# config_name="settings_1",
+
+# For multiple configs from command:
+# config_path="../UofC2022/inputs",
+
+
 @hydra.main(
     version_base=None,
-    config_path="../Inputs",
-    config_name="settings",
+    config_path="../UofC2022/inputs/configs",
+    config_name="settings_3",
 )
 def main(cfg: DictConfig):
+
+    # cfg = cfg["configs"] # Add to run direct from command line with various configs
 
     # Finds root address, will need to be checked in ARC.
     ADDR = Path.cwd()  # /Users/duncan.boyd/Documents/WorkCode/workvenv/UofC2022
