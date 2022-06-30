@@ -6,10 +6,10 @@ from datetime import datetime
 import tensorflow as tf
 import matplotlib.pyplot as plt
 import logging
-import sys
+from unet_compare.functions import real_unet_model, nrmse, schedule, data_aug
 
 
-def remain(
+def real_main(
     cfg,
     ADDR,
     mask,
@@ -23,30 +23,26 @@ def remain(
     rec_train,
 ):
 
-    # Imports functions
-    sys.path.append(str(ADDR / cfg["addrs"]["FUNC_ADDR"]))
-    from Functions import re_u_net, nrmse, schedule, data_aug
-
-    logging.info("Initialized re UNet")
+    logging.info("Initialized real UNet")
     init_time = time.time()
 
     # Declares, compiles, fits the model.
     logging.info("Compiling UNet")
-    model = re_u_net(stats[0], stats[1], stats[2], stats[3])
+    model = real_unet_model(stats[0], stats[1], stats[2], stats[3])
     opt = tf.keras.optimizers.Adam(lr=1e-3, decay=1e-7)
     model.compile(optimizer=opt, loss=nrmse)
 
     # Callbacks to manage training
     lrs = tf.keras.callbacks.LearningRateScheduler(schedule)
     mc = tf.keras.callbacks.ModelCheckpoint(
-        filepath=str(ADDR / cfg["addrs"]["RECHEC_ADDR"]),
+        filepath=str(ADDR / cfg["addrs"]["REAL_CHEC"]),
         mode="min",
         monitor="val_loss",
         save_best_only=True,
     )
     es = tf.keras.callbacks.EarlyStopping(monitor="val_loss", patience=20, mode="min")
     csvl = tf.keras.callbacks.CSVLogger(
-        str(ADDR / cfg["addrs"]["RECSV_ADDR"]), append=False, separator="|"
+        str(ADDR / cfg["addrs"]["REAL_CSV"]), append=False, separator="|"
     )
     combined = data_aug(rec_train, mask, stats, cfg)
 
@@ -60,14 +56,13 @@ def remain(
         validation_data=(kspace_val, image_val),
         callbacks=[lrs, mc, es, csvl],
     )
-    model.summary()
 
     # Saves model
     # Note: Loading does not work due to custom layers
     # Note: Code below this point will be removed for ARC testing
-    model.save(ADDR / cfg["addrs"]["REMODEL_ADDR"])
+    model.save(ADDR / cfg["addrs"]["REAL_MODEL"])
     model = tf.keras.models.load_model(
-        ADDR / cfg["addrs"]["REMODEL_ADDR"], custom_objects={"nrmse": nrmse}
+        ADDR / cfg["addrs"]["REAL_MODEL"], custom_objects={"nrmse": nrmse}
     )
 
     # Makes predictions
@@ -88,7 +83,7 @@ def remain(
     plt.imshow((255.0 - image_test[0]), cmap="Greys")
     plt.subplot(1, 2, 2)
     plt.imshow((255.0 - predictions[0]), cmap="Greys")
-    file_name = "re_" + str(int(end_time - init_time)) + ".jpg"
+    file_name = "real_" + str(int(end_time - init_time)) + ".jpg"
     plt.savefig(str(ADDR / "Outputs" / file_name))
     plt.show()
 

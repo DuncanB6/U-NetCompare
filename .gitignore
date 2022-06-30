@@ -1,11 +1,11 @@
 # Large sets of data
-Test/
-Val/
-Train/
+test/
+val/
+train/
 
 # Outputs
-Outputs/
-Inputs/Masks/
+outputs/
+inputs/masks/
 
 # DS Store
 *.DS_Store

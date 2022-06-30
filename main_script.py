@@ -6,37 +6,42 @@
 
 # To do:
 # Revise scheduler (unsure what this should be doing)
-# Unit testing, containerization, turning code into package (optional, would like to review with mike)
+# Determine acceleration rates
+# Expand on unit tests (optional)
+# Learn how to set up your code in ARC, including imports
 # Determine the actual experiments/training to be done on ARC (once other tasks are complete)
 
 # Imports
 from pathlib import Path
-import sys
 import hydra
 from omegaconf import DictConfig
 import numpy as np
 import matplotlib.pyplot as plt
+from unet_compare.real_unet import real_main
+from unet_compare.comp_unet import comp_main
+from unet_compare.functions import get_brains, mask_gen
 
 # Import settings with hydra
+
+# For debugging:
+# config_path="../UofC2022/inputs/configs",
+# config_name="settings_1",
+
+# For multiple configs from command:
+# config_path="../UofC2022/inputs",
+
+
 @hydra.main(
     version_base=None,
-    config_path="../Inputs",
-    config_name="settings",
+    config_path="../UofC2022/inputs/configs",
+    config_name="settings_3",
 )
 def main(cfg: DictConfig):
-    # Finds root address, will need to be checked in ARC.
-    ADDR = Path.cwd()  # /Users/duncan.boyd/Documents/WorkCode/workvenv
-    ADDR = ADDR / "UofC2022"
-    READDR = ADDR / "UNet"
-    IMADDR = ADDR / "CompUNet"
 
-    # Imports both UNets
-    sys.path.append(str(READDR))
-    sys.path.append(str(IMADDR))
-    sys.path.append(str(ADDR / cfg["addrs"]["FUNC_ADDR"]))
-    from UNet import remain
-    from CompUNet import immain
-    from Functions import get_brains, mask_gen
+    # cfg = cfg["configs"] # Add to run direct from command line with various configs
+
+    # Finds root address, will need to be checked in ARC.
+    ADDR = Path.cwd()  # /Users/duncan.boyd/Documents/WorkCode/workvenv/UofC2022
 
     # Creates masks
     mask_gen(ADDR, cfg)
@@ -74,7 +79,7 @@ def main(cfg: DictConfig):
 
     # Calls both models
 
-    immodel = immain(
+    immodel = comp_main(
         cfg,
         ADDR,
         mask,
@@ -87,7 +92,7 @@ def main(cfg: DictConfig):
         image_test,
         rec_train,
     )
-    remodel = remain(
+    remodel = real_main(
         cfg,
         ADDR,
         mask,
