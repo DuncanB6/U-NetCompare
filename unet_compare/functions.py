@@ -19,7 +19,7 @@ tf.disable_v2_behavior()
 # Creates a number of masks (modifiable in settings) with a 22% poisson disk.
 def mask_gen(ADDR, cfg):
 
-    files = glob.glob(str(ADDR / cfg["addrs"]["MASKS_ADDR"]))
+    files = glob.glob(str(ADDR / cfg["addrs"]["MASKS"]))
     for f in files:
         os.remove(f)
 
@@ -138,9 +138,9 @@ def ifft_layer(kspace):
 def get_brains(cfg, ADDR):
 
     # Note: In train, one file is (174, 256, 256).
-    kspace_files_train = np.asarray(glob.glob(str(ADDR / cfg["addrs"]["TRAIN_ADDR"])))
-    kspace_files_val = np.asarray(glob.glob(str(ADDR / cfg["addrs"]["VAL_ADDR"])))
-    kspace_files_test = np.asarray(glob.glob(str(ADDR / cfg["addrs"]["TEST_ADDR"])))
+    kspace_files_train = np.asarray(glob.glob(str(ADDR / cfg["addrs"]["TRAIN"])))
+    kspace_files_val = np.asarray(glob.glob(str(ADDR / cfg["addrs"]["VAL"])))
+    kspace_files_test = np.asarray(glob.glob(str(ADDR / cfg["addrs"]["TEST"])))
 
     logging.info("train scans: " + str(len(kspace_files_train)))
     logging.info("val scans: " + str(len(kspace_files_val)))
@@ -151,7 +151,7 @@ def get_brains(cfg, ADDR):
     norm = np.sqrt(shape[0] * shape[1])
 
     mask = np.zeros((cfg["params"]["NUM_MASKS"], shape[0], shape[1]))
-    masks = np.asarray(glob.glob(str(ADDR / cfg["addrs"]["MASKS_ADDR"])))
+    masks = np.asarray(glob.glob(str(ADDR / cfg["addrs"]["MASKS"])))
     for i in range(len(masks)):
         mask[i] = np.load(masks[i])
     mask = mask.astype(int)
@@ -265,7 +265,7 @@ def get_brains(cfg, ADDR):
     aux = np.abs(image_train[:, :, :, 0] + 1j * image_train[:, :, :, 1])
     stats[2] = aux.mean()
     stats[3] = aux.std()
-    np.save(str(ADDR / cfg["addrs"]["STATS_ADDR"]), stats)
+    np.save(str(ADDR / cfg["addrs"]["STATS"]), stats)
 
     return (
         mask,
@@ -320,7 +320,9 @@ class CompConv2D(layers.Layer):
 # A variable (MOD) was added to make testing easier. At small scale, MOD = 1 worked best.
 # Question: Can a purely kspace model be trained, with no reference to image domain? For this code, I've assumed no (also just for convenience viewing results).
 # I'm pretty sure it can though.
-def im_u_net(mu1, sigma1, mu2, sigma2, cfg, H=256, W=256, channels=2, kshape=(3, 3)):
+def comp_unet_model(
+    mu1, sigma1, mu2, sigma2, cfg, H=256, W=256, channels=2, kshape=(3, 3)
+):
     MOD = cfg["params"]["MOD"]
 
     inputs = layers.Input(shape=(H, W, channels))
@@ -372,7 +374,7 @@ def im_u_net(mu1, sigma1, mu2, sigma2, cfg, H=256, W=256, channels=2, kshape=(3,
 
 
 # U-Net model.
-def re_u_net(mu1, sigma1, mu2, sigma2, H=256, W=256, channels=2, kshape=(3, 3)):
+def real_unet_model(mu1, sigma1, mu2, sigma2, H=256, W=256, channels=2, kshape=(3, 3)):
 
     inputs = Input(shape=(H, W, channels))
 

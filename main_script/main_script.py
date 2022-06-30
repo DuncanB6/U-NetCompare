@@ -6,7 +6,9 @@
 
 # To do:
 # Revise scheduler (unsure what this should be doing)
-# Unit testing, containerization, turning code into package
+# How to use different yaml files for different runs of the program
+# Expand on unit tests
+# Leanr how to set up your code in ARC, including imports
 # Determine the actual experiments/training to be done on ARC (once other tasks are complete)
 
 # Imports
@@ -16,6 +18,9 @@ from omegaconf import DictConfig
 import numpy as np
 import matplotlib.pyplot as plt
 import this
+from unet_compare.real_unet import real_main
+from unet_compare.comp_unet import comp_main
+from unet_compare.functions import get_brains, mask_gen
 
 # Import settings with hydra
 @hydra.main(
@@ -27,10 +32,6 @@ def main(cfg: DictConfig):
 
     # Finds root address, will need to be checked in ARC.
     ADDR = Path.cwd()  # /Users/duncan.boyd/Documents/WorkCode/workvenv/UofC2022
-
-    from comp_unet.UNet import remain
-    from comp_unet.CompUNet import immain
-    from comp_unet.Functions import get_brains, mask_gen
 
     # Creates masks
     mask_gen(ADDR, cfg)
@@ -68,7 +69,7 @@ def main(cfg: DictConfig):
 
     # Calls both models
 
-    immodel = immain(
+    immodel = comp_main(
         cfg,
         ADDR,
         mask,
@@ -81,7 +82,7 @@ def main(cfg: DictConfig):
         image_test,
         rec_train,
     )
-    remodel = remain(
+    remodel = real_main(
         cfg,
         ADDR,
         mask,

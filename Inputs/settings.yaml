@@ -9,18 +9,18 @@ params:
   NUM_MASKS: 4
   UNIT_CONFIRM: 66
 addrs:
-  TEST_ADDR: Test/*.npy
-  TRAIN_ADDR: Train/*.npy
-  VAL_ADDR: Val/*.npy
-  STATS_ADDR: Outputs/stats.npy
-  IMMODEL_ADDR: Outputs/immodel
-  REMODEL_ADDR: Outputs/remodel
-  IMLOG_ADDR: Outputs/CompUNet.log
-  RELOG_ADDR: Outputs/UNet.log
-  FUNC_ADDR: Functions
-  IMCHEC_ADDR: Outputs/imcheck
-  RECHEC_ADDR: Outputs/recheck
-  IMCSV_ADDR: Outputs/CompUNet_Train.log
-  RECSV_ADDR: Outputs/UNet_Train.log
-  MASKS_ADDR: Inputs/Masks/*.npy
+  TEST: test/*.npy
+  TRAIN: train/*.npy
+  VAL: val/*.npy
+  STATS: outputs/stats.npy
+  COMP_MODEL: outputs/comp_model
+  REAL_MODEL: outputs/real_model
+  COMP_LOG: outputs/comp_unet.log
+  REAL_LOG: outputs/unet.log
+  FUNC: functions
+  COMP_CHEC: outputs/comp_check
+  REAL_CHEC: outputs/real_check
+  COMP_CSV: outputs/comp_unet_train.log
+  REAL_CSV: Outputs/real_unet_train.log
+  MASKS: inputs/masks/*.npy
 
