@@ -1,4 +1,4 @@
-# June 27, 2022
+# July 4, 2022
 
 # Status:
 # This is the beginning of a complex U-Net. Returns medium quality images.
@@ -8,8 +8,8 @@
 # Revise scheduler (unsure what this should be doing)
 # Determine acceleration rates
 # Expand on unit tests (optional)
-# Learn how to set up your code in ARC, including imports
 # Determine the actual experiments/training to be done on ARC (once other tasks are complete)
+# Run ARC tests
 
 # Imports
 from pathlib import Path
@@ -27,18 +27,18 @@ from unet_compare.functions import get_brains, mask_gen
 # config_path="../UofC2022/inputs/configs",
 # config_name="settings_1",
 
-# For multiple configs from command:
+# For multiple configs from command "python3 main_script.py +configs=settings_1":
+# NOTE: Make sure to uncomment first line in main.
 # config_path="../UofC2022/inputs",
 
 
 @hydra.main(
     version_base=None,
-    config_path="../UofC2022/inputs/configs",
-    config_name="settings_3",
+    config_path="../UofC2022/inputs",
 )
 def main(cfg: DictConfig):
 
-    # cfg = cfg["configs"] # Add to run direct from command line with various configs
+    cfg = cfg["configs"]  # Add to run direct from command line with various configs
 
     # Finds root address, will need to be checked in ARC.
     ADDR = Path.cwd()  # /Users/duncan.boyd/Documents/WorkCode/workvenv/UofC2022
@@ -66,16 +66,6 @@ def main(cfg: DictConfig):
     image_val = np.expand_dims(image_val, axis=3)
     image_test = image_test[:, :, :, 0]
     image_test = np.expand_dims(image_test, axis=3)
-
-    """plt.figure(figsize=(10, 10))
-    plt.subplot(1, 2, 1)
-    plt.imshow(
-        np.abs(np.fft.ifft2(kspace_train[0, :, :, 0] + 1j * kspace_train[0, :, :, 1])),
-        cmap="Greys",
-    )
-    plt.subplot(1, 2, 2)
-    plt.imshow(image_train[0], cmap="Greys")
-    plt.show()"""
 
     # Calls both models
 

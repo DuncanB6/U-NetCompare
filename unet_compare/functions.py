@@ -54,7 +54,7 @@ def mask_gen(ADDR, cfg):
     return
 
 
-# Generates augmented images
+# Return an image generator which generates augmented images
 def data_aug(rec_train, mask, stats, cfg):
     seed = 905
     image_datagen1 = ImageDataGenerator(
@@ -63,8 +63,8 @@ def data_aug(rec_train, mask, stats, cfg):
         height_shift_range=0.075,
         shear_range=0.25,
         zoom_range=0.25,
-        horizontal_flip=True,
-        vertical_flip=True,
+        horizontal_flip=False,
+        vertical_flip=False,
         fill_mode="nearest",
     )
 
@@ -74,8 +74,8 @@ def data_aug(rec_train, mask, stats, cfg):
         height_shift_range=0.075,
         shear_range=0.25,
         zoom_range=0.25,
-        horizontal_flip=True,
-        vertical_flip=True,
+        horizontal_flip=False,
+        vertical_flip=False,
         fill_mode="nearest",
     )
 
@@ -109,7 +109,6 @@ def data_aug(rec_train, mask, stats, cfg):
             rec = np.expand_dims(rec, axis=3)
             yield (kspace2, rec)
 
-    # combine generators into one which yields image and masks
     return combine_generator(image_gen1, image_gen2, mask, stats)
 
 

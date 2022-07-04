@@ -2,7 +2,7 @@
 params:
   EPOCHS: 3 # 250 (WNet)
   MOD: 1.5 # Modified to match ReUNet's trainable params roughly (+-10%) which isn't ideal
-  BATCH_SIZE: 5 # 16 (WNet)
+  BATCH_SIZE: 10 # 16 (WNet)
   NUM_TRAIN: 50 # max 4254
   NUM_VAL: 10 # max 1700
   NUM_TEST: 10 # max 1700
