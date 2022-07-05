@@ -9,6 +9,10 @@
 #SBATCH --mem=1G
 #SBATCH --partition=cpu2019
 
+####### Set environment variables ###############
+export PATH=~/software/miniconda3/bin:$PATH
+source activate testvenv
+
 ####### Run your script #########################
 pip install -r requirements.txt
 python main_script.py +configs=settings_1

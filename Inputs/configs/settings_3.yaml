@@ -8,6 +8,7 @@ params:
   NUM_TEST: 1700 # max 1700
   NUM_MASKS: 100
   UNIT_CONFIRM: 66 # Like a verification for unit testing
+  LR: 0.01
 addrs:
   TEST: test/*.npy
   TRAIN: train/*.npy

@@ -36,7 +36,8 @@ def comp_main(
     # Declares, compiles, fits the model.
     logging.info("Compiling UNet")
     model = comp_unet_model(stats[0], stats[1], stats[2], stats[3], cfg)
-    opt = tf.keras.optimizers.Adam(lr=1e-3, decay=1e-7)
+    lr = cfg["params"]["LR"]
+    opt = tf.keras.optimizers.Adam(lr=lr, decay=(lr / cfg["params"]["EPOCHS"]))
     model.compile(optimizer=opt, loss=nrmse)
 
     # Callbacks to manage training

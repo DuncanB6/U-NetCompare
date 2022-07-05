@@ -114,10 +114,7 @@ def data_aug(rec_train, mask, stats, cfg):
 
 # Scheduler, currently just a stolen one as I don't know what I should be going for.
 def schedule(epoch, lr):
-    if epoch < 10:
-        return lr
-    else:
-        return lr * tf.math.exp(-0.1)
+    return lr / (1 + epoch)
 
 
 # Loss function
@@ -216,7 +213,7 @@ def get_brains(cfg, ADDR):
     np.random.shuffle(indexes)
     image_val = image_val[indexes]
     kspace_val = kspace_val[indexes]
-    kspace_train[:, mask[int(random.randint(0, cfg["params"]["NUM_MASKS"] - 1))], :] = 0
+    kspace_val[:, mask[int(random.randint(0, cfg["params"]["NUM_MASKS"] - 1))], :] = 0
 
     kspace_val = kspace_val[: cfg["params"]["NUM_VAL"], :, :, :]
     image_val = image_val[: cfg["params"]["NUM_VAL"], :, :, :]
@@ -248,9 +245,7 @@ def get_brains(cfg, ADDR):
     np.random.shuffle(indexes)
     image_test = image_test[indexes]
     kspace_test = kspace_test[indexes]
-    kspace_train[
-        :, mask[int(random.randint(0, (cfg["params"]["NUM_MASKS"] - 1)))], :
-    ] = 0
+    kspace_test[:, mask[int(random.randint(0, cfg["params"]["NUM_MASKS"] - 1))], :] = 0
 
     kspace_test = kspace_test[: cfg["params"]["NUM_TEST"], :, :, :]
     image_test = image_test[: cfg["params"]["NUM_TEST"], :, :, :]

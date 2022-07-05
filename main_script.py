@@ -5,8 +5,6 @@
 # Variable results most likely due to small sample sizes.
 
 # To do:
-# Revise scheduler (unsure what this should be doing)
-# Determine acceleration rates
 # Expand on unit tests (optional)
 # Determine the actual experiments/training to be done on ARC (once other tasks are complete)
 # Run ARC tests
@@ -34,11 +32,12 @@ from unet_compare.functions import get_brains, mask_gen
 
 @hydra.main(
     version_base=None,
-    config_path="../UofC2022/inputs",
+    config_path="../UofC2022/inputs/configs",
+    config_name="settings_2",
 )
 def main(cfg: DictConfig):
 
-    cfg = cfg["configs"]  # Add to run direct from command line with various configs
+    # cfg = cfg["configs"]  # Add to run direct from command line with various configs
 
     # Finds root address, will need to be checked in ARC.
     ADDR = Path.cwd()  # /Users/duncan.boyd/Documents/WorkCode/workvenv/UofC2022

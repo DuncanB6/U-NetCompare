@@ -8,6 +8,7 @@ params:
   NUM_TEST: 5 # max 1700
   NUM_MASKS: 5
   UNIT_CONFIRM: 66
+  LR: 0.01
 addrs:
   TEST: test/*.npy
   TRAIN: train/*.npy
