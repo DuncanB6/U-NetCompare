@@ -54,18 +54,6 @@ def comp_main(
         str(ADDR / cfg["addrs"]["COMP_CSV"]), append=False, separator="|"
     )
     combined = data_aug(rec_train, mask, stats, cfg)
-    """for ii in combined:
-        print(ii[0].shape)
-        plt.figure(figsize=(10, 10))
-        plt.subplot(1, 2, 1)
-        plt.imshow(
-            np.abs(np.fft.ifft2(ii[0][3, :, :, 0] + 1j * ii[0][3, :, :, 1])),
-            cmap="Greys",
-        )
-        plt.subplot(1, 2, 2)
-        plt.imshow(ii[1][3], cmap="Greys")
-        plt.show()
-        break"""
 
     # Fits model using training data, validation data
     logging.info("Fitting UNet")
