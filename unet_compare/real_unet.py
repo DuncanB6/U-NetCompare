@@ -6,7 +6,7 @@ from datetime import datetime
 import tensorflow as tf
 import matplotlib.pyplot as plt
 import logging
-from unet_compare.functions import real_unet_model, nrmse, schedule, data_aug
+from unet_compare.functions import real_unet_model, nrmse, data_aug
 import numpy as np
 
 
@@ -30,12 +30,14 @@ def real_main(
     # Declares, compiles, fits the model.
     logging.info("Compiling UNet")
     model = real_unet_model(stats[0], stats[1], stats[2], stats[3])
-    lr = cfg["params"]["LR"]
-    opt = tf.keras.optimizers.Adam(lr=lr, decay=(lr / cfg["params"]["EPOCHS"]))
+    opt = tf.keras.optimizers.Adam(
+        lr=cfg["params"]["LR"],
+        beta_1=cfg["params"]["BETA_1"],
+        beta_2=cfg["params"]["BETA_2"],
+    )
     model.compile(optimizer=opt, loss=nrmse)
 
     # Callbacks to manage training
-    lrs = tf.keras.callbacks.LearningRateScheduler(schedule)
     mc = tf.keras.callbacks.ModelCheckpoint(
         filepath=str(ADDR / cfg["addrs"]["REAL_CHEC"]),
         mode="min",
@@ -56,7 +58,7 @@ def real_main(
         steps_per_epoch=rec_train.shape[0] / cfg["params"]["BATCH_SIZE"],
         verbose=1,
         validation_data=(kspace_val, image_val),
-        callbacks=[lrs, mc, es, csvl],
+        callbacks=[mc, es, csvl],
     )
 
     # Saves model

@@ -26,7 +26,7 @@ def mask_gen(ADDR, cfg):
     for k in range(cfg["params"]["NUM_MASKS"]):
         mask = sp.poisson(
             img_shape=(256, 256),
-            accel=5.5,
+            accel=cfg["params"]["ACCEL"],
             dtype=int,
             crop_corner=True,
         )
@@ -110,11 +110,6 @@ def data_aug(rec_train, mask, stats, cfg):
             yield (kspace2, rec)
 
     return combine_generator(image_gen1, image_gen2, mask, stats)
-
-
-# Scheduler, currently just a stolen one as I don't know what I should be going for.
-def schedule(epoch, lr):
-    return lr / (1 + epoch)
 
 
 # Loss function

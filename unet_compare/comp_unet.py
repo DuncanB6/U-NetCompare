@@ -10,7 +10,6 @@ import numpy as np
 from unet_compare.functions import (
     comp_unet_model,
     nrmse,
-    schedule,
     data_aug,
     CompConv2D,
 )
@@ -36,12 +35,14 @@ def comp_main(
     # Declares, compiles, fits the model.
     logging.info("Compiling UNet")
     model = comp_unet_model(stats[0], stats[1], stats[2], stats[3], cfg)
-    lr = cfg["params"]["LR"]
-    opt = tf.keras.optimizers.Adam(lr=lr, decay=(lr / cfg["params"]["EPOCHS"]))
+    opt = tf.keras.optimizers.Adam(
+        lr=cfg["params"]["LR"],
+        beta_1=cfg["params"]["BETA_1"],
+        beta_2=cfg["params"]["BETA_2"],
+    )
     model.compile(optimizer=opt, loss=nrmse)
 
     # Callbacks to manage training
-    lrs = tf.keras.callbacks.LearningRateScheduler(schedule)
     mc = tf.keras.callbacks.ModelCheckpoint(
         filepath=str(ADDR / cfg["addrs"]["COMP_CHEC"]),
         mode="min",
@@ -74,9 +75,8 @@ def comp_main(
         steps_per_epoch=rec_train.shape[0] / cfg["params"]["BATCH_SIZE"],
         verbose=1,
         validation_data=(kspace_val, image_val),
-        callbacks=[lrs, mc, es, csvl],
+        callbacks=[mc, es, csvl],
     )
-    model.summary()
 
     # Saves model
     # Note: Loading does not work due to custom layers. It want an unpit for out_channels

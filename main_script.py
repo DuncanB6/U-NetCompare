@@ -33,7 +33,7 @@ from unet_compare.functions import get_brains, mask_gen
 @hydra.main(
     version_base=None,
     config_path="../UofC2022/inputs/configs",
-    config_name="settings_2",
+    config_name="settings_1",
 )
 def main(cfg: DictConfig):
 
