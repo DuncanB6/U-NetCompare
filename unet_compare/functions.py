@@ -26,7 +26,7 @@ def mask_gen(ADDR, cfg):
     for k in range(cfg["params"]["NUM_MASKS"]):
         mask = sp.poisson(
             img_shape=(256, 256),
-            accel=5.5,
+            accel=cfg["params"]["ACCEL"],
             dtype=int,
             crop_corner=True,
         )
@@ -54,7 +54,7 @@ def mask_gen(ADDR, cfg):
     return
 
 
-# Generates augmented images
+# Return an image generator which generates augmented images
 def data_aug(rec_train, mask, stats, cfg):
     seed = 905
     image_datagen1 = ImageDataGenerator(
@@ -63,8 +63,8 @@ def data_aug(rec_train, mask, stats, cfg):
         height_shift_range=0.075,
         shear_range=0.25,
         zoom_range=0.25,
-        horizontal_flip=True,
-        vertical_flip=True,
+        horizontal_flip=False,
+        vertical_flip=False,
         fill_mode="nearest",
     )
 
@@ -74,8 +74,8 @@ def data_aug(rec_train, mask, stats, cfg):
         height_shift_range=0.075,
         shear_range=0.25,
         zoom_range=0.25,
-        horizontal_flip=True,
-        vertical_flip=True,
+        horizontal_flip=False,
+        vertical_flip=False,
         fill_mode="nearest",
     )
 
@@ -109,16 +109,7 @@ def data_aug(rec_train, mask, stats, cfg):
             rec = np.expand_dims(rec, axis=3)
             yield (kspace2, rec)
 
-    # combine generators into one which yields image and masks
     return combine_generator(image_gen1, image_gen2, mask, stats)
-
-
-# Scheduler, currently just a stolen one as I don't know what I should be going for.
-def schedule(epoch, lr):
-    if epoch < 10:
-        return lr
-    else:
-        return lr * tf.math.exp(-0.1)
 
 
 # Loss function
@@ -217,7 +208,7 @@ def get_brains(cfg, ADDR):
     np.random.shuffle(indexes)
     image_val = image_val[indexes]
     kspace_val = kspace_val[indexes]
-    kspace_train[:, mask[int(random.randint(0, cfg["params"]["NUM_MASKS"] - 1))], :] = 0
+    kspace_val[:, mask[int(random.randint(0, cfg["params"]["NUM_MASKS"] - 1))], :] = 0
 
     kspace_val = kspace_val[: cfg["params"]["NUM_VAL"], :, :, :]
     image_val = image_val[: cfg["params"]["NUM_VAL"], :, :, :]
@@ -249,9 +240,7 @@ def get_brains(cfg, ADDR):
     np.random.shuffle(indexes)
     image_test = image_test[indexes]
     kspace_test = kspace_test[indexes]
-    kspace_train[
-        :, mask[int(random.randint(0, (cfg["params"]["NUM_MASKS"] - 1)))], :
-    ] = 0
+    kspace_test[:, mask[int(random.randint(0, cfg["params"]["NUM_MASKS"] - 1))], :] = 0
 
     kspace_test = kspace_test[: cfg["params"]["NUM_TEST"], :, :, :]
     image_test = image_test[: cfg["params"]["NUM_TEST"], :, :, :]

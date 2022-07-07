@@ -1,13 +1,17 @@
 ---
 params:
-  EPOCHS: 250 # 250 (WNet)
+  EPOCHS: 1 # 250 (WNet)
   MOD: 1.5 # Modified to match ReUNet's trainable params roughly (+-10%) which isn't ideal
-  BATCH_SIZE: 16 # 16 (WNet)
-  NUM_TRAIN: 4254 # max 4254
-  NUM_VAL: 1700 # max 1700
-  NUM_TEST: 1700 # max 1700
-  NUM_MASKS: 100
-  UNIT_CONFIRM: 66 # Like a verification for unit testing
+  BATCH_SIZE: 3 # 16 (WNet)
+  NUM_TRAIN: 10 # max 4254
+  NUM_VAL: 5 # max 1700
+  NUM_TEST: 5 # max 1700
+  NUM_MASKS: 5
+  UNIT_CONFIRM: 66
+  LR: 0.001
+  ACCEL: 5
+  BETA_1: 0.9
+  BETA_2: 0.999
 addrs:
   TEST: test/*.npy
   TRAIN: train/*.npy
