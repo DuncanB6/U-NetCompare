@@ -7,6 +7,9 @@ train/
 outputs/
 inputs/masks/
 
+# Irrelevant
+pytorch/
+
 # DS Store
 *.DS_Store
 

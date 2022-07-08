@@ -1,5 +1,7 @@
 # July 4, 2022
 
+# This program fits two unets and displays results. Used for local testing.
+
 # Status:
 # This is the beginning of a complex U-Net. Returns medium quality images.
 # Variable results most likely due to small sample sizes.
@@ -18,6 +20,7 @@ import matplotlib.pyplot as plt
 from unet_compare.real_unet import real_main
 from unet_compare.comp_unet import comp_main
 from unet_compare.functions import get_brains, mask_gen
+import logging
 
 # Import settings with hydra
 
@@ -68,7 +71,7 @@ def main(cfg: DictConfig):
 
     # Calls both models
 
-    immodel = comp_main(
+    comp_model = comp_main(
         cfg,
         ADDR,
         mask,
@@ -81,7 +84,7 @@ def main(cfg: DictConfig):
         image_test,
         rec_train,
     )
-    remodel = real_main(
+    comp_model = real_main(
         cfg,
         ADDR,
         mask,
@@ -94,6 +97,37 @@ def main(cfg: DictConfig):
         image_test,
         rec_train,
     )
+
+    # Makes predictions
+    logging.info("Evaluating UNet")
+    comp_pred = comp_model.predict(kspace_test)
+    print(comp_pred.shape)
+
+    # Makes predictions
+    logging.info("Evaluating UNet")
+    real_pred = comp_model.predict(kspace_test)
+    print(real_pred.shape)
+
+    # Displays predictions (Not necessary for ARC)
+    plt.figure(figsize=(10, 10))
+    plt.subplot(1, 4, 1)
+    plt.imshow((255.0 - image_test[0]), cmap="Greys")
+    plt.subplot(1, 4, 2)
+    plt.imshow((255.0 - comp_pred[0]), cmap="Greys")
+    plt.subplot(1, 4, 3)
+    plt.imshow((255.0 - real_pred[0]), cmap="Greys")
+    plt.subplot(1, 4, 4)
+    plt.imshow(
+        (
+            255.0
+            - np.abs(
+                np.fft.ifft2(kspace_test[0, :, :, 0] + 1j * kspace_test[0, :, :, 1])
+            )
+        ),
+        cmap="Greys",
+    )
+    plt.show()
+    
     return
 
 

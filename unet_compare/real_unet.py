@@ -62,17 +62,7 @@ def real_main(
     )
 
     # Saves model
-    # Note: Loading does not work due to custom layers
-    # Note: Code below this point will be removed for ARC testing
     model.save(ADDR / cfg["addrs"]["REAL_MODEL"])
-    model = tf.keras.models.load_model(
-        ADDR / cfg["addrs"]["REAL_MODEL"], custom_objects={"nrmse": nrmse}
-    )
-
-    # Makes predictions
-    logging.info("Evaluating UNet")
-    predictions = model.predict(kspace_test)
-    print(predictions.shape)
 
     # Provides endtime logging info
     end_time = time.time()
@@ -80,26 +70,6 @@ def real_main(
     time_finished = now.strftime("%d/%m/%Y %H:%M:%S")
     logging.info("total time: " + str(int(end_time - init_time)))
     logging.info("time completed: " + time_finished)
-
-    # Displays predictions (Not necessary for ARC)
-    plt.figure(figsize=(10, 10))
-    plt.subplot(1, 3, 1)
-    plt.imshow((255.0 - image_test[0]), cmap="Greys")
-    plt.subplot(1, 3, 2)
-    plt.imshow((255.0 - predictions[0]), cmap="Greys")
-    plt.subplot(1, 3, 3)
-    plt.imshow(
-        (
-            255.0
-            - np.abs(
-                np.fft.ifft2(kspace_test[0, :, :, 0] + 1j * kspace_test[0, :, :, 1])
-            )
-        ),
-        cmap="Greys",
-    )
-    file_name = "real_" + str(int(end_time - init_time)) + ".jpg"
-    plt.savefig(str(ADDR / "Outputs" / file_name))
-    plt.show()
 
     logging.info("Done")
 
