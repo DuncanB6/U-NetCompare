@@ -36,7 +36,7 @@ import logging
 @hydra.main(
     version_base=None,
     config_path="../UofC2022/inputs/configs",
-    config_name="settings_2",
+    config_name="settings_1",
 )
 def main(cfg: DictConfig):
 
@@ -70,7 +70,6 @@ def main(cfg: DictConfig):
     image_test = np.expand_dims(image_test, axis=3)
 
     # Calls both models
-
     comp_model = comp_main(
         cfg,
         ADDR,
@@ -84,7 +83,7 @@ def main(cfg: DictConfig):
         image_test,
         rec_train,
     )
-    comp_model = real_main(
+    real_model = real_main(
         cfg,
         ADDR,
         mask,
@@ -97,6 +96,8 @@ def main(cfg: DictConfig):
         image_test,
         rec_train,
     )
+    real_model.summary()
+    comp_model.summary()
 
     # Makes predictions
     logging.info("Evaluating UNet")
@@ -127,7 +128,7 @@ def main(cfg: DictConfig):
         cmap="Greys",
     )
     plt.show()
-    
+
     return
 
 

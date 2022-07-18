@@ -29,7 +29,7 @@ def real_main(
 
     # Declares, compiles, fits the model.
     logging.info("Compiling UNet")
-    model = real_unet_model(stats[0], stats[1], stats[2], stats[3])
+    model = real_unet_model(cfg, stats[0], stats[1], stats[2], stats[3])
     opt = tf.keras.optimizers.Adam(
         lr=cfg["params"]["LR"],
         beta_1=cfg["params"]["BETA_1"],
@@ -70,6 +70,7 @@ def real_main(
     time_finished = now.strftime("%d/%m/%Y %H:%M:%S")
     logging.info("total time: " + str(int(end_time - init_time)))
     logging.info("time completed: " + time_finished)
+    print("Time:", str(int(end_time - init_time)))
 
     logging.info("Done")
 

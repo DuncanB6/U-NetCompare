@@ -5,7 +5,11 @@ train/
 
 # Outputs
 outputs/
+outputs_1/
+outputs_2/
+outputs_3/
 inputs/masks/
+arc_outputs/
 
 # Irrelevant
 pytorch/

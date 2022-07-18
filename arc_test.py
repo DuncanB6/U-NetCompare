@@ -5,7 +5,6 @@ from pathlib import Path
 import hydra
 from omegaconf import DictConfig
 import numpy as np
-import matplotlib.pyplot as plt
 from unet_compare.real_unet import real_main
 from unet_compare.comp_unet import comp_main
 from unet_compare.functions import get_brains, mask_gen

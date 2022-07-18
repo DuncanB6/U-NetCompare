@@ -16,15 +16,15 @@ addrs:
   TEST: test/*.npy
   TRAIN: train/*.npy
   VAL: val/*.npy
-  STATS: outputs/stats.npy
-  COMP_MODEL: outputs/comp_model
-  REAL_MODEL: outputs/real_model
-  COMP_LOG: outputs/comp_unet.log
-  REAL_LOG: outputs/unet.log
+  STATS: outputs_2/stats.npy
+  COMP_MODEL: outputs_2/comp_model
+  REAL_MODEL: outputs_2/real_model
+  COMP_LOG: outputs_2/comp_unet.log
+  REAL_LOG: outputs_2/unet.log
   FUNC: functions
-  COMP_CHEC: outputs/comp_check
-  REAL_CHEC: outputs/real_check
-  COMP_CSV: outputs/comp_unet_train.log
-  REAL_CSV: Outputs/real_unet_train.log
+  COMP_CHEC: outputs_2/comp_check
+  REAL_CHEC: outputs_2/real_check
+  COMP_CSV: outputs_2/comp_unet_train.log
+  REAL_CSV: outputs_2/real_unet_train.log
   MASKS: inputs/masks/*.npy
   MASK_SAVE: inputs/masks

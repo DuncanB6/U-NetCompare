@@ -29,7 +29,7 @@ def comp_main(
     rec_train,
 ):
 
-    logging.info("Initialized complex UNet")
+    logging.info("Initialized complex UNet with ")
     init_time = time.time()
 
     # Declares, compiles, fits the model.
@@ -77,6 +77,7 @@ def comp_main(
     time_finished = now.strftime("%d/%m/%Y %H:%M:%S")
     logging.info("total time: " + str(int(end_time - init_time)))
     logging.info("time completed: " + time_finished)
+    print("Time:", str(int(end_time - init_time)))
 
     logging.info("Done")
 

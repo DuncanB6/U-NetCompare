@@ -21,7 +21,7 @@ from unet_compare.functions import nrmse, CompConv2D, get_test
 @hydra.main(
     version_base=None,
     config_path="../UofC2022/inputs/configs",
-    config_name="settings_2",
+    config_name="settings_1",
 )
 def main(cfg: DictConfig):
 
@@ -37,7 +37,7 @@ def main(cfg: DictConfig):
     image_test = np.expand_dims(image_test, axis=3)
 
     comp_model = tf.keras.models.load_model(
-        ADDR / cfg["addrs"]["COMP_MODEL"],
+        ADDR / cfg["addrs"]["ARC_1_MODEL"],
         custom_objects={"nrmse": nrmse, "CompConv2D": CompConv2D},
     )
 
