@@ -35,9 +35,6 @@ def main(cfg: DictConfig):
         image_test,
     ) = get_test(cfg, ADDR)
 
-    image_test = image_test[:, :, :, 0]
-    image_test = np.expand_dims(image_test, axis=3)
-
     comp_model = tf.keras.models.load_model(
         ADDR / cfg["addrs"]["COMP_ARC"],
         custom_objects={"nrmse": nrmse, "CompConv2D": CompConv2D},
@@ -52,17 +49,20 @@ def main(cfg: DictConfig):
     print(comp_pred.shape)
 
     # Makes predictions
-    real_pred = comp_model.predict(kspace_test)
+    real_pred = real_model.predict(kspace_test)
     print(real_pred.shape)
+
+    comp_pred = np.abs(np.fft.ifft2(comp_pred[:, :, :, 0] + 1j * comp_pred[:, :, :, 1]))
+    real_pred = np.abs(np.fft.ifft2(real_pred[:, :, :, 0] + 1j * real_pred[:, :, :, 1]))
 
     # Displays predictions (Not necessary for ARC)
     plt.figure(figsize=(10, 10))
     plt.subplot(1, 4, 1)
-    plt.imshow((255.0 - image_test[0]), cmap="Greys")
+    plt.imshow((255.0 - image_test[0, :, :, 0]), cmap="Greys")
     plt.subplot(1, 4, 2)
-    plt.imshow((255.0 - comp_pred[0]), cmap="Greys")
+    plt.imshow((255.0 - comp_pred[0, :, :, 0]), cmap="Greys")
     plt.subplot(1, 4, 3)
-    plt.imshow((255.0 - real_pred[0]), cmap="Greys")
+    plt.imshow((255.0 - real_pred[0, :, :, 0]), cmap="Greys")
     plt.subplot(1, 4, 4)
     plt.imshow(
         (

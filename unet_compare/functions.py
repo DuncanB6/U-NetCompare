@@ -75,6 +75,7 @@ def get_test(cfg, ADDR):
         image_test,
     )
 
+
 # Creates a number of masks (modifiable in settings) with a 22% poisson disk.
 def mask_gen(ADDR, cfg):
 
@@ -114,7 +115,7 @@ def mask_gen(ADDR, cfg):
 
 
 # Return an image generator which generates augmented images
-def data_aug(rec_train, mask, stats, cfg):
+def data_aug(image_train, mask, stats, cfg):
     seed = 905
     image_datagen1 = ImageDataGenerator(
         rotation_range=40,
@@ -138,16 +139,16 @@ def data_aug(rec_train, mask, stats, cfg):
         fill_mode="nearest",
     )
 
-    image_datagen1.fit(rec_train[:, :, :, 0, np.newaxis], augment=True, seed=seed)
-    image_datagen2.fit(rec_train[:, :, :, 1, np.newaxis], augment=True, seed=seed)
+    image_datagen1.fit(image_train[:, :, :, 0, np.newaxis], augment=True, seed=seed)
+    image_datagen2.fit(image_train[:, :, :, 1, np.newaxis], augment=True, seed=seed)
 
     image_gen1 = image_datagen1.flow(
-        rec_train[:, :, :, 0, np.newaxis],
+        image_train[:, :, :, 0, np.newaxis],
         batch_size=cfg["params"]["BATCH_SIZE"],
         seed=seed,
     )
     image_gen2 = image_datagen1.flow(
-        rec_train[:, :, :, 1, np.newaxis],
+        image_train[:, :, :, 1, np.newaxis],
         batch_size=cfg["params"]["BATCH_SIZE"],
         seed=seed,
     )
@@ -164,8 +165,7 @@ def data_aug(rec_train, mask, stats, cfg):
                 :, mask[int(random.randint(0, (cfg["params"]["NUM_MASKS"] - 1)))], :
             ] = 0
             kspace2 = (kspace2 - stats[0]) / stats[1]
-            rec = rec_real[:, :, :, 0]
-            rec = np.expand_dims(rec, axis=3)
+            rec = rec_real[:, :, :, :]
             yield (kspace2, rec)
 
     return combine_generator(image_gen1, image_gen2, mask, stats)
@@ -415,17 +415,19 @@ def comp_unet_model(
     # conv8 = layers.Conv2D(2, (1, 1), activation="linear")(conv7)
     conv8 = CompConv2D(1)(conv7)
     res1 = layers.Add()([conv8, inputs])
-    res1_scaled = layers.Lambda(lambda res1: (res1 * sigma1 + mu1))(res1)
+    final = layers.Lambda(lambda res1: (res1 * sigma1 + mu1))(res1)
 
-    rec1 = layers.Lambda(ifft_layer)(res1_scaled)
-    final = layers.Lambda(lambda rec1: (rec1 - mu2) / sigma2)(rec1)
+    # final = layers.Lambda(ifft_layer)(res1_scaled)
+    # final = layers.Lambda(lambda rec1: (rec1 - mu2) / sigma2)(rec1)
 
     model = Model(inputs=inputs, outputs=final)
     return model
 
 
 # U-Net model.
-def real_unet_model(cfg, mu1, sigma1, mu2, sigma2, H=256, W=256, channels=2, kshape=(3, 3)):
+def real_unet_model(
+    cfg, mu1, sigma1, mu2, sigma2, H=256, W=256, channels=2, kshape=(3, 3)
+):
 
     RE_MOD = cfg["params"]["RE_MOD"]
 
@@ -467,10 +469,10 @@ def real_unet_model(cfg, mu1, sigma1, mu2, sigma2, H=256, W=256, channels=2, ksh
 
     conv8 = layers.Conv2D(2, (1, 1), activation="linear")(conv7)
     res1 = layers.Add()([conv8, inputs])
-    res1_scaled = layers.Lambda(lambda res1: (res1 * sigma1 + mu1))(res1)
+    final = layers.Lambda(lambda res1: (res1 * sigma1 + mu1))(res1)
 
-    rec1 = layers.Lambda(ifft_layer)(res1_scaled)
-    final = layers.Lambda(lambda rec1: (rec1 - mu2) / sigma2)(rec1)
+    # final = layers.Lambda(ifft_layer)(res1_scaled)
+    # final = layers.Lambda(lambda rec1: (rec1 - mu2) / sigma2)(rec1)
 
     model = Model(inputs=inputs, outputs=final)
     return model

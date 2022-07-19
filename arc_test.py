@@ -4,7 +4,7 @@
 from pathlib import Path
 import hydra
 from omegaconf import DictConfig
-import numpy as np
+import logging
 from unet_compare.real_unet import real_main
 from unet_compare.comp_unet import comp_main
 from unet_compare.functions import get_brains, mask_gen
@@ -17,6 +17,8 @@ from unet_compare.functions import get_brains, mask_gen
 def main(cfg: DictConfig):
 
     cfg = cfg["configs"]  # Add to run direct from command line with various configs
+
+    logging.info("Settings version: " + str(cfg["params"]["UNIT_CONFIRM"]))
 
     # Finds root address, will need to be checked in ARC.
     ADDR = Path.cwd()  # /Users/duncan.boyd/Documents/WorkCode/workvenv/UofC2022
@@ -36,17 +38,7 @@ def main(cfg: DictConfig):
         image_test,
     ) = get_brains(cfg, ADDR)
 
-    # Block that reverts arrays to the way my code processes them.
-    rec_train = np.copy(image_train)
-    image_train = image_train[:, :, :, 0]
-    image_train = np.expand_dims(image_train, axis=3)
-    image_val = image_val[:, :, :, 0]
-    image_val = np.expand_dims(image_val, axis=3)
-    image_test = image_test[:, :, :, 0]
-    image_test = np.expand_dims(image_test, axis=3)
-
     # Calls both models
-
     immodel = comp_main(
         cfg,
         ADDR,
@@ -58,7 +50,6 @@ def main(cfg: DictConfig):
         image_val,
         kspace_test,
         image_test,
-        rec_train,
     )
     remodel = real_main(
         cfg,
@@ -71,7 +62,6 @@ def main(cfg: DictConfig):
         image_val,
         kspace_test,
         image_test,
-        rec_train,
     )
     return
 

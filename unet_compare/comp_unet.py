@@ -4,14 +4,11 @@
 import time
 from datetime import datetime
 import tensorflow as tf
-import matplotlib.pyplot as plt
 import logging
-import numpy as np
 from unet_compare.functions import (
     comp_unet_model,
     nrmse,
     data_aug,
-    CompConv2D,
 )
 
 
@@ -26,7 +23,6 @@ def comp_main(
     image_val,
     kspace_test,
     image_test,
-    rec_train,
 ):
 
     logging.info("Initialized complex UNet with ")
@@ -53,16 +49,16 @@ def comp_main(
     csvl = tf.keras.callbacks.CSVLogger(
         str(ADDR / cfg["addrs"]["COMP_CSV"]), append=False, separator="|"
     )
-    combined = data_aug(rec_train, mask, stats, cfg)
+    combined = data_aug(image_train, mask, stats, cfg)
 
     # Fits model using training data, validation data
     logging.info("Fitting UNet")
     model.fit(
         combined,
         epochs=cfg["params"]["EPOCHS"],
-        steps_per_epoch=rec_train.shape[0] / cfg["params"]["BATCH_SIZE"],
+        steps_per_epoch=image_train.shape[0] / cfg["params"]["BATCH_SIZE"],
         verbose=1,
-        validation_data=(kspace_val, image_val),
+        validation_data=(image_val, kspace_val),
         callbacks=[mc, es, csvl],
     )
 

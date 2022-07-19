@@ -2,6 +2,8 @@
 
 # This program fits two unets and displays results. Used for local testing.
 
+# Q: What do the imaginary parts of a complex image represent?
+
 # Imports
 from pathlib import Path
 import hydra
@@ -40,15 +42,6 @@ def main(cfg: DictConfig):
         image_test,
     ) = get_brains(cfg, ADDR)
 
-    # Block that reverts arrays to the way my code processes them.
-    rec_train = np.copy(image_train)
-    image_train = image_train[:, :, :, 0]
-    image_train = np.expand_dims(image_train, axis=3)
-    image_val = image_val[:, :, :, 0]
-    image_val = np.expand_dims(image_val, axis=3)
-    image_test = image_test[:, :, :, 0]
-    image_test = np.expand_dims(image_test, axis=3)
-
     # Calls both models
     comp_model = comp_main(
         cfg,
@@ -61,8 +54,8 @@ def main(cfg: DictConfig):
         image_val,
         kspace_test,
         image_test,
-        rec_train,
     )
+    comp_model.summary()
     real_model = real_main(
         cfg,
         ADDR,
@@ -74,8 +67,8 @@ def main(cfg: DictConfig):
         image_val,
         kspace_test,
         image_test,
-        rec_train,
     )
+    real_model.summary()
 
     # Makes predictions
     logging.info("Evaluating UNet")
@@ -84,13 +77,16 @@ def main(cfg: DictConfig):
 
     # Makes predictions
     logging.info("Evaluating UNet")
-    real_pred = comp_model.predict(kspace_test)
+    real_pred = real_model.predict(kspace_test)
     print(real_pred.shape)
+
+    comp_pred = np.abs(np.fft.ifft2(comp_pred[:, :, :, 0] + 1j * comp_pred[:, :, :, 1]))
+    real_pred = np.abs(np.fft.ifft2(real_pred[:, :, :, 0] + 1j * real_pred[:, :, :, 1]))
 
     # Displays predictions (Not necessary for ARC)
     plt.figure(figsize=(10, 10))
     plt.subplot(1, 4, 1)
-    plt.imshow((255.0 - image_test[0]), cmap="Greys")
+    plt.imshow((255.0 - image_test[0, :, :, 0]), cmap="Greys")
     plt.subplot(1, 4, 2)
     plt.imshow((255.0 - comp_pred[0]), cmap="Greys")
     plt.subplot(1, 4, 3)
