@@ -1,15 +1,6 @@
-# July 4, 2022
+# July 19, 2022
 
 # This program fits two unets and displays results. Used for local testing.
-
-# Status:
-# This is the beginning of a complex U-Net. Returns medium quality images.
-# Variable results most likely due to small sample sizes.
-
-# To do:
-# Expand on unit tests (optional)
-# Determine the actual experiments/training to be done on ARC (once other tasks are complete)
-# Run ARC tests
 
 # Imports
 from pathlib import Path
@@ -23,16 +14,6 @@ from unet_compare.functions import get_brains, mask_gen
 import logging
 
 # Import settings with hydra
-
-# For debugging:
-# config_path="../UofC2022/inputs/configs",
-# config_name="settings_1",
-
-# For multiple configs from command "python3 main_script.py +configs=settings_1":
-# NOTE: Make sure to uncomment first line in main.
-# config_path="../UofC2022/inputs",
-
-
 @hydra.main(
     version_base=None,
     config_path="../UofC2022/inputs/configs",
@@ -42,7 +23,6 @@ def main(cfg: DictConfig):
 
     logging.info("Settings version: " + str(cfg["params"]["UNIT_CONFIRM"]))
 
-    # Finds root address, will need to be checked in ARC.
     ADDR = Path.cwd()  # /Users/duncan.boyd/Documents/WorkCode/workvenv/UofC2022
 
     # Creates masks
@@ -96,8 +76,6 @@ def main(cfg: DictConfig):
         image_test,
         rec_train,
     )
-    real_model.summary()
-    comp_model.summary()
 
     # Makes predictions
     logging.info("Evaluating UNet")
