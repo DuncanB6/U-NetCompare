@@ -4,7 +4,7 @@ params:
   MOD: 1.42 # 1.42: Modified to match ReUNet's trainable params roughly (+-1%) which isn't ideal
   RE_MOD: 1.0
   BATCH_SIZE: 1 # 16 (WNet)
-  NUM_TRAIN: 4 # max 4254
+  NUM_TRAIN: 1 # max 4254
   NUM_VAL: 1 # max 1700
   NUM_TEST: 1 # max 1700
   NUM_MASKS: 1

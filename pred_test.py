@@ -25,6 +25,8 @@ from unet_compare.functions import nrmse, CompConv2D, get_test
 )
 def main(cfg: DictConfig):
 
+    print(cfg)
+
     ADDR = Path.cwd()
 
     # Loads data
