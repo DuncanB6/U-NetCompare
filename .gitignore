@@ -5,9 +5,11 @@ train/
 
 # Outputs
 outputs/
-arc_outputs/
 outputs_1/
+outputs_2/
+outputs_3/
 inputs/masks/
+arc_outputs/
 
 # DS Store
 *.DS_Store

@@ -16,6 +16,65 @@ import sigpy.mri as sp
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
 tf.disable_v2_behavior()
 
+# Gets test data only.
+def get_test(cfg, ADDR):
+
+    kspace_files_test = np.asarray(glob.glob(str(ADDR / cfg["addrs"]["TEST"])))
+
+    logging.info("test scans: " + str(len(kspace_files_test)))
+    logging.debug("Scans loaded")
+
+    shape = (256, 256)
+    norm = np.sqrt(shape[0] * shape[1])
+
+    mask = np.zeros((cfg["params"]["NUM_MASKS"], shape[0], shape[1]))
+    masks = np.asarray(glob.glob(str(ADDR / cfg["addrs"]["MASKS"])))
+    for i in range(len(masks)):
+        mask[i] = np.load(masks[i])
+    mask = mask.astype(int)
+    logging.info("masks: " + str(len(mask)))
+
+    # Get number of samples
+    ntest = 0
+    for ii in range(len(kspace_files_test)):
+        ntest += np.load(kspace_files_test[ii]).shape[0]
+
+    # Load test data
+    image_test = np.zeros((ntest, shape[0], shape[1], 2))
+    kspace_test = np.zeros((ntest, shape[0], shape[1], 2))
+    aux_counter = 0
+    for ii in range(len(kspace_files_test)):
+        aux_kspace = np.load(kspace_files_test[ii]) / norm
+        aux = aux_kspace.shape[0]
+        aux2 = np.fft.ifft2(aux_kspace[:, :, :, 0] + 1j * aux_kspace[:, :, :, 1])
+        image_test[aux_counter : aux_counter + aux, :, :, 0] = aux2.real
+        image_test[aux_counter : aux_counter + aux, :, :, 1] = aux2.imag
+        kspace_test[aux_counter : aux_counter + aux, :, :, 0] = aux_kspace[:, :, :, 0]
+        kspace_test[aux_counter : aux_counter + aux, :, :, 1] = aux_kspace[:, :, :, 1]
+        aux_counter += aux
+
+    # Shuffle testing
+    indexes = np.arange(image_test.shape[0], dtype=int)
+    np.random.shuffle(indexes)
+    image_test = image_test[indexes]
+    kspace_test = kspace_test[indexes]
+    kspace_test[
+        :, mask[int(random.randint(0, (cfg["params"]["NUM_MASKS"] - 1)))], :
+    ] = 0
+
+    kspace_test = kspace_test[: cfg["params"]["NUM_TEST"], :, :, :]
+    image_test = image_test[: cfg["params"]["NUM_TEST"], :, :, :]
+
+    logging.info("kspace test: " + str(kspace_test.shape))
+    logging.info("image test: " + str(image_test.shape))
+
+    logging.debug("Scans formatted")
+
+    return (
+        kspace_test,
+        image_test,
+    )
+
 # Creates a number of masks (modifiable in settings) with a 22% poisson disk.
 def mask_gen(ADDR, cfg):
 
@@ -366,43 +425,45 @@ def comp_unet_model(
 
 
 # U-Net model.
-def real_unet_model(mu1, sigma1, mu2, sigma2, H=256, W=256, channels=2, kshape=(3, 3)):
+def real_unet_model(cfg, mu1, sigma1, mu2, sigma2, H=256, W=256, channels=2, kshape=(3, 3)):
+
+    RE_MOD = cfg["params"]["RE_MOD"]
 
     inputs = Input(shape=(H, W, channels))
 
-    conv1 = Conv2D(48, kshape, activation="relu", padding="same")(inputs)
-    conv1 = Conv2D(48, kshape, activation="relu", padding="same")(conv1)
-    conv1 = Conv2D(48, kshape, activation="relu", padding="same")(conv1)
+    conv1 = Conv2D(48 * RE_MOD, kshape, activation="relu", padding="same")(inputs)
+    conv1 = Conv2D(48 * RE_MOD, kshape, activation="relu", padding="same")(conv1)
+    conv1 = Conv2D(48 * RE_MOD, kshape, activation="relu", padding="same")(conv1)
     pool1 = MaxPooling2D(pool_size=(2, 2))(conv1)
 
-    conv2 = Conv2D(64, kshape, activation="relu", padding="same")(pool1)
-    conv2 = Conv2D(64, kshape, activation="relu", padding="same")(conv2)
-    conv2 = Conv2D(64, kshape, activation="relu", padding="same")(conv2)
+    conv2 = Conv2D(64 * RE_MOD, kshape, activation="relu", padding="same")(pool1)
+    conv2 = Conv2D(64 * RE_MOD, kshape, activation="relu", padding="same")(conv2)
+    conv2 = Conv2D(64 * RE_MOD, kshape, activation="relu", padding="same")(conv2)
     pool2 = MaxPooling2D(pool_size=(2, 2))(conv2)
 
-    conv3 = Conv2D(128, kshape, activation="relu", padding="same")(pool2)
-    conv3 = Conv2D(128, kshape, activation="relu", padding="same")(conv3)
-    conv3 = Conv2D(128, kshape, activation="relu", padding="same")(conv3)
+    conv3 = Conv2D(128 * RE_MOD, kshape, activation="relu", padding="same")(pool2)
+    conv3 = Conv2D(128 * RE_MOD, kshape, activation="relu", padding="same")(conv3)
+    conv3 = Conv2D(128 * RE_MOD, kshape, activation="relu", padding="same")(conv3)
     pool3 = MaxPooling2D(pool_size=(2, 2))(conv3)
 
-    conv4 = Conv2D(256, kshape, activation="relu", padding="same")(pool3)
-    conv4 = Conv2D(256, kshape, activation="relu", padding="same")(conv4)
-    conv4 = Conv2D(256, kshape, activation="relu", padding="same")(conv4)
+    conv4 = Conv2D(256 * RE_MOD, kshape, activation="relu", padding="same")(pool3)
+    conv4 = Conv2D(256 * RE_MOD, kshape, activation="relu", padding="same")(conv4)
+    conv4 = Conv2D(256 * RE_MOD, kshape, activation="relu", padding="same")(conv4)
 
     up1 = concatenate([UpSampling2D(size=(2, 2))(conv4), conv3], axis=-1)
-    conv5 = Conv2D(128, kshape, activation="relu", padding="same")(up1)
-    conv5 = Conv2D(128, kshape, activation="relu", padding="same")(conv5)
-    conv5 = Conv2D(128, kshape, activation="relu", padding="same")(conv5)
+    conv5 = Conv2D(128 * RE_MOD, kshape, activation="relu", padding="same")(up1)
+    conv5 = Conv2D(128 * RE_MOD, kshape, activation="relu", padding="same")(conv5)
+    conv5 = Conv2D(128 * RE_MOD, kshape, activation="relu", padding="same")(conv5)
 
     up2 = concatenate([UpSampling2D(size=(2, 2))(conv5), conv2], axis=-1)
-    conv6 = Conv2D(64, kshape, activation="relu", padding="same")(up2)
-    conv6 = Conv2D(64, kshape, activation="relu", padding="same")(conv6)
-    conv6 = Conv2D(64, kshape, activation="relu", padding="same")(conv6)
+    conv6 = Conv2D(64 * RE_MOD, kshape, activation="relu", padding="same")(up2)
+    conv6 = Conv2D(64 * RE_MOD, kshape, activation="relu", padding="same")(conv6)
+    conv6 = Conv2D(64 * RE_MOD, kshape, activation="relu", padding="same")(conv6)
 
     up3 = concatenate([UpSampling2D(size=(2, 2))(conv6), conv1], axis=-1)
-    conv7 = Conv2D(48, kshape, activation="relu", padding="same")(up3)
-    conv7 = Conv2D(48, kshape, activation="relu", padding="same")(conv7)
-    conv7 = Conv2D(48, kshape, activation="relu", padding="same")(conv7)
+    conv7 = Conv2D(48 * RE_MOD, kshape, activation="relu", padding="same")(up3)
+    conv7 = Conv2D(48 * RE_MOD, kshape, activation="relu", padding="same")(conv7)
+    conv7 = Conv2D(48 * RE_MOD, kshape, activation="relu", padding="same")(conv7)
 
     conv8 = layers.Conv2D(2, (1, 1), activation="linear")(conv7)
     res1 = layers.Add()([conv8, inputs])
