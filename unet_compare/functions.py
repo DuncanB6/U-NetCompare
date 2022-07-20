@@ -412,8 +412,8 @@ def comp_unet_model(
     conv7 = CompConv2D(24 * MOD)(conv7)
     conv7 = CompConv2D(24 * MOD)(conv7)
 
-    # conv8 = layers.Conv2D(2, (1, 1), activation="linear")(conv7)
-    conv8 = CompConv2D(1)(conv7)
+    conv8 = layers.Conv2D(2, (1, 1), activation="linear")(conv7)
+    # conv8 = CompConv2D(1)(conv7)
     res1 = layers.Add()([conv8, inputs])
     final = layers.Lambda(lambda res1: (res1 * sigma1 + mu1))(res1)
 
