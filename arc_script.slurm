@@ -1,13 +1,11 @@
-####### This script is not complete and should be revised. ###########
-
 #!/bin/bash
 ####### Reserve computing resources #############
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
-#SBATCH --cpus-per-task=1
+#SBATCH --cpus-per-task=8
 #SBATCH --time=10:00:00
 #SBATCH --mem=1G
-#SBATCH --partition=cpu2019
+#SBATCH --partition=gpu-v100
 
 ####### Set environment variables ###############
 export PATH=~/software/miniconda3/bin:$PATH

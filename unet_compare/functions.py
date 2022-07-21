@@ -59,7 +59,7 @@ def get_test(cfg, ADDR):
     image_test = image_test[indexes]
     kspace_test = kspace_test[indexes]
     kspace_test[
-        :, mask[int(random.randint(0, (cfg["params"]["NUM_MASKS"] - 1)))], :
+        :, ~mask[int(random.randint(0, (cfg["params"]["NUM_MASKS"] - 1)))], :
     ] = 0
 
     kspace_test = kspace_test[: cfg["params"]["NUM_TEST"], :, :, :]
@@ -88,7 +88,7 @@ def mask_gen(ADDR, cfg):
             img_shape=(256, 256),
             accel=cfg["params"]["ACCEL"],
             dtype=int,
-            crop_corner=True,
+            crop_corner=False,
         )
 
         ones = 0
@@ -162,7 +162,7 @@ def data_aug(image_train, mask, stats, cfg):
             kspace2[:, :, :, 0] = kspace.real
             kspace2[:, :, :, 1] = kspace.imag
             kspace2[
-                :, mask[int(random.randint(0, (cfg["params"]["NUM_MASKS"] - 1)))], :
+                :, ~mask[int(random.randint(0, (cfg["params"]["NUM_MASKS"] - 1)))], :
             ] = 0
             kspace2 = (kspace2 - stats[0]) / stats[1]
             rec = rec_real[:, :, :, :]
@@ -235,7 +235,7 @@ def get_brains(cfg, ADDR):
     np.random.shuffle(indexes)
     image_train = image_train[indexes]
     kspace_train = kspace_train[indexes]
-    kspace_train[:, mask[int(random.randint(0, cfg["params"]["NUM_MASKS"] - 1))], :] = 0
+    kspace_train[:, ~mask[int(random.randint(0, cfg["params"]["NUM_MASKS"] - 1))], :] = 0
 
     kspace_train = kspace_train[: cfg["params"]["NUM_TRAIN"], :, :, :]
     image_train = image_train[: cfg["params"]["NUM_TRAIN"], :, :, :]
@@ -267,7 +267,7 @@ def get_brains(cfg, ADDR):
     np.random.shuffle(indexes)
     image_val = image_val[indexes]
     kspace_val = kspace_val[indexes]
-    kspace_val[:, mask[int(random.randint(0, cfg["params"]["NUM_MASKS"] - 1))], :] = 0
+    kspace_val[:, ~mask[int(random.randint(0, cfg["params"]["NUM_MASKS"] - 1))], :] = 0
 
     kspace_val = kspace_val[: cfg["params"]["NUM_VAL"], :, :, :]
     image_val = image_val[: cfg["params"]["NUM_VAL"], :, :, :]
@@ -299,7 +299,7 @@ def get_brains(cfg, ADDR):
     np.random.shuffle(indexes)
     image_test = image_test[indexes]
     kspace_test = kspace_test[indexes]
-    kspace_test[:, mask[int(random.randint(0, cfg["params"]["NUM_MASKS"] - 1))], :] = 0
+    kspace_test[:, ~mask[int(random.randint(0, cfg["params"]["NUM_MASKS"] - 1))], :] = 0
 
     kspace_test = kspace_test[: cfg["params"]["NUM_TEST"], :, :, :]
     image_test = image_test[: cfg["params"]["NUM_TEST"], :, :, :]

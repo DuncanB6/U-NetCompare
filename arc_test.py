@@ -16,6 +16,8 @@ from unet_compare.functions import get_brains, mask_gen
 )
 def main(cfg: DictConfig):
 
+    print("Num GPUs Available: ", len(tf.config.list_physical_devices('GPU')))
+
     cfg = cfg["configs"]  # Add to run direct from command line with various configs
 
     logging.info("Settings version: " + str(cfg["params"]["UNIT_CONFIRM"]))
