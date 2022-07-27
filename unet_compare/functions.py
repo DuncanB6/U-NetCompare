@@ -12,6 +12,7 @@ import logging
 from keras.preprocessing.image import ImageDataGenerator
 import random
 import sigpy.mri as sp
+import matplotlib.pyplot as plt
 
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
 tf.disable_v2_behavior()
@@ -59,7 +60,7 @@ def get_test(cfg, ADDR):
     image_test = image_test[indexes]
     kspace_test = kspace_test[indexes]
     kspace_test[
-        :, ~mask[int(random.randint(0, (cfg["params"]["NUM_MASKS"] - 1)))], :
+        :, mask[int(random.randint(0, (cfg["params"]["NUM_MASKS"] - 1)))], :
     ] = 0
 
     kspace_test = kspace_test[: cfg["params"]["NUM_TEST"], :, :, :]
@@ -75,6 +76,18 @@ def get_test(cfg, ADDR):
         image_test,
     )
 
+def create_circular_mask(h=256, w=256, center=None, radius=16):
+
+    if center is None: # use the middle of the image
+        center = (int(w/2), int(h/2))
+    if radius is None: # use the smallest distance between the center and image walls
+        radius = min(center[0], center[1], w-center[0], h-center[1])
+
+    Y, X = np.ogrid[:h, :w]
+    dist_from_center = np.sqrt((X - center[0])**2 + (Y-center[1])**2)
+
+    mask = dist_from_center <= radius
+    return mask
 
 # Creates a number of masks (modifiable in settings) with a 22% poisson disk.
 def mask_gen(ADDR, cfg):
@@ -91,20 +104,10 @@ def mask_gen(ADDR, cfg):
             crop_corner=False,
         )
 
-        ones = 0
-        zeros = 0
+        mask = mask + create_circular_mask()
+        mask = ~np.fft.fftshift(mask, axes=(0, 1))
 
-        for i in range(256):
-            for j in range(256):
-                if mask[i][j] > 0:
-                    ones += 1
-                else:
-                    zeros += 1
-
-        ratio = ones / zeros * 100.0
-        ratio = float(f"{ratio:.4f}")
-
-        filename = "/mask" + str(int(k)) + "_" + str(ratio) + ".npy"
+        filename = "/mask" + str(int(k)) + "_" + str(cfg["params"]["ACCEL"]) + ".npy"
         filename = cfg["addrs"]["MASK_SAVE"] + filename
         np.save(
             str(ADDR / filename),
@@ -162,7 +165,7 @@ def data_aug(image_train, mask, stats, cfg):
             kspace2[:, :, :, 0] = kspace.real
             kspace2[:, :, :, 1] = kspace.imag
             kspace2[
-                :, ~mask[int(random.randint(0, (cfg["params"]["NUM_MASKS"] - 1)))], :
+                :, mask[int(random.randint(0, (cfg["params"]["NUM_MASKS"] - 1)))], :
             ] = 0
             kspace2 = (kspace2 - stats[0]) / stats[1]
             rec = rec_real[:, :, :, :]
@@ -235,7 +238,7 @@ def get_brains(cfg, ADDR):
     np.random.shuffle(indexes)
     image_train = image_train[indexes]
     kspace_train = kspace_train[indexes]
-    kspace_train[:, ~mask[int(random.randint(0, cfg["params"]["NUM_MASKS"] - 1))], :] = 0
+    kspace_train[:, mask[int(random.randint(0, cfg["params"]["NUM_MASKS"] - 1))], :] = 0
 
     kspace_train = kspace_train[: cfg["params"]["NUM_TRAIN"], :, :, :]
     image_train = image_train[: cfg["params"]["NUM_TRAIN"], :, :, :]
@@ -267,7 +270,7 @@ def get_brains(cfg, ADDR):
     np.random.shuffle(indexes)
     image_val = image_val[indexes]
     kspace_val = kspace_val[indexes]
-    kspace_val[:, ~mask[int(random.randint(0, cfg["params"]["NUM_MASKS"] - 1))], :] = 0
+    kspace_val[:, mask[int(random.randint(0, cfg["params"]["NUM_MASKS"] - 1))], :] = 0
 
     kspace_val = kspace_val[: cfg["params"]["NUM_VAL"], :, :, :]
     image_val = image_val[: cfg["params"]["NUM_VAL"], :, :, :]
@@ -299,7 +302,7 @@ def get_brains(cfg, ADDR):
     np.random.shuffle(indexes)
     image_test = image_test[indexes]
     kspace_test = kspace_test[indexes]
-    kspace_test[:, ~mask[int(random.randint(0, cfg["params"]["NUM_MASKS"] - 1))], :] = 0
+    kspace_test[:, mask[int(random.randint(0, cfg["params"]["NUM_MASKS"] - 1))], :] = 0
 
     kspace_test = kspace_test[: cfg["params"]["NUM_TEST"], :, :, :]
     image_test = image_test[: cfg["params"]["NUM_TEST"], :, :, :]
