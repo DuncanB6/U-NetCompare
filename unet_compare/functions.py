@@ -1,7 +1,8 @@
 # Functions that support both UNets. Includes the UNets themselves and the custom layers.
 
 import os
-import tensorflow.compat.v1 as tf
+from re import L
+import tensorflow as tf
 from keras import layers
 from keras.layers import Input, Conv2D, MaxPooling2D, concatenate, UpSampling2D
 import numpy as np
@@ -15,7 +16,7 @@ import sigpy.mri as sp
 import matplotlib.pyplot as plt
 
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
-tf.disable_v2_behavior()
+# tf.disable_v2_behavior()
 
 # Gets test data only.
 def get_test(cfg, ADDR):
@@ -370,10 +371,6 @@ class CompConv2D(layers.Layer):
 
 
 # U-Net model. Includes kspace domain U-Net and IFFT.
-# Note: Filters are halved to maintain structure, but they probably shouldn't be. Although this may reduce performance, I think it's probably fine for testing.
-# A variable (MOD) was added to make testing easier. At small scale, MOD = 1 worked best.
-# Question: Can a purely kspace model be trained, with no reference to image domain? For this code, I've assumed no (also just for convenience viewing results).
-# I'm pretty sure it can though.
 def comp_unet_model(
     mu1, sigma1, mu2, sigma2, cfg, H=256, W=256, channels=2, kshape=(3, 3)
 ):
@@ -417,13 +414,10 @@ def comp_unet_model(
 
     conv8 = layers.Conv2D(2, (1, 1), activation="linear")(conv7)
     # conv8 = CompConv2D(1)(conv7)
-    res1 = layers.Add()([conv8, inputs])
-    final = layers.Lambda(lambda res1: (res1 * sigma1 + mu1))(res1)
+    # res1 = layers.Add()([conv8, inputs])
+    # final = layers.Lambda(lambda res1: (res1 * sigma1 + mu1))(res1)
 
-    # final = layers.Lambda(ifft_layer)(res1_scaled)
-    # final = layers.Lambda(lambda rec1: (rec1 - mu2) / sigma2)(rec1)
-
-    model = Model(inputs=inputs, outputs=final)
+    model = Model(inputs=inputs, outputs=conv8)
     return model
 
 
@@ -471,11 +465,8 @@ def real_unet_model(
     conv7 = Conv2D(48 * RE_MOD, kshape, activation="relu", padding="same")(conv7)
 
     conv8 = layers.Conv2D(2, (1, 1), activation="linear")(conv7)
-    res1 = layers.Add()([conv8, inputs])
-    final = layers.Lambda(lambda res1: (res1 * sigma1 + mu1))(res1)
+    # res1 = layers.Add()([conv8, inputs])
+    # final = layers.Lambda(lambda res1: (res1 * sigma1 + mu1))(res1)
 
-    # final = layers.Lambda(ifft_layer)(res1_scaled)
-    # final = layers.Lambda(lambda rec1: (rec1 - mu2) / sigma2)(rec1)
-
-    model = Model(inputs=inputs, outputs=final)
+    model = Model(inputs=inputs, outputs=conv8)
     return model

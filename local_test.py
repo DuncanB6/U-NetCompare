@@ -1,4 +1,4 @@
-# July 19, 2022
+# July 27, 2022
 
 # This program fits two unets and displays results. Used for local testing.
 
@@ -42,6 +42,26 @@ def main(cfg: DictConfig):
         image_test,
     ) = get_brains(cfg, ADDR)
 
+    # Following 3 blocks convert kspace to image domain.
+    # When implemented in a function, this code returned grey images.
+    aux = np.fft.ifft2(kspace_train[:, :, :, 0] + 1j * kspace_train[:, :, :, 1])
+    image = np.copy(kspace_train)
+    image[:, :, :, 0] = aux.real
+    image[:, :, :, 1] = aux.imag
+    kspace_train = image
+
+    aux = np.fft.ifft2(kspace_test[:, :, :, 0] + 1j * kspace_test[:, :, :, 1])
+    image = np.copy(kspace_test)
+    image[:, :, :, 0] = aux.real
+    image[:, :, :, 1] = aux.imag
+    kspace_test = image
+
+    aux = np.fft.ifft2(kspace_val[:, :, :, 0] + 1j * kspace_val[:, :, :, 1])
+    image = np.copy(kspace_val)
+    image[:, :, :, 0] = aux.real
+    image[:, :, :, 1] = aux.imag
+    kspace_val = image
+
     # Calls both models
     comp_model = comp_main(
         cfg,
@@ -80,19 +100,20 @@ def main(cfg: DictConfig):
     real_pred = real_model.predict(kspace_test)
     print(real_pred.shape)
 
-    comp_pred = np.abs(np.fft.ifft2(comp_pred[:, :, :, 0] + 1j * comp_pred[:, :, :, 1]))
-    real_pred = np.abs(np.fft.ifft2(real_pred[:, :, :, 0] + 1j * real_pred[:, :, :, 1]))
+    # comp_pred = np.abs(np.fft.ifft2(comp_pred[:, :, :, 0] + 1j * comp_pred[:, :, :, 1]))
+    # real_pred = np.abs(np.fft.ifft2(real_pred[:, :, :, 0] + 1j * real_pred[:, :, :, 1]))
 
     # Displays predictions (Not necessary for ARC)
     plt.figure(figsize=(10, 10))
     plt.subplot(1, 4, 1)
     plt.imshow((255.0 - image_test[0, :, :, 0]), cmap="Greys")
     plt.subplot(1, 4, 2)
-    plt.imshow((255.0 - comp_pred[0]), cmap="Greys")
+    plt.imshow((255.0 - comp_pred[0, :, :, 0]), cmap="Greys")
     plt.subplot(1, 4, 3)
-    plt.imshow((255.0 - real_pred[0]), cmap="Greys")
+    plt.imshow((255.0 - real_pred[0, :, :, 0]), cmap="Greys")
     plt.subplot(1, 4, 4)
-    plt.imshow(
+    plt.imshow((255.0 - kspace_test[0, :, :, 0]), cmap="Greys")
+    '''plt.imshow(
         (
             255.0
             - np.abs(
@@ -100,7 +121,7 @@ def main(cfg: DictConfig):
             )
         ),
         cmap="Greys",
-    )
+    )'''
     plt.show()
 
     return

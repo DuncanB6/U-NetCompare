@@ -8,6 +8,7 @@ import logging
 from unet_compare.real_unet import real_main
 from unet_compare.comp_unet import comp_main
 from unet_compare.functions import get_brains, mask_gen
+import numpy as np
 
 # Import settings with hydra
 @hydra.main(
@@ -39,6 +40,26 @@ def main(cfg: DictConfig):
         kspace_test,
         image_test,
     ) = get_brains(cfg, ADDR)
+
+    # Following 3 blocks convert kspace to image domain.
+    # When implemented in a function, this code returned grey images.
+    aux = np.fft.ifft2(kspace_train[:, :, :, 0] + 1j * kspace_train[:, :, :, 1])
+    image = np.copy(kspace_train)
+    image[:, :, :, 0] = aux.real
+    image[:, :, :, 1] = aux.imag
+    kspace_train = image
+
+    aux = np.fft.ifft2(kspace_test[:, :, :, 0] + 1j * kspace_test[:, :, :, 1])
+    image = np.copy(kspace_test)
+    image[:, :, :, 0] = aux.real
+    image[:, :, :, 1] = aux.imag
+    kspace_test = image
+
+    aux = np.fft.ifft2(kspace_val[:, :, :, 0] + 1j * kspace_val[:, :, :, 1])
+    image = np.copy(kspace_val)
+    image[:, :, :, 0] = aux.real
+    image[:, :, :, 1] = aux.imag
+    kspace_val = image
 
     # Calls both models
     immodel = comp_main(
