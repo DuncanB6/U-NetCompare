@@ -12,7 +12,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from unet_compare.real_unet import real_main
 from unet_compare.comp_unet import comp_main
-from unet_compare.functions import get_brains, mask_gen
+from unet_compare.functions import get_brains, mask_gen, normalize
 import logging
 
 # Import settings with hydra
@@ -100,9 +100,6 @@ def main(cfg: DictConfig):
     real_pred = real_model.predict(kspace_test)
     print(real_pred.shape)
 
-    # comp_pred = np.abs(np.fft.ifft2(comp_pred[:, :, :, 0] + 1j * comp_pred[:, :, :, 1]))
-    # real_pred = np.abs(np.fft.ifft2(real_pred[:, :, :, 0] + 1j * real_pred[:, :, :, 1]))
-
     # Displays predictions (Not necessary for ARC)
     plt.figure(figsize=(10, 10))
     plt.subplot(1, 4, 1)
@@ -113,15 +110,6 @@ def main(cfg: DictConfig):
     plt.imshow((255.0 - real_pred[0, :, :, 0]), cmap="Greys")
     plt.subplot(1, 4, 4)
     plt.imshow((255.0 - kspace_test[0, :, :, 0]), cmap="Greys")
-    '''plt.imshow(
-        (
-            255.0
-            - np.abs(
-                np.fft.ifft2(kspace_test[0, :, :, 0] + 1j * kspace_test[0, :, :, 1])
-            )
-        ),
-        cmap="Greys",
-    )'''
     plt.show()
 
     return

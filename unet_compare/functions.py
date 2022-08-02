@@ -21,6 +21,9 @@ from skimage.metrics import peak_signal_noise_ratio as psnr
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
 # tf.disable_v2_behavior()
 
+def normalize(values, actual_bounds, desired_bounds):
+    return desired_bounds[0] + (values - actual_bounds[0]) * (desired_bounds[1] - desired_bounds[0]) / (actual_bounds[1] - actual_bounds[0])
+
 def metrics(ref, pred):
 
     metrics = np.zeros((pred.shape[0],3))
@@ -439,7 +442,7 @@ def comp_unet_model(
     conv8 = layers.Conv2D(2, (1, 1), activation="linear")(conv7)
     # conv8 = CompConv2D(1)(conv7)
     # res1 = layers.Add()([conv8, inputs])
-    # final = layers.Lambda(lambda res1: (res1 * sigma1 + mu1))(res1)
+    # final = layers.Lambda(lambda res1: (res1 * sigma1 + mu1))(conv8)
 
     model = Model(inputs=inputs, outputs=conv8)
     return model
