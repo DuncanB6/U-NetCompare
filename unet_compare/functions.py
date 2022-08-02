@@ -3,20 +3,37 @@
 import os
 from re import L
 import tensorflow as tf
-from keras import layers
-from keras.layers import Input, Conv2D, MaxPooling2D, concatenate, UpSampling2D
+from tensorflow.keras import layers
+from tensorflow.keras.layers import Input, Conv2D, MaxPooling2D, concatenate, UpSampling2D
 import numpy as np
 import glob
-from keras import backend as K
-from keras.models import Model
+from tensorflow.keras import backend as K
+from tensorflow.keras.models import Model
 import logging
-from keras.preprocessing.image import ImageDataGenerator
+from tensorflow.keras.preprocessing.image import ImageDataGenerator
 import random
-import sigpy.mri as sp
+import sigpy.mri as sp # 1.22
 import matplotlib.pyplot as plt
+from skimage.metrics import structural_similarity as ssim
+from skimage.metrics import normalized_root_mse as norm_root_mse
+from skimage.metrics import peak_signal_noise_ratio as psnr
 
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
 # tf.disable_v2_behavior()
+
+def metrics(ref, pred):
+
+    metrics = np.zeros((pred.shape[0],3))
+    for ii in range(pred.shape[0]):  
+        metrics[ii,0] = ssim(ref[ii].ravel(), pred[ii].ravel(), win_size = ref[ii].size-1)
+        metrics[ii,1] = norm_root_mse(ref[ii], pred[ii])
+        metrics[ii,2] = psnr(ref[ii], pred[ii], data_range=(ref[ii].max()-ref[ii].min())) 
+
+    metrics[:,1] = metrics[:,1]*100
+    print("Metrics:")
+    print("SSIM: %.3f +/- %.3f" %(metrics[:,0].mean(), metrics[:,0].std()))
+    print("NRMSE: %.3f +/- %.3f" %(metrics[:,1].mean(),metrics[:,1].std()))
+    print("PSNR: %.3f +/- %.3f" %(metrics[:,2].mean(), metrics[:,2].std()))
 
 # Gets test data only.
 def get_test(cfg, ADDR):
@@ -170,6 +187,13 @@ def data_aug(image_train, mask, stats, cfg):
             ] = 0
             kspace2 = (kspace2 - stats[0]) / stats[1]
             rec = rec_real[:, :, :, :]
+
+            aux = np.fft.ifft2(kspace2[:, :, :, 0] + 1j * kspace2[:, :, :, 1])
+            image = np.copy(kspace2)
+            image[:, :, :, 0] = aux.real
+            image[:, :, :, 1] = aux.imag
+            kspace2 = image
+            
             yield (kspace2, rec)
 
     return combine_generator(image_gen1, image_gen2, mask, stats)

@@ -29,5 +29,5 @@ addrs:
   REAL_CSV: outputs_1/real_unet_train.log
   MASKS: inputs/masks/*.npy
   MASK_SAVE: inputs/masks
-  COMP_ARC: arc_outputs/arc_15309178/comp_model
-  REAL_ARC: arc_outputs/arc_15309177/real_model
+  COMP_ARC: arc_outputs/arc_batch_1/arc_15352245/comp_model
+  REAL_ARC: arc_outputs/arc_batch_1/arc_15352245/real_model

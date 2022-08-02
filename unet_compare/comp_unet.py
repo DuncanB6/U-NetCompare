@@ -57,7 +57,7 @@ def comp_main(
         combined,
         epochs=cfg["params"]["EPOCHS"],
         steps_per_epoch=image_train.shape[0] / cfg["params"]["BATCH_SIZE"],
-        verbose=1,
+        verbose=0,
         validation_data=(image_val, kspace_val),
         callbacks=[mc, es, csvl],
     )

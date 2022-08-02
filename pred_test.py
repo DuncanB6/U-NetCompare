@@ -15,7 +15,7 @@ import hydra
 from omegaconf import DictConfig
 import numpy as np
 import matplotlib.pyplot as plt
-from unet_compare.functions import nrmse, CompConv2D, get_test
+from unet_compare.functions import nrmse, CompConv2D, get_test, metrics
 
 # Collects test data and uses it to evaluate existing models.
 @hydra.main(
@@ -58,8 +58,8 @@ def main(cfg: DictConfig):
     real_pred = real_model.predict(kspace_test)
     print(real_pred.shape)
 
-    # comp_pred = np.abs(np.fft.ifft2(comp_pred[:, :, :, 0] + 1j * comp_pred[:, :, :, 1]))
-    # real_pred = np.abs(np.fft.ifft2(real_pred[:, :, :, 0] + 1j * real_pred[:, :, :, 1]))
+    print(kspace_test[0, 0, 0, 0].type())
+    print(real_pred[0, 0, 0, 0].type())
 
     # Displays predictions (Not necessary for ARC)
     plt.figure(figsize=(10, 10))
@@ -71,16 +71,14 @@ def main(cfg: DictConfig):
     plt.imshow((255.0 - real_pred[0, :, :, 0]), cmap="Greys")
     plt.subplot(1, 4, 4)
     plt.imshow((255.0 - kspace_test[0, :, :, 0]), cmap="Greys")
-    '''plt.imshow(
-        (
-            255.0
-            - np.abs(
-                np.fft.ifft2(kspace_test[0, :, :, 0] + 1j * kspace_test[0, :, :, 1])
-            )
-        ),
-        cmap="Greys",
-    )'''
     plt.show()
+
+    # High score is better for SSIM, PSNR
+    # Low is better for NRMSE
+    # Should be ballpark (0.978 +/- 0.076, 1.827 +/- 1.112, 35.543 +/- 3.239)
+    '''metrics(image_test, kspace_test)
+    metrics(image_test, comp_pred)
+    metrics(image_test, real_pred)'''
 
 
 # Name guard

@@ -6,6 +6,7 @@ train/
 # Outputs
 outputs/
 Outputs/
+arc_testing/
 outputs_1/
 outputs_2/
 outputs_3/
