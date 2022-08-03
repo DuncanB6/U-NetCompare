@@ -38,6 +38,8 @@ def metrics(ref, pred):
     print("NRMSE: %.3f +/- %.3f" %(metrics[:,1].mean(),metrics[:,1].std()))
     print("PSNR: %.3f +/- %.3f" %(metrics[:,2].mean(), metrics[:,2].std()))
 
+    return metrics
+
 # Gets test data only.
 def get_test(cfg, ADDR):
 
@@ -188,7 +190,6 @@ def data_aug(image_train, mask, stats, cfg):
             kspace2[
                 :, mask[int(random.randint(0, (cfg["params"]["NUM_MASKS"] - 1)))], :
             ] = 0
-            kspace2 = (kspace2 - stats[0]) / stats[1]
             rec = rec_real[:, :, :, :]
 
             aux = np.fft.ifft2(kspace2[:, :, :, 0] + 1j * kspace2[:, :, :, 1])
