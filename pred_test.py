@@ -92,6 +92,7 @@ def main(cfg: DictConfig):
 
     print(np.mean(comp_pred))
     print(np.mean(image_test))
+    print(np.mean(kspace_test))
 
     # High score is better for SSIM, PSNR
     # Low is better for NRMSE
