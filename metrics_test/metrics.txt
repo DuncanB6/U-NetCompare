@@ -1,0 +1,27 @@
+
+
+Complex: /Users/duncanboyd/Documents/homevenv/UofC2022/metrics_test/arc_15377050/comp_model
+SSIM: 1.000 +/- 0.000
+NRMSE: 1.446 +/- 0.111
+PSNR: 48.712 +/- 0.730
+
+Real: /Users/duncanboyd/Documents/homevenv/UofC2022/metrics_test/arc_15377050/real_model
+SSIM: 1.000 +/- 0.000
+NRMSE: 1.349 +/- 0.176
+PSNR: 49.357 +/- 1.288
+
+Complex: /Users/duncanboyd/Documents/homevenv/UofC2022/metrics_test/arc_15377052/comp_model
+SSIM: 1.000 +/- 0.000
+NRMSE: 1.370 +/- 0.135
+PSNR: 49.194 +/- 0.957
+
+Real: /Users/duncanboyd/Documents/homevenv/UofC2022/metrics_test/arc_15377052/real_model
+SSIM: 0.999 +/- 0.000
+NRMSE: 2.336 +/- 0.183
+PSNR: 44.542 +/- 0.921
+
+Comp avgs: 
+SSIM: 1.000 NRMSE: 1.408 pSNR: 48.953
+
+Real avgs: 
+SSIM: 1.000 NRMSE: 1.843 pSNR: 46.949

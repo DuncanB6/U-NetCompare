@@ -2,8 +2,6 @@
 
 # This program fits two unets and displays results. Used for local testing.
 
-# Q: What do the imaginary parts of a complex image represent?
-
 # Imports
 from pathlib import Path
 import hydra
@@ -14,6 +12,7 @@ from unet_compare.real_unet import real_main
 from unet_compare.comp_unet import comp_main
 from unet_compare.functions import get_brains, mask_gen, normalize
 import logging
+import random
 
 # Import settings with hydra
 @hydra.main(
@@ -61,6 +60,10 @@ def main(cfg: DictConfig):
     image[:, :, :, 0] = aux.real
     image[:, :, :, 1] = aux.imag
     kspace_val = image
+
+    plt.imshow(kspace_train[0, :, :, 0], cmap = 'gray')
+    plt.show()
+
 
     # Calls both models
     comp_model = comp_main(

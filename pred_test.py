@@ -19,7 +19,7 @@ from unet_compare.functions import nrmse, CompConv2D, get_test, metrics, normali
 @hydra.main(
     version_base=None,
     config_path="../UofC2022/inputs/configs",
-    config_name="settings_1",
+    config_name="test_settings",
 )
 def main(cfg: DictConfig):
 
@@ -69,7 +69,7 @@ def main(cfg: DictConfig):
         real_pred = real_model.predict(kspace_test)
         print(real_pred.shape)
 
-        '''# Displays predictions (Not necessary for ARC)
+        # Displays predictions (Not necessary for ARC)
         plt.figure(figsize=(10, 10))
         plt.subplot(1, 4, 1)
         plt.imshow((255.0 - image_test[0, :, :, 0]), cmap="Greys")
@@ -79,7 +79,7 @@ def main(cfg: DictConfig):
         plt.imshow((255.0 - real_pred[0, :, :, 0]), cmap="Greys")
         plt.subplot(1, 4, 4)
         plt.imshow((255.0 - kspace_test[0, :, :, 0]), cmap="Greys")
-        plt.show()'''
+        plt.show()
 
         
         comp_predc = np.sqrt(comp_pred[:, :, :, 0] * comp_pred[:, :, :, 0] + comp_pred[:, :, :, 1] * comp_pred[:, :, :, 1])

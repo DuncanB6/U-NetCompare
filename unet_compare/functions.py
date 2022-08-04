@@ -55,7 +55,7 @@ def get_test(cfg, ADDR):
     masks = np.asarray(glob.glob(str(ADDR / cfg["addrs"]["MASKS"])))
     for i in range(len(masks)):
         mask[i] = np.load(masks[i])
-    mask = mask.astype(int)
+    mask = mask.astype(bool)
     logging.info("masks: " + str(len(mask)))
 
     # Get number of samples
@@ -71,6 +71,7 @@ def get_test(cfg, ADDR):
         aux_kspace = np.load(kspace_files_test[ii]) / norm
         aux = aux_kspace.shape[0]
         aux2 = np.fft.ifft2(aux_kspace[:, :, :, 0] + 1j * aux_kspace[:, :, :, 1])
+        aux_kspace[:, mask[int(random.randint(0, cfg["params"]["NUM_MASKS"] - 1))], :] = 0
         image_test[aux_counter : aux_counter + aux, :, :, 0] = aux2.real
         image_test[aux_counter : aux_counter + aux, :, :, 1] = aux2.imag
         kspace_test[aux_counter : aux_counter + aux, :, :, 0] = aux_kspace[:, :, :, 0]
@@ -82,9 +83,6 @@ def get_test(cfg, ADDR):
     np.random.shuffle(indexes)
     image_test = image_test[indexes]
     kspace_test = kspace_test[indexes]
-    kspace_test[
-        :, mask[int(random.randint(0, (cfg["params"]["NUM_MASKS"] - 1)))], :
-    ] = 0
 
     kspace_test = kspace_test[: cfg["params"]["NUM_TEST"], :, :, :]
     image_test = image_test[: cfg["params"]["NUM_TEST"], :, :, :]
@@ -127,8 +125,11 @@ def mask_gen(ADDR, cfg):
             crop_corner=False,
         )
 
-        mask = mask + create_circular_mask()
+        # mask = mask + create_circular_mask()
         mask = ~np.fft.fftshift(mask, axes=(0, 1))
+
+        mask = mask + 2
+        mask = mask.astype(np.bool)
 
         filename = "/mask" + str(int(k)) + "_" + str(cfg["params"]["ACCEL"]) + ".npy"
         filename = cfg["addrs"]["MASK_SAVE"] + filename
@@ -190,7 +191,9 @@ def data_aug(image_train, mask, stats, cfg):
             kspace2[
                 :, mask[int(random.randint(0, (cfg["params"]["NUM_MASKS"] - 1)))], :
             ] = 0
-            rec = rec_real[:, :, :, :]
+            rec = np.zeros((kspace.shape[0], kspace.shape[1], kspace.shape[2], 2))
+            rec[:, :, :, 0] = rec_real[:, :, :, 0]
+            rec[:, :, :, 1] = rec_imag[:, :, :, 0]
 
             aux = np.fft.ifft2(kspace2[:, :, :, 0] + 1j * kspace2[:, :, :, 1])
             image = np.copy(kspace2)
@@ -239,9 +242,8 @@ def get_brains(cfg, ADDR):
     masks = np.asarray(glob.glob(str(ADDR / cfg["addrs"]["MASKS"])))
     for i in range(len(masks)):
         mask[i] = np.load(masks[i])
-    mask = mask.astype(int)
+    mask = mask.astype(bool)
     logging.info("masks: " + str(len(mask)))
-    # mask = np.load(str(ADDR / cfg["addrs"]["MASK_ADDR"]))
 
     # Get number of samples
     ntrain = 0
@@ -267,10 +269,11 @@ def get_brains(cfg, ADDR):
     np.random.shuffle(indexes)
     image_train = image_train[indexes]
     kspace_train = kspace_train[indexes]
-    kspace_train[:, mask[int(random.randint(0, cfg["params"]["NUM_MASKS"] - 1))], :] = 0
 
     kspace_train = kspace_train[: cfg["params"]["NUM_TRAIN"], :, :, :]
     image_train = image_train[: cfg["params"]["NUM_TRAIN"], :, :, :]
+
+    kspace_train[:, mask[int(random.randint(0, cfg["params"]["NUM_MASKS"] - 1))], :] = 0
 
     logging.info("kspace train: " + str(kspace_train.shape))
     logging.info("image train: " + str(image_train.shape))
@@ -304,6 +307,8 @@ def get_brains(cfg, ADDR):
     kspace_val = kspace_val[: cfg["params"]["NUM_VAL"], :, :, :]
     image_val = image_val[: cfg["params"]["NUM_VAL"], :, :, :]
 
+    kspace_val[:, mask[int(random.randint(0, cfg["params"]["NUM_MASKS"] - 1))], :] = 0
+
     logging.info("kspace val: " + str(kspace_val.shape))
     logging.info("image val: " + str(image_val.shape))
 
@@ -331,10 +336,11 @@ def get_brains(cfg, ADDR):
     np.random.shuffle(indexes)
     image_test = image_test[indexes]
     kspace_test = kspace_test[indexes]
-    kspace_test[:, mask[int(random.randint(0, cfg["params"]["NUM_MASKS"] - 1))], :] = 0
 
     kspace_test = kspace_test[: cfg["params"]["NUM_TEST"], :, :, :]
     image_test = image_test[: cfg["params"]["NUM_TEST"], :, :, :]
+
+    kspace_test[:, mask[int(random.randint(0, cfg["params"]["NUM_MASKS"] - 1))], :] = 0
 
     logging.info("kspace test: " + str(kspace_test.shape))
     logging.info("image test: " + str(image_test.shape))

@@ -1,0 +1,97 @@
+2022-08-03 13:54:45.512814: I tensorflow/stream_executor/platform/default/dso_loader.cc:49] Successfully opened dynamic library libcudart.so.10.1
+2022-08-03 13:56:39.742117: I tensorflow/compiler/jit/xla_cpu_device.cc:41] Not creating XLA devices, tf_xla_enable_xla_devices not set
+2022-08-03 13:56:39.760539: I tensorflow/stream_executor/platform/default/dso_loader.cc:49] Successfully opened dynamic library libcuda.so.1
+2022-08-03 13:56:40.741035: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1720] Found device 0 with properties: 
+pciBusID: 0000:3b:00.0 name: Tesla V100-PCIE-16GB computeCapability: 7.0
+coreClock: 1.38GHz coreCount: 80 deviceMemorySize: 15.78GiB deviceMemoryBandwidth: 836.37GiB/s
+2022-08-03 13:56:40.741066: I tensorflow/stream_executor/platform/default/dso_loader.cc:49] Successfully opened dynamic library libcudart.so.10.1
+2022-08-03 13:56:40.847835: I tensorflow/stream_executor/platform/default/dso_loader.cc:49] Successfully opened dynamic library libcublas.so.10
+2022-08-03 13:56:40.847895: I tensorflow/stream_executor/platform/default/dso_loader.cc:49] Successfully opened dynamic library libcublasLt.so.10
+2022-08-03 13:56:40.947472: I tensorflow/stream_executor/platform/default/dso_loader.cc:49] Successfully opened dynamic library libcufft.so.10
+2022-08-03 13:56:41.026898: I tensorflow/stream_executor/platform/default/dso_loader.cc:49] Successfully opened dynamic library libcurand.so.10
+2022-08-03 13:56:41.116712: I tensorflow/stream_executor/platform/default/dso_loader.cc:49] Successfully opened dynamic library libcusolver.so.10
+2022-08-03 13:56:41.190246: I tensorflow/stream_executor/platform/default/dso_loader.cc:49] Successfully opened dynamic library libcusparse.so.10
+2022-08-03 13:56:41.311906: I tensorflow/stream_executor/platform/default/dso_loader.cc:49] Successfully opened dynamic library libcudnn.so.7
+2022-08-03 13:56:41.313211: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1862] Adding visible gpu devices: 0
+Num GPUs Available:  1
+[2022-08-03 13:56:41,313][root][INFO] - Settings version: 1
+[2022-08-03 13:58:12,892][root][INFO] - train scans: 25
+[2022-08-03 13:58:12,903][root][INFO] - val scans: 10
+[2022-08-03 13:58:12,903][root][INFO] - test scans: 10
+[2022-08-03 13:58:19,501][root][INFO] - masks: 100
+[2022-08-03 14:03:26,392][root][INFO] - kspace train: (4254, 256, 256, 2)
+[2022-08-03 14:03:26,401][root][INFO] - image train: (4254, 256, 256, 2)
+[2022-08-03 14:05:13,352][root][INFO] - kspace val: (1700, 256, 256, 2)
+[2022-08-03 14:05:13,371][root][INFO] - image val: (1700, 256, 256, 2)
+[2022-08-03 14:06:56,650][root][INFO] - kspace test: (1700, 256, 256, 2)
+[2022-08-03 14:06:56,656][root][INFO] - image test: (1700, 256, 256, 2)
+[2022-08-03 14:07:54,189][root][INFO] - Initialized complex UNet
+[2022-08-03 14:07:54,189][root][INFO] - Compiling UNet
+2022-08-03 14:07:54.463974: I tensorflow/core/platform/cpu_feature_guard.cc:142] This TensorFlow binary is optimized with oneAPI Deep Neural Network Library (oneDNN) to use the following CPU instructions in performance-critical operations:  SSE4.1 SSE4.2 AVX AVX2 AVX512F FMA
+To enable them in other operations, rebuild TensorFlow with the appropriate compiler flags.
+2022-08-03 14:07:54.464299: I tensorflow/compiler/jit/xla_gpu_device.cc:99] Not creating XLA devices, tf_xla_enable_xla_devices not set
+2022-08-03 14:07:54.465419: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1720] Found device 0 with properties: 
+pciBusID: 0000:3b:00.0 name: Tesla V100-PCIE-16GB computeCapability: 7.0
+coreClock: 1.38GHz coreCount: 80 deviceMemorySize: 15.78GiB deviceMemoryBandwidth: 836.37GiB/s
+2022-08-03 14:07:54.465448: I tensorflow/stream_executor/platform/default/dso_loader.cc:49] Successfully opened dynamic library libcudart.so.10.1
+2022-08-03 14:07:54.465499: I tensorflow/stream_executor/platform/default/dso_loader.cc:49] Successfully opened dynamic library libcublas.so.10
+2022-08-03 14:07:54.465513: I tensorflow/stream_executor/platform/default/dso_loader.cc:49] Successfully opened dynamic library libcublasLt.so.10
+2022-08-03 14:07:54.465525: I tensorflow/stream_executor/platform/default/dso_loader.cc:49] Successfully opened dynamic library libcufft.so.10
+2022-08-03 14:07:54.465544: I tensorflow/stream_executor/platform/default/dso_loader.cc:49] Successfully opened dynamic library libcurand.so.10
+2022-08-03 14:07:54.465556: I tensorflow/stream_executor/platform/default/dso_loader.cc:49] Successfully opened dynamic library libcusolver.so.10
+2022-08-03 14:07:54.465569: I tensorflow/stream_executor/platform/default/dso_loader.cc:49] Successfully opened dynamic library libcusparse.so.10
+2022-08-03 14:07:54.465581: I tensorflow/stream_executor/platform/default/dso_loader.cc:49] Successfully opened dynamic library libcudnn.so.7
+2022-08-03 14:07:54.466798: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1862] Adding visible gpu devices: 0
+2022-08-03 14:07:54.466828: I tensorflow/stream_executor/platform/default/dso_loader.cc:49] Successfully opened dynamic library libcudart.so.10.1
+2022-08-03 14:07:55.783860: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1261] Device interconnect StreamExecutor with strength 1 edge matrix:
+2022-08-03 14:07:55.783896: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1267]      0 
+2022-08-03 14:07:55.783902: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1280] 0:   N 
+2022-08-03 14:07:55.785925: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1406] Created TensorFlow device (/job:localhost/replica:0/task:0/device:GPU:0 with 14763 MB memory) -> physical GPU (device: 0, name: Tesla V100-PCIE-16GB, pci bus id: 0000:3b:00.0, compute capability: 7.0)
+[2022-08-03 14:08:36,969][root][INFO] - Fitting UNet
+2022-08-03 14:08:37.640105: I tensorflow/compiler/mlir/mlir_graph_optimization_pass.cc:116] None of the MLIR optimization passes are enabled (registered 2)
+2022-08-03 14:08:37.656447: I tensorflow/core/platform/profile_utils/cpu_utils.cc:112] CPU Frequency: 2400000000 Hz
+2022-08-03 14:08:40.702380: I tensorflow/stream_executor/platform/default/dso_loader.cc:49] Successfully opened dynamic library libcudnn.so.7
+2022-08-03 14:08:42.608398: W tensorflow/stream_executor/gpu/asm_compiler.cc:63] Running ptxas --version returned 256
+2022-08-03 14:08:42.722257: W tensorflow/stream_executor/gpu/redzone_allocator.cc:314] Internal: ptxas exited with non-zero error code 256, output: 
+Relying on driver to perform ptx compilation. 
+Modify $PATH to customize ptxas location.
+This message will be only logged once.
+2022-08-03 14:08:44.491474: I tensorflow/stream_executor/platform/default/dso_loader.cc:49] Successfully opened dynamic library libcublas.so.10
+2022-08-03 14:15:48.135617: W tensorflow/python/util/util.cc:348] Sets are not currently considered sequences, but this may change in the future, so consider avoiding using them.
+[2022-08-03 14:15:50,718][absl][WARNING] - Found untraced functions such as conv2d_layer_call_fn, conv2d_layer_call_and_return_conditional_losses, conv2d_1_layer_call_fn, conv2d_1_layer_call_and_return_conditional_losses, conv2d_2_layer_call_fn while saving (showing 5 of 210). These functions will not be directly callable after loading.
+[2022-08-03 14:15:50,881][absl][WARNING] - Found untraced functions such as conv2d_layer_call_fn, conv2d_layer_call_and_return_conditional_losses, conv2d_1_layer_call_fn, conv2d_1_layer_call_and_return_conditional_losses, conv2d_2_layer_call_fn while saving (showing 5 of 210). These functions will not be directly callable after loading.
+INFO:tensorflow:Assets written to: /home/duncan.boyd/home/outputs_1/comp_check/assets
+[2022-08-03 14:15:54,817][tensorflow][INFO] - Assets written to: /home/duncan.boyd/home/outputs_1/comp_check/assets
+[2022-08-03 14:18:57,900][absl][WARNING] - Found untraced functions such as conv2d_layer_call_fn, conv2d_layer_call_and_return_conditional_losses, conv2d_1_layer_call_fn, conv2d_1_layer_call_and_return_conditional_losses, conv2d_2_layer_call_fn while saving (showing 5 of 210). These functions will not be directly callable after loading.
+[2022-08-03 14:18:58,055][absl][WARNING] - Found untraced functions such as conv2d_layer_call_fn, conv2d_layer_call_and_return_conditional_losses, conv2d_1_layer_call_fn, conv2d_1_layer_call_and_return_conditional_losses, conv2d_2_layer_call_fn while saving (showing 5 of 210). These functions will not be directly callable after loading.
+INFO:tensorflow:Assets written to: /home/duncan.boyd/home/outputs_1/comp_check/assets
+[2022-08-03 14:19:01,476][tensorflow][INFO] - Assets written to: /home/duncan.boyd/home/outputs_1/comp_check/assets
+[2022-08-03 14:25:06,545][absl][WARNING] - Found untraced functions such as conv2d_layer_call_fn, conv2d_layer_call_and_return_conditional_losses, conv2d_1_layer_call_fn, conv2d_1_layer_call_and_return_conditional_losses, conv2d_2_layer_call_fn while saving (showing 5 of 210). These functions will not be directly callable after loading.
+[2022-08-03 14:25:06,706][absl][WARNING] - Found untraced functions such as conv2d_layer_call_fn, conv2d_layer_call_and_return_conditional_losses, conv2d_1_layer_call_fn, conv2d_1_layer_call_and_return_conditional_losses, conv2d_2_layer_call_fn while saving (showing 5 of 210). These functions will not be directly callable after loading.
+INFO:tensorflow:Assets written to: /home/duncan.boyd/home/outputs_1/comp_check/assets
+[2022-08-03 14:25:10,120][tensorflow][INFO] - Assets written to: /home/duncan.boyd/home/outputs_1/comp_check/assets
+[2022-08-03 14:43:10,871][absl][WARNING] - Found untraced functions such as conv2d_layer_call_fn, conv2d_layer_call_and_return_conditional_losses, conv2d_1_layer_call_fn, conv2d_1_layer_call_and_return_conditional_losses, conv2d_2_layer_call_fn while saving (showing 5 of 210). These functions will not be directly callable after loading.
+[2022-08-03 14:43:11,032][absl][WARNING] - Found untraced functions such as conv2d_layer_call_fn, conv2d_layer_call_and_return_conditional_losses, conv2d_1_layer_call_fn, conv2d_1_layer_call_and_return_conditional_losses, conv2d_2_layer_call_fn while saving (showing 5 of 210). These functions will not be directly callable after loading.
+INFO:tensorflow:Assets written to: /home/duncan.boyd/home/outputs_1/comp_check/assets
+[2022-08-03 14:43:13,590][tensorflow][INFO] - Assets written to: /home/duncan.boyd/home/outputs_1/comp_check/assets
+[2022-08-03 15:42:58,939][absl][WARNING] - Found untraced functions such as conv2d_layer_call_fn, conv2d_layer_call_and_return_conditional_losses, conv2d_1_layer_call_fn, conv2d_1_layer_call_and_return_conditional_losses, conv2d_2_layer_call_fn while saving (showing 5 of 210). These functions will not be directly callable after loading.
+[2022-08-03 15:42:59,092][absl][WARNING] - Found untraced functions such as conv2d_layer_call_fn, conv2d_layer_call_and_return_conditional_losses, conv2d_1_layer_call_fn, conv2d_1_layer_call_and_return_conditional_losses, conv2d_2_layer_call_fn while saving (showing 5 of 210). These functions will not be directly callable after loading.
+INFO:tensorflow:Assets written to: /home/duncan.boyd/home/outputs_1/comp_model/assets
+[2022-08-03 15:43:01,202][tensorflow][INFO] - Assets written to: /home/duncan.boyd/home/outputs_1/comp_model/assets
+[2022-08-03 15:43:01,371][root][INFO] - total time: 5707
+[2022-08-03 15:43:01,372][root][INFO] - time completed: 03/08/2022 15:43:01
+Time: 5707
+[2022-08-03 15:43:01,372][root][INFO] - Done
+[2022-08-03 15:43:01,372][root][INFO] - Initialized real UNet
+[2022-08-03 15:43:01,372][root][INFO] - Compiling UNet
+[2022-08-03 15:43:41,833][root][INFO] - Fitting UNet
+INFO:tensorflow:Assets written to: /home/duncan.boyd/home/outputs_1/real_check/assets
+[2022-08-03 15:49:38,208][tensorflow][INFO] - Assets written to: /home/duncan.boyd/home/outputs_1/real_check/assets
+INFO:tensorflow:Assets written to: /home/duncan.boyd/home/outputs_1/real_check/assets
+[2022-08-03 16:16:50,653][tensorflow][INFO] - Assets written to: /home/duncan.boyd/home/outputs_1/real_check/assets
+INFO:tensorflow:Assets written to: /home/duncan.boyd/home/outputs_1/real_model/assets
+[2022-08-03 17:11:00,380][tensorflow][INFO] - Assets written to: /home/duncan.boyd/home/outputs_1/real_model/assets
+[2022-08-03 17:11:00,476][root][INFO] - total time: 5279
+[2022-08-03 17:11:00,477][root][INFO] - time completed: 03/08/2022 17:11:00
+Time: 5279
+[2022-08-03 17:11:00,477][root][INFO] - Done

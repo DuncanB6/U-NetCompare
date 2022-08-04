@@ -1,0 +1,31 @@
+---
+params:
+  EPOCHS: 250 # 250 (WNet)
+  MOD: 1.42 # 1.42: Modified to match ReUNet's trainable params roughly (+-1%) which isn't ideal
+  RE_MOD: 1.0
+  BATCH_SIZE: 16 # 16 (WNet)
+  NUM_TRAIN: 4254 # max 4254
+  NUM_VAL: 1700 # max 1700
+  NUM_TEST: 1700 # max 1700
+  NUM_MASKS: 100
+  UNIT_CONFIRM: 1
+  LR: 0.001
+  ACCEL: 5
+  BETA_1: 0.9
+  BETA_2: 0.999
+addrs:
+  TEST: test/*.npy
+  TRAIN: train/*.npy
+  VAL: val/*.npy
+  STATS: outputs_1/stats.npy
+  COMP_MODEL: outputs_1/comp_model
+  REAL_MODEL: outputs_1/real_model
+  COMP_LOG: outputs_1/comp_unet.log
+  REAL_LOG: outputs_1/unet.log
+  FUNC: functions
+  COMP_CHEC: outputs_1/comp_check
+  REAL_CHEC: outputs_1/real_check
+  COMP_CSV: outputs_1/comp_unet_train.log
+  REAL_CSV: outputs_1/real_unet_train.log
+  MASKS: inputs/masks_1/*.npy
+  MASK_SAVE: inputs/masks_1
