@@ -41,7 +41,7 @@ def real_main(
         monitor="val_loss",
         save_best_only=True,
     )
-    es = tf.keras.callbacks.EarlyStopping(monitor="val_loss", patience=20, mode="min")
+    es = tf.keras.callbacks.EarlyStopping(monitor="val_loss", patience=5, mode="min")
     csvl = tf.keras.callbacks.CSVLogger(
         str(ADDR / cfg["addrs"]["REAL_CSV"]), append=False, separator="|"
     )

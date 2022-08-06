@@ -1,27 +1,355 @@
 
 
-Complex: /Users/duncanboyd/Documents/homevenv/UofC2022/metrics_test/arc_15377050/comp_model
-SSIM: 1.000 +/- 0.000
-NRMSE: 1.446 +/- 0.111
-PSNR: 48.712 +/- 0.730
+Complex: /Users/duncanboyd/Documents/homevenv/UofC2022/metrics_test/arc_15393791/comp_model
+SSIM: 0.778 +/- 0.245
+NRMSE: 21.279 +/- 3.969
+PSNR: 24.124 +/- 3.166
 
-Real: /Users/duncanboyd/Documents/homevenv/UofC2022/metrics_test/arc_15377050/real_model
-SSIM: 1.000 +/- 0.000
-NRMSE: 1.349 +/- 0.176
-PSNR: 49.357 +/- 1.288
+Real: /Users/duncanboyd/Documents/homevenv/UofC2022/metrics_test/arc_15393791/real_model
+SSIM: 0.851 +/- 0.192
+NRMSE: 14.779 +/- 2.795
+PSNR: 27.331 +/- 4.539
 
-Complex: /Users/duncanboyd/Documents/homevenv/UofC2022/metrics_test/arc_15377052/comp_model
-SSIM: 1.000 +/- 0.000
-NRMSE: 1.370 +/- 0.135
-PSNR: 49.194 +/- 0.957
+Complex: /Users/duncanboyd/Documents/homevenv/UofC2022/metrics_test/arc_15393746/comp_model
+SSIM: 0.868 +/- 0.166
+NRMSE: 14.565 +/- 2.639
+PSNR: 27.437 +/- 4.453
 
-Real: /Users/duncanboyd/Documents/homevenv/UofC2022/metrics_test/arc_15377052/real_model
-SSIM: 0.999 +/- 0.000
-NRMSE: 2.336 +/- 0.183
-PSNR: 44.542 +/- 0.921
+Real: /Users/duncanboyd/Documents/homevenv/UofC2022/metrics_test/arc_15393746/real_model
+SSIM: 0.855 +/- 0.184
+NRMSE: 15.159 +/- 2.701
+PSNR: 27.073 +/- 4.409
+
+Complex: /Users/duncanboyd/Documents/homevenv/UofC2022/metrics_test/arc_15394076/comp_model
+SSIM: 0.850 +/- 0.188
+NRMSE: 15.243 +/- 2.559
+PSNR: 27.010 +/- 4.142
+
+Real: /Users/duncanboyd/Documents/homevenv/UofC2022/metrics_test/arc_15394076/real_model
+SSIM: 0.839 +/- 0.207
+NRMSE: 15.881 +/- 3.665
+PSNR: 26.801 +/- 5.089
 
 Comp avgs: 
-SSIM: 1.000 NRMSE: 1.408 pSNR: 48.953
+SSIM: 0.832 NRMSE: 17.029 pSNR: 26.190
 
 Real avgs: 
-SSIM: 1.000 NRMSE: 1.843 pSNR: 46.949
+SSIM: 0.848 NRMSE: 15.273 pSNR: 27.068
+
+Complex: /Users/duncanboyd/Documents/homevenv/UofC2022/metrics_test/arc_15393791/comp_model
+SSIM: 0.950 +/- 0.021
+NRMSE: 20.120 +/- 3.639
+PSNR: 27.238 +/- 4.186
+
+Real: /Users/duncanboyd/Documents/homevenv/UofC2022/metrics_test/arc_15393791/real_model
+SSIM: 0.982 +/- 0.010
+NRMSE: 12.900 +/- 2.598
+PSNR: 31.142 +/- 3.632
+
+Complex: /Users/duncanboyd/Documents/homevenv/UofC2022/metrics_test/arc_15388452/comp_model
+SSIM: 0.982 +/- 0.010
+NRMSE: 12.093 +/- 2.821
+PSNR: 31.786 +/- 3.824
+
+Real: /Users/duncanboyd/Documents/homevenv/UofC2022/metrics_test/arc_15388452/real_model
+SSIM: 0.981 +/- 0.010
+NRMSE: 12.679 +/- 2.506
+PSNR: 31.282 +/- 3.433
+
+Complex: /Users/duncanboyd/Documents/homevenv/UofC2022/metrics_test/arc_15388454/comp_model
+SSIM: 0.982 +/- 0.010
+NRMSE: 12.160 +/- 2.622
+PSNR: 31.694 +/- 3.734
+
+Real: /Users/duncanboyd/Documents/homevenv/UofC2022/metrics_test/arc_15388454/real_model
+SSIM: 0.981 +/- 0.010
+NRMSE: 12.469 +/- 2.580
+PSNR: 31.447 +/- 3.638
+
+Complex: /Users/duncanboyd/Documents/homevenv/UofC2022/metrics_test/arc_15388449/comp_model
+SSIM: 0.980 +/- 0.010
+NRMSE: 12.939 +/- 2.556
+PSNR: 31.116 +/- 3.745
+
+Real: /Users/duncanboyd/Documents/homevenv/UofC2022/metrics_test/arc_15388449/real_model
+SSIM: 0.982 +/- 0.010
+NRMSE: 12.543 +/- 2.584
+PSNR: 31.397 +/- 3.660
+
+Complex: /Users/duncanboyd/Documents/homevenv/UofC2022/metrics_test/arc_15393746/comp_model
+SSIM: 0.983 +/- 0.010
+NRMSE: 12.169 +/- 2.815
+PSNR: 31.717 +/- 3.494
+
+Real: /Users/duncanboyd/Documents/homevenv/UofC2022/metrics_test/arc_15393746/real_model
+SSIM: 0.982 +/- 0.009
+NRMSE: 12.583 +/- 2.432
+PSNR: 31.344 +/- 3.620
+
+Complex: /Users/duncanboyd/Documents/homevenv/UofC2022/metrics_test/arc_15388451/comp_model
+SSIM: 0.981 +/- 0.010
+NRMSE: 12.801 +/- 2.910
+PSNR: 31.274 +/- 3.774
+
+Real: /Users/duncanboyd/Documents/homevenv/UofC2022/metrics_test/arc_15388451/real_model
+SSIM: 0.982 +/- 0.010
+NRMSE: 12.536 +/- 2.663
+PSNR: 31.417 +/- 3.704
+
+Complex: /Users/duncanboyd/Documents/homevenv/UofC2022/metrics_test/arc_15394076/comp_model
+SSIM: 0.980 +/- 0.010
+NRMSE: 12.814 +/- 2.467
+PSNR: 31.184 +/- 3.573
+
+Real: /Users/duncanboyd/Documents/homevenv/UofC2022/metrics_test/arc_15394076/real_model
+SSIM: 0.980 +/- 0.011
+NRMSE: 12.937 +/- 2.854
+PSNR: 31.152 +/- 3.236
+
+Comp avgs: 
+SSIM: 0.977 NRMSE: 13.585 pSNR: 30.859
+
+Real avgs: 
+SSIM: 0.981 NRMSE: 12.664 pSNR: 31.312
+
+Complex: /Users/duncanboyd/Documents/homevenv/UofC2022/metrics_test/arc_15393791/comp_model
+SSIM: 0.938 +/- 0.026
+NRMSE: 20.985 +/- 3.576
+PSNR: 27.958 +/- 4.720
+
+Real: /Users/duncanboyd/Documents/homevenv/UofC2022/metrics_test/arc_15393791/real_model
+SSIM: 0.972 +/- 0.023
+NRMSE: 13.280 +/- 2.549
+PSNR: 31.979 +/- 3.354
+
+Complex: /Users/duncanboyd/Documents/homevenv/UofC2022/metrics_test/arc_15393791/comp_model
+SSIM: 0.001 +/- 0.011
+NRMSE: 103288507038442.500 +/- 299158967762386.250
+PSNR: -159.339 +/- 66.299
+
+Real: /Users/duncanboyd/Documents/homevenv/UofC2022/metrics_test/arc_15393791/real_model
+SSIM: 0.185 +/- 0.097
+NRMSE: 17426442788374.059 +/- 50472959522138.805
+PSNR: -144.351 +/- 65.122
+
+Complex: /Users/duncanboyd/Documents/homevenv/UofC2022/metrics_test/arc_15388452/comp_model
+SSIM: 0.091 +/- 0.124
+NRMSE: 31494201449498.145 +/- 91218017093338.656
+PSNR: -149.091 +/- 66.127
+
+Real: /Users/duncanboyd/Documents/homevenv/UofC2022/metrics_test/arc_15388452/real_model
+SSIM: 0.039 +/- 0.073
+NRMSE: 54279614941151.984 +/- 157212395029636.219
+PSNR: -153.830 +/- 66.099
+
+Complex: /Users/duncanboyd/Documents/homevenv/UofC2022/metrics_test/arc_15388454/comp_model
+SSIM: 0.093 +/- 0.116
+NRMSE: 30316716806069.273 +/- 87807617327668.156
+PSNR: -148.795 +/- 66.039
+
+Real: /Users/duncanboyd/Documents/homevenv/UofC2022/metrics_test/arc_15388454/real_model
+SSIM: 0.153 +/- 0.090
+NRMSE: 19750622645179.836 +/- 57204582100563.617
+PSNR: -145.393 +/- 65.237
+
+Complex: /Users/duncanboyd/Documents/homevenv/UofC2022/metrics_test/arc_15388449/comp_model
+SSIM: 0.064 +/- 0.102
+NRMSE: 41130475540635.789 +/- 119127974229494.266
+PSNR: -151.402 +/- 66.146
+
+Real: /Users/duncanboyd/Documents/homevenv/UofC2022/metrics_test/arc_15388449/real_model
+SSIM: 0.047 +/- 0.085
+NRMSE: 51150980622337.898 +/- 148150796250660.594
+PSNR: -153.276 +/- 66.195
+
+Complex: /Users/duncanboyd/Documents/homevenv/UofC2022/metrics_test/arc_15393746/comp_model
+SSIM: 0.029 +/- 0.071
+NRMSE: 72219890299884.469 +/- 209173589955436.594
+PSNR: -156.051 +/- 66.751
+
+Real: /Users/duncanboyd/Documents/homevenv/UofC2022/metrics_test/arc_15393746/real_model
+SSIM: 0.030 +/- 0.063
+NRMSE: 74587966444659.953 +/- 216032351325761.219
+PSNR: -156.610 +/- 66.050
+
+Complex: /Users/duncanboyd/Documents/homevenv/UofC2022/metrics_test/arc_15388451/comp_model
+SSIM: 0.067 +/- 0.108
+NRMSE: 40186964216574.859 +/- 116395241581153.625
+PSNR: -151.199 +/- 66.150
+
+Real: /Users/duncanboyd/Documents/homevenv/UofC2022/metrics_test/arc_15388451/real_model
+SSIM: 0.211 +/- 0.091
+NRMSE: 15579940895287.141 +/- 45124856263603.805
+PSNR: -143.462 +/- 64.913
+
+Complex: /Users/duncanboyd/Documents/homevenv/UofC2022/metrics_test/arc_15394076/comp_model
+SSIM: 0.058 +/- 0.100
+NRMSE: 45972784507970.453 +/- 133152962966004.297
+PSNR: -152.378 +/- 66.123
+
+Real: /Users/duncanboyd/Documents/homevenv/UofC2022/metrics_test/arc_15394076/real_model
+SSIM: 0.122 +/- 0.097
+NRMSE: 23232870839730.391 +/- 67290368070929.742
+PSNR: -146.693 +/- 65.513
+
+Comp avgs: 
+SSIM: 0.057 NRMSE: 52087077122725.062 pSNR: -152.608
+
+Real avgs: 
+SSIM: 0.112 NRMSE: 36572634168103.039 pSNR: -149.088
+
+Complex: /Users/duncanboyd/Documents/homevenv/UofC2022/metrics_test/arc_15393791/comp_model
+SSIM: -0.165 +/- 0.069
+NRMSE: 165.082 +/- 108.747
+PSNR: 9.709 +/- 3.564
+
+Real: /Users/duncanboyd/Documents/homevenv/UofC2022/metrics_test/arc_15393791/real_model
+SSIM: 0.189 +/- 0.094
+NRMSE: 86.077 +/- 1.609
+PSNR: 14.174 +/- 0.605
+
+Complex: /Users/duncanboyd/Documents/homevenv/UofC2022/metrics_test/arc_15388452/comp_model
+SSIM: 0.348 +/- 0.052
+NRMSE: 72.523 +/- 6.634
+PSNR: 15.694 +/- 0.473
+
+Real: /Users/duncanboyd/Documents/homevenv/UofC2022/metrics_test/arc_15388452/real_model
+SSIM: 0.196 +/- 0.107
+NRMSE: 85.260 +/- 1.482
+PSNR: 14.256 +/- 0.656
+
+Complex: /Users/duncanboyd/Documents/homevenv/UofC2022/metrics_test/arc_15393791/comp_model
+SSIM: 0.014 +/- 0.032
+NRMSE: 85381588877716.094 +/- 255950251209184.375
+PSNR: -95.984 +/- 73.345
+
+Real: /Users/duncanboyd/Documents/homevenv/UofC2022/metrics_test/arc_15393791/real_model
+SSIM: 0.148 +/- 0.043
+NRMSE: 9469310540006.594 +/- 28386358733783.062
+PSNR: -78.884 +/- 70.507
+
+Complex: /Users/duncanboyd/Documents/homevenv/UofC2022/metrics_test/arc_15388452/comp_model
+SSIM: 0.141 +/- 0.051
+NRMSE: 10150065685048.924 +/- 30427073287561.816
+PSNR: -79.372 +/- 70.664
+
+Real: /Users/duncanboyd/Documents/homevenv/UofC2022/metrics_test/arc_15388452/real_model
+SSIM: 0.028 +/- 0.057
+NRMSE: 40510322101293.969 +/- 121438676095289.141
+PSNR: -90.183 +/- 72.369
+
+Complex: /Users/duncanboyd/Documents/homevenv/UofC2022/metrics_test/arc_15393791/comp_model
+SSIM: 0.021 +/- 0.045
+NRMSE: 303048515811080.375 +/- 645401079340634.375
+PSNR: -108.202 +/- 101.684
+
+Real: /Users/duncanboyd/Documents/homevenv/UofC2022/metrics_test/arc_15393791/real_model
+SSIM: 0.209 +/- 0.068
+NRMSE: 30419375728114.312 +/- 64784009499927.289
+PSNR: -92.371 +/- 96.898
+
+Complex: /Users/duncanboyd/Documents/homevenv/UofC2022/metrics_test/arc_15388452/comp_model
+SSIM: 0.134 +/- 0.091
+NRMSE: 54258093645477.016 +/- 115553221276734.562
+PSNR: -96.118 +/- 98.338
+
+Real: /Users/duncanboyd/Documents/homevenv/UofC2022/metrics_test/arc_15388452/real_model
+SSIM: 0.061 +/- 0.067
+NRMSE: 98088052523720.203 +/- 208897690184074.781
+PSNR: -100.187 +/- 99.581
+
+Complex: /Users/duncanboyd/Documents/homevenv/UofC2022/metrics_test/arc_15388454/comp_model
+SSIM: 0.084 +/- 0.109
+NRMSE: 104921656490399.781 +/- 223451186221039.250
+PSNR: -100.477 +/- 99.926
+
+Real: /Users/duncanboyd/Documents/homevenv/UofC2022/metrics_test/arc_15388454/real_model
+SSIM: 0.225 +/- 0.070
+NRMSE: 29343169547181.438 +/- 62492017971211.664
+PSNR: -92.086 +/- 96.865
+
+Complex: /Users/duncanboyd/Documents/homevenv/UofC2022/metrics_test/arc_15388449/comp_model
+SSIM: 0.132 +/- 0.079
+NRMSE: 52292070651886.180 +/- 111366190819446.516
+PSNR: -95.898 +/- 98.224
+
+Real: /Users/duncanboyd/Documents/homevenv/UofC2022/metrics_test/arc_15388449/real_model
+SSIM: 0.296 +/- 0.091
+NRMSE: 23537751956730.039 +/- 50128245893442.695
+PSNR: -90.475 +/- 96.523
+
+Complex: /Users/duncanboyd/Documents/homevenv/UofC2022/metrics_test/arc_15393746/comp_model
+SSIM: 0.083 +/- 0.058
+NRMSE: 69351905703301.664 +/- 147698445814963.938
+PSNR: -97.941 +/- 98.673
+
+Real: /Users/duncanboyd/Documents/homevenv/UofC2022/metrics_test/arc_15393746/real_model
+SSIM: 0.156 +/- 0.046
+NRMSE: 39735254351191.172 +/- 84623994862493.234
+PSNR: -94.136 +/- 97.514
+
+Complex: /Users/duncanboyd/Documents/homevenv/UofC2022/metrics_test/arc_15388451/comp_model
+SSIM: 0.100 +/- 0.103
+NRMSE: 77527173695801.578 +/- 165109277787124.031
+PSNR: -98.445 +/- 99.228
+
+Real: /Users/duncanboyd/Documents/homevenv/UofC2022/metrics_test/arc_15388451/real_model
+SSIM: 0.697 +/- 0.321
+NRMSE: 6785007360408.695 +/- 14450000066179.566
+PSNR: -81.874 +/- 94.210
+
+Complex: /Users/duncanboyd/Documents/homevenv/UofC2022/metrics_test/arc_15394076/comp_model
+SSIM: 0.093 +/- 0.119
+NRMSE: 99529651490882.703 +/- 211967857106347.750
+PSNR: -100.113 +/- 99.817
+
+Real: /Users/duncanboyd/Documents/homevenv/UofC2022/metrics_test/arc_15394076/real_model
+SSIM: 0.618 +/- 0.246
+NRMSE: 10598037837748.080 +/- 22570594153338.945
+PSNR: -84.985 +/- 94.995
+
+Comp avgs: 
+SSIM: 0.092 NRMSE: 108704152498404.203 pSNR: -99.599
+
+Real avgs: 
+SSIM: 0.323 NRMSE: 34072378472156.273 pSNR: -90.874
+
+Complex: /Users/duncanboyd/Documents/homevenv/UofC2022/metrics_test/arc_15393791/comp_model
+SSIM: -0.020 +/- 0.065
+NRMSE: 9194457004662846.000 +/- 18185345426949592.000
+PSNR: -185.732 +/- 86.850
+
+Real: /Users/duncanboyd/Documents/homevenv/UofC2022/metrics_test/arc_15393791/real_model
+SSIM: 0.074 +/- 0.037
+NRMSE: 1567809504132949.500 +/- 3100907142399550.500
+PSNR: -171.393 +/- 84.566
+
+Complex: /Users/duncanboyd/Documents/homevenv/UofC2022/metrics_test/arc_15393791/comp_model
+SSIM: 0.383 +/- 0.263
+NRMSE: 239.458 +/- 257.196
+PSNR: 13.536 +/- 4.456
+
+Real: /Users/duncanboyd/Documents/homevenv/UofC2022/metrics_test/arc_15393791/real_model
+SSIM: 0.534 +/- 0.209
+NRMSE: 129.913 +/- 111.200
+PSNR: 17.274 +/- 2.461
+
+Complex: /Users/duncanboyd/Documents/homevenv/UofC2022/metrics_test/arc_15388452/comp_model
+SSIM: 0.584 +/- 0.199
+NRMSE: 113.759 +/- 95.443
+PSNR: 18.329 +/- 2.359
+
+Real: /Users/duncanboyd/Documents/homevenv/UofC2022/metrics_test/arc_15388452/real_model
+SSIM: 0.535 +/- 0.066
+NRMSE: 93.648 +/- 46.676
+PSNR: 18.689 +/- 0.982
+
+Complex: /Users/duncanboyd/Documents/homevenv/UofC2022/metrics_test/arc_15393791/comp_model
+SSIM: -0.019 +/- 0.180
+NRMSE: 105.753 +/- 33.841
+PSNR: 12.766 +/- 2.629
+
+Real: /Users/duncanboyd/Documents/homevenv/UofC2022/metrics_test/arc_15393791/real_model
+SSIM: 0.110 +/- 0.071
+NRMSE: 88.915 +/- 3.846
+PSNR: 13.886 +/- 0.848

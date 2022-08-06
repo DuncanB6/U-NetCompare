@@ -13,7 +13,6 @@ import logging
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
 import random
 import sigpy.mri as sp # 1.22
-import matplotlib.pyplot as plt
 from skimage.metrics import structural_similarity as ssim
 from skimage.metrics import normalized_root_mse as norm_root_mse
 from skimage.metrics import peak_signal_noise_ratio as psnr
@@ -63,21 +62,23 @@ def get_test(cfg, ADDR):
     for ii in range(len(kspace_files_test)):
         ntest += np.load(kspace_files_test[ii]).shape[0]
 
-    # Load test data
+    # Load train data
     image_test = np.zeros((ntest, shape[0], shape[1], 2))
     kspace_test = np.zeros((ntest, shape[0], shape[1], 2))
     aux_counter = 0
     for ii in range(len(kspace_files_test)):
-        aux_kspace = np.load(kspace_files_test[ii]) / norm
-        aux = aux_kspace.shape[0]
-        aux2 = np.fft.ifft2(aux_kspace[:, :, :, 0] + 1j * aux_kspace[:, :, :, 1])
-        aux_kspace[:, mask[int(random.randint(0, cfg["params"]["NUM_MASKS"] - 1))], :] = 0
-        image_test[aux_counter : aux_counter + aux, :, :, 0] = aux2.real
-        image_test[aux_counter : aux_counter + aux, :, :, 1] = aux2.imag
-        kspace_test[aux_counter : aux_counter + aux, :, :, 0] = aux_kspace[:, :, :, 0]
-        kspace_test[aux_counter : aux_counter + aux, :, :, 1] = aux_kspace[:, :, :, 1]
+        dec_kspace = np.load(kspace_files_test[ii]) / norm
+        rec_kspace = np.copy(dec_kspace)
+        dec_kspace[:, mask[int(random.randint(0, cfg["params"]["NUM_MASKS"] - 1))], :] = 0
+        dec_image = np.fft.ifft2(dec_kspace[:, :, :, 0] + 1j * dec_kspace[:, :, :, 1])
+        rec_image = np.fft.ifft2(rec_kspace[:, :, :, 0] + 1j * rec_kspace[:, :, :, 1])
+        aux = rec_kspace.shape[0]
+        kspace_test[aux_counter : aux_counter + aux, :, :, 0] = dec_image.real
+        kspace_test[aux_counter : aux_counter + aux, :, :, 1] = dec_image.imag
+        image_test[aux_counter : aux_counter + aux, :, :, 0] = rec_image.real
+        image_test[aux_counter : aux_counter + aux, :, :, 1] = rec_image.imag
         aux_counter += aux
-
+    
     # Shuffle testing
     indexes = np.arange(image_test.shape[0], dtype=int)
     np.random.shuffle(indexes)
@@ -86,6 +87,9 @@ def get_test(cfg, ADDR):
 
     kspace_test = kspace_test[: cfg["params"]["NUM_TEST"], :, :, :]
     image_test = image_test[: cfg["params"]["NUM_TEST"], :, :, :]
+
+    kspace_test = kspace_test / np.max(np.abs(kspace_test[:, :, :, 0] + 1j * kspace_test[:, :, :, 1]))
+    image_test = image_test / np.max(np.abs(image_test[:, :, :, 0] + 1j * image_test[:, :, :, 1]))
 
     logging.info("kspace test: " + str(kspace_test.shape))
     logging.info("image test: " + str(image_test.shape))
@@ -255,13 +259,16 @@ def get_brains(cfg, ADDR):
     kspace_train = np.zeros((ntrain, shape[0], shape[1], 2))
     aux_counter = 0
     for ii in range(len(kspace_files_train)):
-        aux_kspace = np.load(kspace_files_train[ii]) / norm
-        aux = aux_kspace.shape[0]
-        aux2 = np.fft.ifft2(aux_kspace[:, :, :, 0] + 1j * aux_kspace[:, :, :, 1])
-        image_train[aux_counter : aux_counter + aux, :, :, 0] = aux2.real
-        image_train[aux_counter : aux_counter + aux, :, :, 1] = aux2.imag
-        kspace_train[aux_counter : aux_counter + aux, :, :, 0] = aux_kspace[:, :, :, 0]
-        kspace_train[aux_counter : aux_counter + aux, :, :, 1] = aux_kspace[:, :, :, 1]
+        dec_kspace = np.load(kspace_files_train[ii]) / norm
+        rec_kspace = np.copy(dec_kspace)
+        dec_kspace[:, mask[int(random.randint(0, cfg["params"]["NUM_MASKS"] - 1))], :] = 0
+        dec_image = np.fft.ifft2(dec_kspace[:, :, :, 0] + 1j * dec_kspace[:, :, :, 1])
+        rec_image = np.fft.ifft2(rec_kspace[:, :, :, 0] + 1j * rec_kspace[:, :, :, 1])
+        aux = rec_kspace.shape[0]
+        kspace_train[aux_counter : aux_counter + aux, :, :, 0] = dec_image.real
+        kspace_train[aux_counter : aux_counter + aux, :, :, 1] = dec_image.imag
+        image_train[aux_counter : aux_counter + aux, :, :, 0] = rec_image.real
+        image_train[aux_counter : aux_counter + aux, :, :, 1] = rec_image.imag
         aux_counter += aux
 
     # Shuffle training
@@ -273,7 +280,8 @@ def get_brains(cfg, ADDR):
     kspace_train = kspace_train[: cfg["params"]["NUM_TRAIN"], :, :, :]
     image_train = image_train[: cfg["params"]["NUM_TRAIN"], :, :, :]
 
-    kspace_train[:, mask[int(random.randint(0, cfg["params"]["NUM_MASKS"] - 1))], :] = 0
+    kspace_train = kspace_train / np.max(np.abs(kspace_train[:, :, :, 0] + 1j * kspace_train[:, :, :, 1]))
+    image_train = image_train / np.max(np.abs(image_train[:, :, :, 0] + 1j * image_train[:, :, :, 1]))
 
     logging.info("kspace train: " + str(kspace_train.shape))
     logging.info("image train: " + str(image_train.shape))
@@ -288,13 +296,16 @@ def get_brains(cfg, ADDR):
     kspace_val = np.zeros((nval, shape[0], shape[1], 2))
     aux_counter = 0
     for ii in range(len(kspace_files_val)):
-        aux_kspace = np.load(kspace_files_val[ii]) / norm
-        aux = aux_kspace.shape[0]
-        aux2 = np.fft.ifft2(aux_kspace[:, :, :, 0] + 1j * aux_kspace[:, :, :, 1])
-        image_val[aux_counter : aux_counter + aux, :, :, 0] = aux2.real
-        image_val[aux_counter : aux_counter + aux, :, :, 1] = aux2.imag
-        kspace_val[aux_counter : aux_counter + aux, :, :, 0] = aux_kspace[:, :, :, 0]
-        kspace_val[aux_counter : aux_counter + aux, :, :, 1] = aux_kspace[:, :, :, 1]
+        dec_kspace = np.load(kspace_files_val[ii]) / norm
+        rec_kspace = np.copy(dec_kspace)
+        dec_kspace[:, mask[int(random.randint(0, cfg["params"]["NUM_MASKS"] - 1))], :] = 0
+        dec_image = np.fft.ifft2(dec_kspace[:, :, :, 0] + 1j * dec_kspace[:, :, :, 1])
+        rec_image = np.fft.ifft2(rec_kspace[:, :, :, 0] + 1j * rec_kspace[:, :, :, 1])
+        aux = rec_kspace.shape[0]
+        kspace_val[aux_counter : aux_counter + aux, :, :, 0] = dec_image.real
+        kspace_val[aux_counter : aux_counter + aux, :, :, 1] = dec_image.imag
+        image_val[aux_counter : aux_counter + aux, :, :, 0] = rec_image.real
+        image_val[aux_counter : aux_counter + aux, :, :, 1] = rec_image.imag
         aux_counter += aux
 
     # Shuffle valing
@@ -307,7 +318,8 @@ def get_brains(cfg, ADDR):
     kspace_val = kspace_val[: cfg["params"]["NUM_VAL"], :, :, :]
     image_val = image_val[: cfg["params"]["NUM_VAL"], :, :, :]
 
-    kspace_val[:, mask[int(random.randint(0, cfg["params"]["NUM_MASKS"] - 1))], :] = 0
+    kspace_val = kspace_val / np.max(np.abs(kspace_val[:, :, :, 0] + 1j * kspace_val[:, :, :, 1]))
+    image_val = image_val / np.max(np.abs(image_val[:, :, :, 0] + 1j * image_val[:, :, :, 1]))
 
     logging.info("kspace val: " + str(kspace_val.shape))
     logging.info("image val: " + str(image_val.shape))
@@ -322,13 +334,16 @@ def get_brains(cfg, ADDR):
     kspace_test = np.zeros((ntest, shape[0], shape[1], 2))
     aux_counter = 0
     for ii in range(len(kspace_files_test)):
-        aux_kspace = np.load(kspace_files_test[ii]) / norm
-        aux = aux_kspace.shape[0]
-        aux2 = np.fft.ifft2(aux_kspace[:, :, :, 0] + 1j * aux_kspace[:, :, :, 1])
-        image_test[aux_counter : aux_counter + aux, :, :, 0] = aux2.real
-        image_test[aux_counter : aux_counter + aux, :, :, 1] = aux2.imag
-        kspace_test[aux_counter : aux_counter + aux, :, :, 0] = aux_kspace[:, :, :, 0]
-        kspace_test[aux_counter : aux_counter + aux, :, :, 1] = aux_kspace[:, :, :, 1]
+        dec_kspace = np.load(kspace_files_test[ii]) / norm
+        rec_kspace = np.copy(dec_kspace)
+        dec_kspace[:, mask[int(random.randint(0, cfg["params"]["NUM_MASKS"] - 1))], :] = 0
+        dec_image = np.fft.ifft2(dec_kspace[:, :, :, 0] + 1j * dec_kspace[:, :, :, 1])
+        rec_image = np.fft.ifft2(rec_kspace[:, :, :, 0] + 1j * rec_kspace[:, :, :, 1])
+        aux = rec_kspace.shape[0]
+        kspace_test[aux_counter : aux_counter + aux, :, :, 0] = dec_image.real
+        kspace_test[aux_counter : aux_counter + aux, :, :, 1] = dec_image.imag
+        image_test[aux_counter : aux_counter + aux, :, :, 0] = rec_image.real
+        image_test[aux_counter : aux_counter + aux, :, :, 1] = rec_image.imag
         aux_counter += aux
 
     # Shuffle testing
@@ -340,7 +355,8 @@ def get_brains(cfg, ADDR):
     kspace_test = kspace_test[: cfg["params"]["NUM_TEST"], :, :, :]
     image_test = image_test[: cfg["params"]["NUM_TEST"], :, :, :]
 
-    kspace_test[:, mask[int(random.randint(0, cfg["params"]["NUM_MASKS"] - 1))], :] = 0
+    kspace_test = kspace_test / np.max(np.abs(kspace_test[:, :, :, 0] + 1j * kspace_test[:, :, :, 1]))
+    image_test = image_test / np.max(np.abs(image_test[:, :, :, 0] + 1j * image_test[:, :, :, 1]))
 
     logging.info("kspace test: " + str(kspace_test.shape))
     logging.info("image test: " + str(image_test.shape))

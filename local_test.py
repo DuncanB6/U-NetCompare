@@ -1,4 +1,4 @@
-# July 27, 2022
+# Aug 5, 2022
 
 # This program fits two unets and displays results. Used for local testing.
 
@@ -12,7 +12,6 @@ from unet_compare.real_unet import real_main
 from unet_compare.comp_unet import comp_main
 from unet_compare.functions import get_brains, mask_gen, normalize
 import logging
-import random
 
 # Import settings with hydra
 @hydra.main(
@@ -40,30 +39,6 @@ def main(cfg: DictConfig):
         kspace_test,
         image_test,
     ) = get_brains(cfg, ADDR)
-
-    # Following 3 blocks convert kspace to image domain.
-    # When implemented in a function, this code returned grey images.
-    aux = np.fft.ifft2(kspace_train[:, :, :, 0] + 1j * kspace_train[:, :, :, 1])
-    image = np.copy(kspace_train)
-    image[:, :, :, 0] = aux.real
-    image[:, :, :, 1] = aux.imag
-    kspace_train = image
-
-    aux = np.fft.ifft2(kspace_test[:, :, :, 0] + 1j * kspace_test[:, :, :, 1])
-    image = np.copy(kspace_test)
-    image[:, :, :, 0] = aux.real
-    image[:, :, :, 1] = aux.imag
-    kspace_test = image
-
-    aux = np.fft.ifft2(kspace_val[:, :, :, 0] + 1j * kspace_val[:, :, :, 1])
-    image = np.copy(kspace_val)
-    image[:, :, :, 0] = aux.real
-    image[:, :, :, 1] = aux.imag
-    kspace_val = image
-
-    plt.imshow(kspace_train[0, :, :, 0], cmap = 'gray')
-    plt.show()
-
 
     # Calls both models
     comp_model = comp_main(
@@ -96,12 +71,10 @@ def main(cfg: DictConfig):
     # Makes predictions
     logging.info("Evaluating UNet")
     comp_pred = comp_model.predict(kspace_test)
-    print(comp_pred.shape)
 
     # Makes predictions
     logging.info("Evaluating UNet")
     real_pred = real_model.predict(kspace_test)
-    print(real_pred.shape)
 
     # Displays predictions (Not necessary for ARC)
     plt.figure(figsize=(10, 10))
