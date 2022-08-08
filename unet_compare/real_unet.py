@@ -49,12 +49,12 @@ def real_main(
 
     # Fits model using training data, validation data
     logging.info("Fitting UNet")
-    model.fit(
+    model.fit_generator(
         combined,
         epochs=cfg["params"]["EPOCHS"],
         steps_per_epoch=image_train.shape[0] / cfg["params"]["BATCH_SIZE"],
         verbose=0,
-        validation_data=(image_val, kspace_val),
+        validation_data=(kspace_val, image_val),
         callbacks=[mc, es, csvl],
     )
 

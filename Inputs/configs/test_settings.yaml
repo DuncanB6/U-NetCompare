@@ -6,7 +6,7 @@ params:
   BATCH_SIZE: 5 # 16 (WNet)
   NUM_TRAIN: 15 # max 4254
   NUM_VAL: 10 # max 1700
-  NUM_TEST: 10 # max 1700
+  NUM_TEST: 100 # max 1700
   NUM_MASKS: 10
   UNIT_CONFIRM: 1
   LR: 0.001

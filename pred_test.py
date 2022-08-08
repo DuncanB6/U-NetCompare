@@ -2,6 +2,8 @@
 
 # Requires two existing unets, displays prediction images.
 
+# scp -r duncan.boyd@arc.ucalgary.ca:home/metrics_test metrics_test
+
 # Imports
 import numpy as np
 import tensorflow as tf
@@ -31,10 +33,10 @@ def main(cfg: DictConfig):
         image_test,
     ) = get_test(cfg, ADDR)
 
-    plt.imshow((255.0 - kspace_test[0, :, :, 0]), cmap='Greys')
+    '''plt.imshow((255.0 - kspace_test[0, :, :, 0]), cmap='Greys')
     plt.show()
     plt.imshow((255.0 - image_test[0, :, :, 0]), cmap='Greys')
-    plt.show()
+    plt.show()'''
 
     comp_models = np.asarray(glob.glob(str(ADDR / cfg["addrs"]["COMP_ARC"])))
     real_models = np.asarray(glob.glob(str(ADDR / cfg["addrs"]["REAL_ARC"])))
@@ -61,7 +63,7 @@ def main(cfg: DictConfig):
         comp_pred = comp_model.predict(kspace_test)
         real_pred = real_model.predict(kspace_test)
 
-        # Displays predictions (Not necessary for ARC)
+        '''# Displays predictions (Not necessary for ARC)
         plt.figure(figsize=(10, 10))
         plt.subplot(1, 4, 1)
         plt.imshow((255.0 - image_test[0, :, :, 0]), cmap="Greys")
@@ -75,7 +77,7 @@ def main(cfg: DictConfig):
         plt.subplot(1, 4, 4)
         plt.imshow((255.0 - kspace_test[0, :, :, 0]), cmap="Greys")
         plt.axis("off")
-        plt.show()
+        plt.show()'''
 
         comp_pred = comp_pred / np.max(np.abs(comp_pred[:, :, :, 0] + 1j * comp_pred[:, :, :, 1]))
         real_pred = real_pred / np.max(np.abs(real_pred[:, :, :, 0] + 1j * real_pred[:, :, :, 1]))
