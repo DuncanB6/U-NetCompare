@@ -10,7 +10,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from unet_compare.real_unet import real_main
 from unet_compare.comp_unet import comp_main
-from unet_compare.functions import get_brains, mask_gen, normalize
+from unet_compare.functions import get_brains, mask_gen, get_test
 import logging
 
 # Import settings with hydra
@@ -32,13 +32,16 @@ def main(cfg: DictConfig):
     (
         mask,
         stats,
-        kspace_train,
-        image_train,
-        kspace_val,
-        image_val,
-        kspace_test,
-        image_test,
+        dec_train,
+        rec_train,
+        dec_val,
+        rec_val,
     ) = get_brains(cfg, ADDR)
+
+    (
+        dec_test,
+        rec_test,
+    ) = get_test(cfg, ADDR)
 
     # Calls both models
     comp_model = comp_main(
@@ -46,46 +49,44 @@ def main(cfg: DictConfig):
         ADDR,
         mask,
         stats,
-        kspace_train,
-        image_train,
-        kspace_val,
-        image_val,
-        kspace_test,
-        image_test,
+        rec_train,
+        dec_val,
+        rec_val,
     )
     comp_model.summary()
+
     real_model = real_main(
         cfg,
         ADDR,
         mask,
         stats,
-        kspace_train,
-        image_train,
-        kspace_val,
-        image_val,
-        kspace_test,
-        image_test,
+        rec_train,
+        dec_val,
+        rec_val,
     )
     real_model.summary()
 
     # Makes predictions
     logging.info("Evaluating UNet")
-    comp_pred = comp_model.predict(kspace_test)
+    comp_pred = comp_model.predict(dec_test)
 
     # Makes predictions
     logging.info("Evaluating UNet")
-    real_pred = real_model.predict(kspace_test)
+    real_pred = real_model.predict(dec_test)
+
+    comp_pred = comp_pred / np.max(np.abs(comp_pred[:, :, :, 0] + 1j * comp_pred[:, :, :, 1]))
+    real_pred = real_pred / np.max(np.abs(real_pred[:, :, :, 0] + 1j * real_pred[:, :, :, 1]))
 
     # Displays predictions (Not necessary for ARC)
     plt.figure(figsize=(10, 10))
     plt.subplot(1, 4, 1)
-    plt.imshow((255.0 - image_test[0, :, :, 0]), cmap="Greys")
+    plt.imshow((255.0 - rec_test[0, :, :, 0]), cmap="Greys")
     plt.subplot(1, 4, 2)
     plt.imshow((255.0 - comp_pred[0, :, :, 0]), cmap="Greys")
     plt.subplot(1, 4, 3)
     plt.imshow((255.0 - real_pred[0, :, :, 0]), cmap="Greys")
     plt.subplot(1, 4, 4)
-    plt.imshow((255.0 - kspace_test[0, :, :, 0]), cmap="Greys")
+    plt.imshow((255.0 - dec_test[0, :, :, 0]), cmap="Greys")
     plt.show()
 
     return

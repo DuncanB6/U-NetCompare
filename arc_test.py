@@ -1,4 +1,4 @@
-# This is an ARC compatible file which fits two unets, real and complex.
+# This is an ARC compatible file which fits and saves two unets, real and complex.
 
 # Imports
 from pathlib import Path
@@ -8,7 +8,6 @@ import logging
 from unet_compare.real_unet import real_main
 from unet_compare.comp_unet import comp_main
 from unet_compare.functions import get_brains, mask_gen
-import numpy as np
 import tensorflow as tf
 
 # Import settings with hydra
@@ -34,38 +33,30 @@ def main(cfg: DictConfig):
     (
         mask,
         stats,
-        kspace_train,
-        image_train,
-        kspace_val,
-        image_val,
-        kspace_test,
-        image_test,
+        dec_train,
+        rec_train,
+        dec_val,
+        rec_val,
     ) = get_brains(cfg, ADDR)
 
     # Calls both models
-    immodel = comp_main(
+    comp_main(
         cfg,
         ADDR,
         mask,
         stats,
-        kspace_train,
-        image_train,
-        kspace_val,
-        image_val,
-        kspace_test,
-        image_test,
+        rec_train,
+        dec_val,
+        rec_val,
     )
-    remodel = real_main(
+    real_main(
         cfg,
         ADDR,
         mask,
         stats,
-        kspace_train,
-        image_train,
-        kspace_val,
-        image_val,
-        kspace_test,
-        image_test,
+        rec_train,
+        dec_val,
+        rec_val,
     )
 
     return

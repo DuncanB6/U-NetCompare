@@ -1,7 +1,7 @@
 ---
 params:
   EPOCHS: 1 # 250 (WNet)
-  MOD: 1.42 # 1.42: Modified to match ReUNet's trainable params roughly (+-1%) which isn't ideal
+  MOD: 1.42 # 1.42: Modified to match ReUNet's trainable params roughly (+-1%)
   RE_MOD: 1.0
   BATCH_SIZE: 5 # 16 (WNet)
   NUM_TRAIN: 15 # max 4254
@@ -29,6 +29,3 @@ addrs:
   REAL_CSV: outputs_1/real_unet_train.log
   MASKS: inputs/masks/*.npy
   MASK_SAVE: inputs/masks
-  COMP_ARC: arc_outputs/*/comp_model # arc_outputs/arc_batch_1/
-  REAL_ARC: arc_outputs/*/real_model
-  METRICS: metrics.txt

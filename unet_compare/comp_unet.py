@@ -17,12 +17,9 @@ def comp_main(
     ADDR,
     mask,
     stats,
-    kspace_train,
-    image_train,
-    kspace_val,
-    image_val,
-    kspace_test,
-    image_test,
+    rec_train,
+    dec_val,
+    rec_val,
 ):
 
     logging.info("Initialized complex UNet with ")
@@ -49,22 +46,20 @@ def comp_main(
     csvl = tf.keras.callbacks.CSVLogger(
         str(ADDR / cfg["addrs"]["COMP_CSV"]), append=False, separator="|"
     )
-    combined = data_aug(image_train, mask, stats, cfg)
+    combined = data_aug(rec_train, mask, stats, cfg)
 
     # Fits model using training data, validation data
     logging.info("Fitting UNet")
     model.fit_generator(
         combined,
         epochs=cfg["params"]["EPOCHS"],
-        steps_per_epoch=image_train.shape[0] / cfg["params"]["BATCH_SIZE"],
+        steps_per_epoch=rec_train.shape[0] / cfg["params"]["BATCH_SIZE"],
         verbose=0,
-        validation_data=(kspace_val, image_val),
+        validation_data=(dec_val, rec_val),
         callbacks=[mc, es, csvl],
     )
 
     # Saves model
-    # Note: Loading does not work due to custom layers. It want an unpit for out_channels
-    # while loading, but this is determined in the UNet.
     model.save(ADDR / cfg["addrs"]["COMP_MODEL"])
 
     # Provides endtime logging info

@@ -1,6 +1,6 @@
 # This program is used to evaluate existing models.
 
-# Requires two existing unets, displays prediction images.
+# Requires two existing unets, displays prediction recs.
 
 # scp -r duncan.boyd@arc.ucalgary.ca:home/metrics_test metrics_test
 
@@ -13,7 +13,7 @@ import hydra
 from omegaconf import DictConfig
 import numpy as np
 import matplotlib.pyplot as plt
-from unet_compare.functions import nrmse, CompConv2D, get_test, metrics, normalize, mask_gen
+from unet_compare.functions import nrmse, CompConv2D, get_test, metrics, mask_gen
 
 # Collects test data and uses it to evaluate existing models.
 @hydra.main(
@@ -25,17 +25,17 @@ def main(cfg: DictConfig):
 
     ADDR = Path.cwd()
 
-    # mask_gen(cfg, ADDR)
+    mask_gen(ADDR, cfg)
 
     # Loads data
     (
-        kspace_test,
-        image_test,
+        dec_test,
+        rec_test,
     ) = get_test(cfg, ADDR)
 
-    '''plt.imshow((255.0 - kspace_test[0, :, :, 0]), cmap='Greys')
+    '''plt.imshow((255.0 - dec_test[0, :, :, 0]), cmap='Greys')
     plt.show()
-    plt.imshow((255.0 - image_test[0, :, :, 0]), cmap='Greys')
+    plt.imshow((255.0 - rec_test[0, :, :, 0]), cmap='Greys')
     plt.show()'''
 
     comp_models = np.asarray(glob.glob(str(ADDR / cfg["addrs"]["COMP_ARC"])))
@@ -47,6 +47,10 @@ def main(cfg: DictConfig):
     comp_ssim_sum = 0.0
     comp_nrmse_sum = 0.0
     comp_psnr_sum = 0.0
+
+    metrics_file = open(ADDR / cfg['addrs']['METRICS'], 'w')
+    metrics_file.write("Metrics:\n")
+    metrics_file.close()
 
     for i in range(len(comp_models)):
 
@@ -60,13 +64,13 @@ def main(cfg: DictConfig):
         )
 
         # Makes predictions
-        comp_pred = comp_model.predict(kspace_test)
-        real_pred = real_model.predict(kspace_test)
+        comp_pred = comp_model.predict(dec_test)
+        real_pred = real_model.predict(dec_test)
 
-        '''# Displays predictions (Not necessary for ARC)
+        # Displays predictions (Not necessary for large scale)
         plt.figure(figsize=(10, 10))
         plt.subplot(1, 4, 1)
-        plt.imshow((255.0 - image_test[0, :, :, 0]), cmap="Greys")
+        plt.imshow((255.0 - rec_test[0, :, :, 0]), cmap="Greys")
         plt.axis("off")
         plt.subplot(1, 4, 2)
         plt.imshow((255.0 - comp_pred[0, :, :, 0]), cmap="Greys")
@@ -75,31 +79,18 @@ def main(cfg: DictConfig):
         plt.imshow((255.0 - real_pred[0, :, :, 0]), cmap="Greys")
         plt.axis("off")
         plt.subplot(1, 4, 4)
-        plt.imshow((255.0 - kspace_test[0, :, :, 0]), cmap="Greys")
+        plt.imshow((255.0 - dec_test[0, :, :, 0]), cmap="Greys")
         plt.axis("off")
-        plt.show()'''
+        plt.show()
 
         comp_pred = comp_pred / np.max(np.abs(comp_pred[:, :, :, 0] + 1j * comp_pred[:, :, :, 1]))
         real_pred = real_pred / np.max(np.abs(real_pred[:, :, :, 0] + 1j * real_pred[:, :, :, 1]))
-        
-        '''comp_predc = np.sqrt(comp_pred[:, :, :, 0] * comp_pred[:, :, :, 0] + comp_pred[:, :, :, 1] * comp_pred[:, :, :, 1])
-        real_predc = np.sqrt(real_pred[:, :, :, 0] * real_pred[:, :, :, 0] + real_pred[:, :, :, 1] * real_pred[:, :, :, 1])
-        image_testc = np.sqrt(image_test[:, :, :, 0] * image_test[:, :, :, 0] + image_test[:, :, :, 1] * image_test[:, :, :, 1]) 
-
-        a_bounds = (image_testc.min(), image_testc.max())
-        cd_bounds = (comp_predc.min(), comp_predc.max())
-        rd_bounds = (real_predc.min(), real_predc.max())
-        comp_predc = comp_predc.astype(np.float64)
-        real_predc = real_predc.astype(np.float64)
-
-        comp_predc = normalize(comp_predc, cd_bounds, a_bounds)
-        real_predc = normalize(real_predc, rd_bounds, a_bounds)'''
 
         # High score is better for SSIM, PSNR
         # Low is better for NRMSE
         # Should be ballpark (0.978 +/- 0.076, 1.827 +/- 1.112, 35.543 +/- 3.239)
         metrics_file = open(ADDR / cfg['addrs']['METRICS'], 'a')
-        metric = metrics(image_test, comp_pred)
+        metric = metrics(rec_test, comp_pred)
         metrics_file.write("\n\nComplex: ")
         metrics_file.write(str(comp_models[i]))
         metrics_file.write("\nSSIM: %.3f +/- %.3f" %(metric[:,0].mean(), metric[:,0].std()))
@@ -109,7 +100,7 @@ def main(cfg: DictConfig):
         comp_nrmse_sum += metric[:, 1].mean()
         comp_psnr_sum += metric[:, 2].mean()
 
-        metric = metrics(image_test, real_pred)
+        metric = metrics(rec_test, real_pred)
         metrics_file.write("\n\nReal: ")
         metrics_file.write(str(real_models[i]))
         metrics_file.write("\nSSIM: %.3f +/- %.3f" %(metric[:,0].mean(), metric[:,0].std()))

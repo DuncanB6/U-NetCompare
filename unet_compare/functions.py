@@ -42,9 +42,9 @@ def metrics(ref, pred):
 # Gets test data only.
 def get_test(cfg, ADDR):
 
-    kspace_files_test = np.asarray(glob.glob(str(ADDR / cfg["addrs"]["TEST"])))
+    dec_files_test = np.asarray(glob.glob(str(ADDR / cfg["addrs"]["TEST"])))
 
-    logging.info("test scans: " + str(len(kspace_files_test)))
+    logging.info("test scans: " + str(len(dec_files_test)))
     logging.debug("Scans loaded")
 
     shape = (256, 256)
@@ -59,53 +59,53 @@ def get_test(cfg, ADDR):
 
     # Get number of samples
     ntest = 0
-    for ii in range(len(kspace_files_test)):
-        ntest += np.load(kspace_files_test[ii]).shape[0]
+    for ii in range(len(dec_files_test)):
+        ntest += np.load(dec_files_test[ii]).shape[0]
 
     # Load train data
-    image_test = np.zeros((ntest, shape[0], shape[1], 2))
-    kspace_test = np.zeros((ntest, shape[0], shape[1], 2))
+    rec_test = np.zeros((ntest, shape[0], shape[1], 2))
+    dec_test = np.zeros((ntest, shape[0], shape[1], 2))
     aux_counter = 0
-    for ii in range(len(kspace_files_test)):
-        dec_kspace = np.load(kspace_files_test[ii]) / norm
-        rec_kspace = np.copy(dec_kspace)
-        dec_kspace[:, mask[int(random.randint(0, cfg["params"]["NUM_MASKS"] - 1))], :] = 0
-        dec_image = np.fft.ifft2(dec_kspace[:, :, :, 0] + 1j * dec_kspace[:, :, :, 1])
-        rec_image = np.fft.ifft2(rec_kspace[:, :, :, 0] + 1j * rec_kspace[:, :, :, 1])
-        aux = rec_kspace.shape[0]
-        kspace_test[aux_counter : aux_counter + aux, :, :, 0] = dec_image.real
-        kspace_test[aux_counter : aux_counter + aux, :, :, 1] = dec_image.imag
-        image_test[aux_counter : aux_counter + aux, :, :, 0] = rec_image.real
-        image_test[aux_counter : aux_counter + aux, :, :, 1] = rec_image.imag
+    for ii in range(len(dec_files_test)):
+        dec_dec = np.load(dec_files_test[ii]) / norm
+        rec_dec = np.copy(dec_dec)
+        dec_dec[:, mask[int(random.randint(0, cfg["params"]["NUM_MASKS"] - 1))], :] = 0
+        dec_rec = np.fft.ifft2(dec_dec[:, :, :, 0] + 1j * dec_dec[:, :, :, 1])
+        rec_rec = np.fft.ifft2(rec_dec[:, :, :, 0] + 1j * rec_dec[:, :, :, 1])
+        aux = rec_dec.shape[0]
+        dec_test[aux_counter : aux_counter + aux, :, :, 0] = dec_rec.real
+        dec_test[aux_counter : aux_counter + aux, :, :, 1] = dec_rec.imag
+        rec_test[aux_counter : aux_counter + aux, :, :, 0] = rec_rec.real
+        rec_test[aux_counter : aux_counter + aux, :, :, 1] = rec_rec.imag
         aux_counter += aux
     
     # Shuffle testing
-    indexes = np.arange(image_test.shape[0], dtype=int)
+    indexes = np.arange(rec_test.shape[0], dtype=int)
     np.random.shuffle(indexes)
-    image_test = image_test[indexes]
-    kspace_test = kspace_test[indexes]
+    rec_test = rec_test[indexes]
+    dec_test = dec_test[indexes]
 
-    kspace_test = kspace_test[: cfg["params"]["NUM_TEST"], :, :, :]
-    image_test = image_test[: cfg["params"]["NUM_TEST"], :, :, :]
+    dec_test = dec_test[: cfg["params"]["NUM_TEST"], :, :, :]
+    rec_test = rec_test[: cfg["params"]["NUM_TEST"], :, :, :]
 
-    kspace_test = kspace_test / np.max(np.abs(kspace_test[:, :, :, 0] + 1j * kspace_test[:, :, :, 1]))
-    image_test = image_test / np.max(np.abs(image_test[:, :, :, 0] + 1j * image_test[:, :, :, 1]))
+    dec_test = dec_test / np.max(np.abs(dec_test[:, :, :, 0] + 1j * dec_test[:, :, :, 1]))
+    rec_test = rec_test / np.max(np.abs(rec_test[:, :, :, 0] + 1j * rec_test[:, :, :, 1]))
 
-    logging.info("kspace test: " + str(kspace_test.shape))
-    logging.info("image test: " + str(image_test.shape))
+    logging.info("dec test: " + str(dec_test.shape))
+    logging.info("rec test: " + str(rec_test.shape))
 
     logging.debug("Scans formatted")
 
     return (
-        kspace_test,
-        image_test,
+        dec_test,
+        rec_test,
     )
 
 def create_circular_mask(h=256, w=256, center=None, radius=16):
 
-    if center is None: # use the middle of the image
+    if center is None: # use the middle of the rec
         center = (int(w/2), int(h/2))
-    if radius is None: # use the smallest distance between the center and image walls
+    if radius is None: # use the smallest distance between the center and rec walls
         radius = min(center[0], center[1], w-center[0], h-center[1])
 
     Y, X = np.ogrid[:h, :w]
@@ -117,7 +117,7 @@ def create_circular_mask(h=256, w=256, center=None, radius=16):
 # Creates a number of masks (modifiable in settings) with a 22% poisson disk.
 def mask_gen(ADDR, cfg):
 
-    files = glob.glob(str(ADDR / cfg["addrs"]["MASKS"]))
+    files = np.asarray(glob.glob(str(ADDR / cfg["addrs"]["MASKS"])))
     for f in files:
         os.remove(f)
 
@@ -145,10 +145,10 @@ def mask_gen(ADDR, cfg):
     return
 
 
-# Return an image generator which generates augmented images
-def data_aug(image_train, mask, stats, cfg):
+# Return an rec generator which generates augmented recs
+def data_aug(rec_train, mask, stats, cfg):
     seed = 905
-    image_datagen1 = ImageDataGenerator(
+    rec_datagen1 = ImageDataGenerator(
         rotation_range=40,
         width_shift_range=0.075,
         height_shift_range=0.075,
@@ -159,7 +159,7 @@ def data_aug(image_train, mask, stats, cfg):
         fill_mode="nearest",
     )
 
-    image_datagen2 = ImageDataGenerator(
+    rec_datagen2 = ImageDataGenerator(
         rotation_range=40,
         width_shift_range=0.075,
         height_shift_range=0.075,
@@ -170,16 +170,16 @@ def data_aug(image_train, mask, stats, cfg):
         fill_mode="nearest",
     )
 
-    image_datagen1.fit(image_train[:, :, :, 0, np.newaxis], augment=True, seed=seed)
-    image_datagen2.fit(image_train[:, :, :, 1, np.newaxis], augment=True, seed=seed)
+    rec_datagen1.fit(rec_train[:, :, :, 0, np.newaxis], augment=True, seed=seed)
+    rec_datagen2.fit(rec_train[:, :, :, 1, np.newaxis], augment=True, seed=seed)
 
-    image_gen1 = image_datagen1.flow(
-        image_train[:, :, :, 0, np.newaxis],
+    rec_gen1 = rec_datagen1.flow(
+        rec_train[:, :, :, 0, np.newaxis],
         batch_size=cfg["params"]["BATCH_SIZE"],
         seed=seed,
     )
-    image_gen2 = image_datagen1.flow(
-        image_train[:, :, :, 1, np.newaxis],
+    rec_gen2 = rec_datagen1.flow(
+        rec_train[:, :, :, 1, np.newaxis],
         batch_size=cfg["params"]["BATCH_SIZE"],
         seed=seed,
     )
@@ -188,26 +188,26 @@ def data_aug(image_train, mask, stats, cfg):
         while True:
             rec_real = gen1.next()
             rec_imag = gen2.next()
-            kspace = np.fft.fft2(rec_real[:, :, :, 0] + 1j * rec_imag[:, :, :, 0])
-            kspace2 = np.zeros((kspace.shape[0], kspace.shape[1], kspace.shape[2], 2))
-            kspace2[:, :, :, 0] = kspace.real
-            kspace2[:, :, :, 1] = kspace.imag
-            kspace2[
+            dec = np.fft.fft2(rec_real[:, :, :, 0] + 1j * rec_imag[:, :, :, 0])
+            dec2 = np.zeros((dec.shape[0], dec.shape[1], dec.shape[2], 2))
+            dec2[:, :, :, 0] = dec.real
+            dec2[:, :, :, 1] = dec.imag
+            dec2[
                 :, mask[int(random.randint(0, (cfg["params"]["NUM_MASKS"] - 1)))], :
             ] = 0
-            rec = np.zeros((kspace.shape[0], kspace.shape[1], kspace.shape[2], 2))
+            rec = np.zeros((dec.shape[0], dec.shape[1], dec.shape[2], 2))
             rec[:, :, :, 0] = rec_real[:, :, :, 0]
             rec[:, :, :, 1] = rec_imag[:, :, :, 0]
 
-            aux = np.fft.ifft2(kspace2[:, :, :, 0] + 1j * kspace2[:, :, :, 1])
-            image = np.copy(kspace2)
-            image[:, :, :, 0] = aux.real
-            image[:, :, :, 1] = aux.imag
-            kspace2 = image
+            aux = np.fft.ifft2(dec2[:, :, :, 0] + 1j * dec2[:, :, :, 1])
+            rec = np.copy(dec2)
+            rec[:, :, :, 0] = aux.real
+            rec[:, :, :, 1] = aux.imag
+            dec2 = rec
             
-            yield (kspace2, rec)
+            yield (dec2, rec)
 
-    return combine_generator(image_gen1, image_gen2, mask, stats)
+    return combine_generator(rec_gen1, rec_gen2, mask, stats)
 
 
 # Loss function
@@ -217,11 +217,11 @@ def nrmse(y_true, y_pred):
 
 
 # IFFT layer, used in u_net.
-def ifft_layer(kspace):
-    real = layers.Lambda(lambda kspace: kspace[:, :, :, 0])(kspace)
-    imag = layers.Lambda(lambda kspace: kspace[:, :, :, 1])(kspace)
-    kspace_complex = tf.complex(real, imag)
-    rec1 = tf.abs(tf.ifft2d(kspace_complex))
+def ifft_layer(dec):
+    real = layers.Lambda(lambda dec: dec[:, :, :, 0])(dec)
+    imag = layers.Lambda(lambda dec: dec[:, :, :, 1])(dec)
+    dec_complex = tf.complex(real, imag)
+    rec1 = tf.abs(tf.ifft2d(dec_complex))
     rec1 = tf.expand_dims(rec1, -1)
     return rec1
 
@@ -230,13 +230,11 @@ def ifft_layer(kspace):
 def get_brains(cfg, ADDR):
 
     # Note: In train, one file is (174, 256, 256).
-    kspace_files_train = np.asarray(glob.glob(str(ADDR / cfg["addrs"]["TRAIN"])))
-    kspace_files_val = np.asarray(glob.glob(str(ADDR / cfg["addrs"]["VAL"])))
-    kspace_files_test = np.asarray(glob.glob(str(ADDR / cfg["addrs"]["TEST"])))
+    dec_files_train = np.asarray(glob.glob(str(ADDR / cfg["addrs"]["TRAIN"])))
+    dec_files_val = np.asarray(glob.glob(str(ADDR / cfg["addrs"]["VAL"])))
 
-    logging.info("train scans: " + str(len(kspace_files_train)))
-    logging.info("val scans: " + str(len(kspace_files_val)))
-    logging.info("test scans: " + str(len(kspace_files_test)))
+    logging.info("train scans: " + str(len(dec_files_train)))
+    logging.info("val scans: " + str(len(dec_files_val)))
     logging.debug("Scans loaded")
 
     shape = (256, 256)
@@ -251,123 +249,86 @@ def get_brains(cfg, ADDR):
 
     # Get number of samples
     ntrain = 0
-    for ii in range(len(kspace_files_train)):
-        ntrain += np.load(kspace_files_train[ii]).shape[0]
+    for ii in range(len(dec_files_train)):
+        ntrain += np.load(dec_files_train[ii]).shape[0]
 
     # Load train data
-    image_train = np.zeros((ntrain, shape[0], shape[1], 2))
-    kspace_train = np.zeros((ntrain, shape[0], shape[1], 2))
+    rec_train = np.zeros((ntrain, shape[0], shape[1], 2))
+    dec_train = np.zeros((ntrain, shape[0], shape[1], 2))
     aux_counter = 0
-    for ii in range(len(kspace_files_train)):
-        dec_kspace = np.load(kspace_files_train[ii]) / norm
-        rec_kspace = np.copy(dec_kspace)
-        dec_kspace[:, mask[int(random.randint(0, cfg["params"]["NUM_MASKS"] - 1))], :] = 0
-        dec_image = np.fft.ifft2(dec_kspace[:, :, :, 0] + 1j * dec_kspace[:, :, :, 1])
-        rec_image = np.fft.ifft2(rec_kspace[:, :, :, 0] + 1j * rec_kspace[:, :, :, 1])
-        aux = rec_kspace.shape[0]
-        kspace_train[aux_counter : aux_counter + aux, :, :, 0] = dec_image.real
-        kspace_train[aux_counter : aux_counter + aux, :, :, 1] = dec_image.imag
-        image_train[aux_counter : aux_counter + aux, :, :, 0] = rec_image.real
-        image_train[aux_counter : aux_counter + aux, :, :, 1] = rec_image.imag
+    for ii in range(len(dec_files_train)):
+        dec_dec = np.load(dec_files_train[ii]) / norm
+        rec_dec = np.copy(dec_dec)
+        dec_dec[:, mask[int(random.randint(0, cfg["params"]["NUM_MASKS"] - 1))], :] = 0
+        dec_rec = np.fft.ifft2(dec_dec[:, :, :, 0] + 1j * dec_dec[:, :, :, 1])
+        rec_rec = np.fft.ifft2(rec_dec[:, :, :, 0] + 1j * rec_dec[:, :, :, 1])
+        aux = rec_dec.shape[0]
+        dec_train[aux_counter : aux_counter + aux, :, :, 0] = dec_rec.real
+        dec_train[aux_counter : aux_counter + aux, :, :, 1] = dec_rec.imag
+        rec_train[aux_counter : aux_counter + aux, :, :, 0] = rec_rec.real
+        rec_train[aux_counter : aux_counter + aux, :, :, 1] = rec_rec.imag
         aux_counter += aux
 
     # Shuffle training
-    indexes = np.arange(image_train.shape[0], dtype=int)
+    indexes = np.arange(rec_train.shape[0], dtype=int)
     np.random.shuffle(indexes)
-    image_train = image_train[indexes]
-    kspace_train = kspace_train[indexes]
+    rec_train = rec_train[indexes]
+    dec_train = dec_train[indexes]
 
-    kspace_train = kspace_train[: cfg["params"]["NUM_TRAIN"], :, :, :]
-    image_train = image_train[: cfg["params"]["NUM_TRAIN"], :, :, :]
+    dec_train = dec_train[: cfg["params"]["NUM_TRAIN"], :, :, :]
+    rec_train = rec_train[: cfg["params"]["NUM_TRAIN"], :, :, :]
 
-    kspace_train = kspace_train / np.max(np.abs(kspace_train[:, :, :, 0] + 1j * kspace_train[:, :, :, 1]))
-    image_train = image_train / np.max(np.abs(image_train[:, :, :, 0] + 1j * image_train[:, :, :, 1]))
+    dec_train = dec_train / np.max(np.abs(dec_train[:, :, :, 0] + 1j * dec_train[:, :, :, 1]))
+    rec_train = rec_train / np.max(np.abs(rec_train[:, :, :, 0] + 1j * rec_train[:, :, :, 1]))
 
-    logging.info("kspace train: " + str(kspace_train.shape))
-    logging.info("image train: " + str(image_train.shape))
+    logging.info("dec train: " + str(dec_train.shape))
+    logging.info("rec train: " + str(rec_train.shape))
 
     # Get number of samples
     nval = 0
-    for ii in range(len(kspace_files_val)):
-        nval += np.load(kspace_files_val[ii]).shape[0]
+    for ii in range(len(dec_files_val)):
+        nval += np.load(dec_files_val[ii]).shape[0]
 
     # Load val data
-    image_val = np.zeros((nval, shape[0], shape[1], 2))
-    kspace_val = np.zeros((nval, shape[0], shape[1], 2))
+    rec_val = np.zeros((nval, shape[0], shape[1], 2))
+    dec_val = np.zeros((nval, shape[0], shape[1], 2))
     aux_counter = 0
-    for ii in range(len(kspace_files_val)):
-        dec_kspace = np.load(kspace_files_val[ii]) / norm
-        rec_kspace = np.copy(dec_kspace)
-        dec_kspace[:, mask[int(random.randint(0, cfg["params"]["NUM_MASKS"] - 1))], :] = 0
-        dec_image = np.fft.ifft2(dec_kspace[:, :, :, 0] + 1j * dec_kspace[:, :, :, 1])
-        rec_image = np.fft.ifft2(rec_kspace[:, :, :, 0] + 1j * rec_kspace[:, :, :, 1])
-        aux = rec_kspace.shape[0]
-        kspace_val[aux_counter : aux_counter + aux, :, :, 0] = dec_image.real
-        kspace_val[aux_counter : aux_counter + aux, :, :, 1] = dec_image.imag
-        image_val[aux_counter : aux_counter + aux, :, :, 0] = rec_image.real
-        image_val[aux_counter : aux_counter + aux, :, :, 1] = rec_image.imag
+    for ii in range(len(dec_files_val)):
+        dec_dec = np.load(dec_files_val[ii]) / norm
+        rec_dec = np.copy(dec_dec)
+        dec_dec[:, mask[int(random.randint(0, cfg["params"]["NUM_MASKS"] - 1))], :] = 0
+        dec_rec = np.fft.ifft2(dec_dec[:, :, :, 0] + 1j * dec_dec[:, :, :, 1])
+        rec_rec = np.fft.ifft2(rec_dec[:, :, :, 0] + 1j * rec_dec[:, :, :, 1])
+        aux = rec_dec.shape[0]
+        dec_val[aux_counter : aux_counter + aux, :, :, 0] = dec_rec.real
+        dec_val[aux_counter : aux_counter + aux, :, :, 1] = dec_rec.imag
+        rec_val[aux_counter : aux_counter + aux, :, :, 0] = rec_rec.real
+        rec_val[aux_counter : aux_counter + aux, :, :, 1] = rec_rec.imag
         aux_counter += aux
 
     # Shuffle valing
-    indexes = np.arange(image_val.shape[0], dtype=int)
+    indexes = np.arange(rec_val.shape[0], dtype=int)
     np.random.shuffle(indexes)
-    image_val = image_val[indexes]
-    kspace_val = kspace_val[indexes]
-    kspace_val[:, mask[int(random.randint(0, cfg["params"]["NUM_MASKS"] - 1))], :] = 0
+    rec_val = rec_val[indexes]
+    dec_val = dec_val[indexes]
+    dec_val[:, mask[int(random.randint(0, cfg["params"]["NUM_MASKS"] - 1))], :] = 0
 
-    kspace_val = kspace_val[: cfg["params"]["NUM_VAL"], :, :, :]
-    image_val = image_val[: cfg["params"]["NUM_VAL"], :, :, :]
+    dec_val = dec_val[: cfg["params"]["NUM_VAL"], :, :, :]
+    rec_val = rec_val[: cfg["params"]["NUM_VAL"], :, :, :]
 
-    kspace_val = kspace_val / np.max(np.abs(kspace_val[:, :, :, 0] + 1j * kspace_val[:, :, :, 1]))
-    image_val = image_val / np.max(np.abs(image_val[:, :, :, 0] + 1j * image_val[:, :, :, 1]))
+    dec_val = dec_val / np.max(np.abs(dec_val[:, :, :, 0] + 1j * dec_val[:, :, :, 1]))
+    rec_val = rec_val / np.max(np.abs(rec_val[:, :, :, 0] + 1j * rec_val[:, :, :, 1]))
 
-    logging.info("kspace val: " + str(kspace_val.shape))
-    logging.info("image val: " + str(image_val.shape))
-
-    # Get number of samples
-    ntest = 0
-    for ii in range(len(kspace_files_test)):
-        ntest += np.load(kspace_files_test[ii]).shape[0]
-
-    # Load test data
-    image_test = np.zeros((ntest, shape[0], shape[1], 2))
-    kspace_test = np.zeros((ntest, shape[0], shape[1], 2))
-    aux_counter = 0
-    for ii in range(len(kspace_files_test)):
-        dec_kspace = np.load(kspace_files_test[ii]) / norm
-        rec_kspace = np.copy(dec_kspace)
-        dec_kspace[:, mask[int(random.randint(0, cfg["params"]["NUM_MASKS"] - 1))], :] = 0
-        dec_image = np.fft.ifft2(dec_kspace[:, :, :, 0] + 1j * dec_kspace[:, :, :, 1])
-        rec_image = np.fft.ifft2(rec_kspace[:, :, :, 0] + 1j * rec_kspace[:, :, :, 1])
-        aux = rec_kspace.shape[0]
-        kspace_test[aux_counter : aux_counter + aux, :, :, 0] = dec_image.real
-        kspace_test[aux_counter : aux_counter + aux, :, :, 1] = dec_image.imag
-        image_test[aux_counter : aux_counter + aux, :, :, 0] = rec_image.real
-        image_test[aux_counter : aux_counter + aux, :, :, 1] = rec_image.imag
-        aux_counter += aux
-
-    # Shuffle testing
-    indexes = np.arange(image_test.shape[0], dtype=int)
-    np.random.shuffle(indexes)
-    image_test = image_test[indexes]
-    kspace_test = kspace_test[indexes]
-
-    kspace_test = kspace_test[: cfg["params"]["NUM_TEST"], :, :, :]
-    image_test = image_test[: cfg["params"]["NUM_TEST"], :, :, :]
-
-    kspace_test = kspace_test / np.max(np.abs(kspace_test[:, :, :, 0] + 1j * kspace_test[:, :, :, 1]))
-    image_test = image_test / np.max(np.abs(image_test[:, :, :, 0] + 1j * image_test[:, :, :, 1]))
-
-    logging.info("kspace test: " + str(kspace_test.shape))
-    logging.info("image test: " + str(image_test.shape))
+    logging.info("dec val: " + str(dec_val.shape))
+    logging.info("rec val: " + str(rec_val.shape))
 
     logging.debug("Scans formatted")
 
-    # Save k-space and image domain stats
+    # Save k-space and rec domain stats
     stats = np.zeros(4)
-    stats[0] = kspace_train.mean()
-    stats[1] = kspace_train.std()
-    aux = np.abs(image_train[:, :, :, 0] + 1j * image_train[:, :, :, 1])
+    stats[0] = dec_train.mean()
+    stats[1] = dec_train.std()
+    aux = np.abs(rec_train[:, :, :, 0] + 1j * rec_train[:, :, :, 1])
     stats[2] = aux.mean()
     stats[3] = aux.std()
     np.save(str(ADDR / cfg["addrs"]["STATS"]), stats)
@@ -375,12 +336,10 @@ def get_brains(cfg, ADDR):
     return (
         mask,
         stats,
-        kspace_train,
-        image_train,
-        kspace_val,
-        image_val,
-        kspace_test,
-        image_test,
+        dec_train,
+        rec_train,
+        dec_val,
+        rec_val,
     )
 
 
@@ -420,7 +379,7 @@ class CompConv2D(layers.Layer):
         return dict(list(base_config.items()) + list(config.items()))
 
 
-# U-Net model. Includes kspace domain U-Net and IFFT.
+# U-Net model. Includes dec domain U-Net and IFFT.
 def comp_unet_model(
     mu1, sigma1, mu2, sigma2, cfg, H=256, W=256, channels=2, kshape=(3, 3)
 ):

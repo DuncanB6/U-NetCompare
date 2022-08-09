@@ -1,0 +1,12 @@
+Metrics:
+
+
+Complex: /Users/duncanboyd/Documents/homevenv/UofC2022/metrics_test/arc_15409056/comp_model
+SSIM: 0.939 +/- 0.009
+NRMSE: 32.134 +/- 3.724
+PSNR: 26.913 +/- 2.383
+
+Real: /Users/duncanboyd/Documents/homevenv/UofC2022/metrics_test/arc_15409056/real_model
+SSIM: 0.979 +/- 0.008
+NRMSE: 18.559 +/- 5.648
+PSNR: 32.000 +/- 2.933
