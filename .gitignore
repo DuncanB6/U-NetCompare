@@ -13,6 +13,7 @@ outputs_2/
 outputs_3/
 inputs/masks/
 arc_outputs/
+good_models/
 
 # DS Store
 *.DS_Store

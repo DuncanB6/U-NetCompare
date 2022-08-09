@@ -25,6 +25,8 @@ def normalize(values, actual_bounds, desired_bounds):
 
 def metrics(ref, pred):
 
+    print(ref.dtype, pred.dtype)
+
     metrics = np.zeros((pred.shape[0],3))
     for ii in range(pred.shape[0]):  
         metrics[ii,0] = ssim(ref[ii].ravel(), pred[ii].ravel(), win_size = ref[ii].size-1)
@@ -90,6 +92,9 @@ def get_test(cfg, ADDR):
 
     dec_test = dec_test / np.max(np.abs(dec_test[:, :, :, 0] + 1j * dec_test[:, :, :, 1]))
     rec_test = rec_test / np.max(np.abs(rec_test[:, :, :, 0] + 1j * rec_test[:, :, :, 1]))
+
+    dec_test = dec_test.astype('float32')
+    rec_test = rec_test.astype('float32')
 
     logging.info("dec test: " + str(dec_test.shape))
     logging.info("rec test: " + str(rec_test.shape))
@@ -188,6 +193,10 @@ def data_aug(rec_train, mask, stats, cfg):
         while True:
             rec_real = gen1.next()
             rec_imag = gen2.next()
+            rec = np.zeros((rec_real.shape[0], rec_real.shape[1], rec_real.shape[2], 2))
+            rec[:, :, :, 0] = rec_real[:, :, :, 0]
+            rec[:, :, :, 1] = rec_imag[:, :, :, 0]
+
             dec = np.fft.fft2(rec_real[:, :, :, 0] + 1j * rec_imag[:, :, :, 0])
             dec2 = np.zeros((dec.shape[0], dec.shape[1], dec.shape[2], 2))
             dec2[:, :, :, 0] = dec.real
@@ -195,17 +204,16 @@ def data_aug(rec_train, mask, stats, cfg):
             dec2[
                 :, mask[int(random.randint(0, (cfg["params"]["NUM_MASKS"] - 1)))], :
             ] = 0
-            rec = np.zeros((dec.shape[0], dec.shape[1], dec.shape[2], 2))
-            rec[:, :, :, 0] = rec_real[:, :, :, 0]
-            rec[:, :, :, 1] = rec_imag[:, :, :, 0]
 
             aux = np.fft.ifft2(dec2[:, :, :, 0] + 1j * dec2[:, :, :, 1])
-            rec = np.copy(dec2)
-            rec[:, :, :, 0] = aux.real
-            rec[:, :, :, 1] = aux.imag
-            dec2 = rec
+            dec = np.copy(dec2)
+            dec[:, :, :, 0] = aux.real
+            dec[:, :, :, 1] = aux.imag
+
+            dec = dec.astype('float32')
+            rec = rec.astype('float32')
             
-            yield (dec2, rec)
+            yield (dec, rec)
 
     return combine_generator(rec_gen1, rec_gen2, mask, stats)
 
@@ -281,6 +289,9 @@ def get_brains(cfg, ADDR):
     dec_train = dec_train / np.max(np.abs(dec_train[:, :, :, 0] + 1j * dec_train[:, :, :, 1]))
     rec_train = rec_train / np.max(np.abs(rec_train[:, :, :, 0] + 1j * rec_train[:, :, :, 1]))
 
+    dec_train = dec_train.astype('float32')
+    rec_train = rec_train.astype('float32')
+
     logging.info("dec train: " + str(dec_train.shape))
     logging.info("rec train: " + str(rec_train.shape))
 
@@ -318,6 +329,9 @@ def get_brains(cfg, ADDR):
 
     dec_val = dec_val / np.max(np.abs(dec_val[:, :, :, 0] + 1j * dec_val[:, :, :, 1]))
     rec_val = rec_val / np.max(np.abs(rec_val[:, :, :, 0] + 1j * rec_val[:, :, :, 1]))
+
+    dec_val = dec_val.astype('float32')
+    rec_val = rec_val.astype('float32')
 
     logging.info("dec val: " + str(dec_val.shape))
     logging.info("rec val: " + str(rec_val.shape))

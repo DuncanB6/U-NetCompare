@@ -1,12 +1,58 @@
 Metrics:
 
 
-Complex: /Users/duncanboyd/Documents/homevenv/UofC2022/metrics_test/arc_15409056/comp_model
-SSIM: 0.939 +/- 0.009
-NRMSE: 32.134 +/- 3.724
-PSNR: 26.913 +/- 2.383
+Complex: /Users/duncanboyd/Documents/homevenv/UofC2022/metrics_test/arc_15404170/comp_model
+SSIM: 0.969 +/- 0.009
+NRMSE: 20.368 +/- 2.154
+PSNR: 30.173 +/- 2.053
 
-Real: /Users/duncanboyd/Documents/homevenv/UofC2022/metrics_test/arc_15409056/real_model
-SSIM: 0.979 +/- 0.008
-NRMSE: 18.559 +/- 5.648
-PSNR: 32.000 +/- 2.933
+Real: /Users/duncanboyd/Documents/homevenv/UofC2022/metrics_test/arc_15404170/real_model
+SSIM: 0.955 +/- 0.006
+NRMSE: 24.770 +/- 2.768
+PSNR: 28.485 +/- 2.567
+
+Complex: /Users/duncanboyd/Documents/homevenv/UofC2022/metrics_test/arc_15409055/comp_model
+SSIM: 0.942 +/- 0.010
+NRMSE: 29.189 +/- 3.398
+PSNR: 27.064 +/- 2.683
+
+Real: /Users/duncanboyd/Documents/homevenv/UofC2022/metrics_test/arc_15409055/real_model
+SSIM: 0.971 +/- 0.006
+NRMSE: 20.071 +/- 2.224
+PSNR: 30.308 +/- 2.382
+
+Complex: /Users/duncanboyd/Documents/homevenv/UofC2022/metrics_test/arc_15407336/comp_model
+SSIM: 0.971 +/- 0.007
+NRMSE: 19.818 +/- 2.046
+PSNR: 30.410 +/- 2.207
+
+Real: /Users/duncanboyd/Documents/homevenv/UofC2022/metrics_test/arc_15407336/real_model
+SSIM: 0.967 +/- 0.007
+NRMSE: 21.514 +/- 2.418
+PSNR: 29.707 +/- 2.429
+
+Complex: /Users/duncanboyd/Documents/homevenv/UofC2022/metrics_test/arc_15407338/comp_model
+SSIM: 0.908 +/- 0.033
+NRMSE: 38.425 +/- 5.314
+PSNR: 24.706 +/- 2.968
+
+Real: /Users/duncanboyd/Documents/homevenv/UofC2022/metrics_test/arc_15407338/real_model
+SSIM: 0.966 +/- 0.008
+NRMSE: 21.875 +/- 2.876
+PSNR: 29.581 +/- 2.496
+
+Complex: /Users/duncanboyd/Documents/homevenv/UofC2022/metrics_test/arc_15404171/comp_model
+SSIM: 0.941 +/- 0.012
+NRMSE: 29.959 +/- 3.887
+PSNR: 26.855 +/- 2.848
+
+Real: /Users/duncanboyd/Documents/homevenv/UofC2022/metrics_test/arc_15404171/real_model
+SSIM: 0.967 +/- 0.009
+NRMSE: 21.459 +/- 2.529
+PSNR: 29.733 +/- 2.348
+
+Comp avgs: 
+SSIM: 0.946 NRMSE: 27.552 pSNR: 27.842
+
+Real avgs: 
+SSIM: 0.965 NRMSE: 21.938 pSNR: 29.563
