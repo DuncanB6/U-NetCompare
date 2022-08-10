@@ -38,11 +38,6 @@ def main(cfg: DictConfig):
         rec_val,
     ) = get_brains(cfg, ADDR)
 
-    print(dec_train[0].dtype)
-    print(rec_train[1].dtype)
-    print(dec_val[0].dtype)
-    print(rec_val[1].dtype)
-
     (
         dec_test,
         rec_test,
@@ -81,9 +76,6 @@ def main(cfg: DictConfig):
 
     comp_pred = comp_pred / np.max(np.abs(comp_pred[:, :, :, 0] + 1j * comp_pred[:, :, :, 1]))
     real_pred = real_pred / np.max(np.abs(real_pred[:, :, :, 0] + 1j * real_pred[:, :, :, 1]))
-
-    print(comp_pred[0].dtype)
-    print(real_pred[1].dtype)
 
     # Displays predictions (Not necessary for ARC)
     plt.figure(figsize=(10, 10))

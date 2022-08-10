@@ -12,16 +12,13 @@ from tensorflow.keras.models import Model
 import logging
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
 import random
-import sigpy.mri as sp # 1.22
+import sigpy.mri as sp
 from skimage.metrics import structural_similarity as ssim
 from skimage.metrics import normalized_root_mse as norm_root_mse
 from skimage.metrics import peak_signal_noise_ratio as psnr
+import matplotlib.pyplot as plt
 
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
-# tf.disable_v2_behavior()
-
-def normalize(values, actual_bounds, desired_bounds):
-    return desired_bounds[0] + (values - actual_bounds[0]) * (desired_bounds[1] - desired_bounds[0]) / (actual_bounds[1] - actual_bounds[0])
 
 def metrics(ref, pred):
 
@@ -69,16 +66,16 @@ def get_test(cfg, ADDR):
     dec_test = np.zeros((ntest, shape[0], shape[1], 2))
     aux_counter = 0
     for ii in range(len(dec_files_test)):
-        dec_dec = np.load(dec_files_test[ii]) / norm
-        rec_dec = np.copy(dec_dec)
-        dec_dec[:, mask[int(random.randint(0, cfg["params"]["NUM_MASKS"] - 1))], :] = 0
-        dec_rec = np.fft.ifft2(dec_dec[:, :, :, 0] + 1j * dec_dec[:, :, :, 1])
-        rec_rec = np.fft.ifft2(rec_dec[:, :, :, 0] + 1j * rec_dec[:, :, :, 1])
-        aux = rec_dec.shape[0]
-        dec_test[aux_counter : aux_counter + aux, :, :, 0] = dec_rec.real
-        dec_test[aux_counter : aux_counter + aux, :, :, 1] = dec_rec.imag
-        rec_test[aux_counter : aux_counter + aux, :, :, 0] = rec_rec.real
-        rec_test[aux_counter : aux_counter + aux, :, :, 1] = rec_rec.imag
+        dec1 = np.load(dec_files_test[ii]) / norm
+        rec1 = np.copy(dec1)
+        dec1[:, mask[int(random.randint(0, cfg["params"]["NUM_MASKS"] - 1))], :] = 0
+        dec2 = np.fft.ifft2(dec1[:, :, :, 0] + 1j * dec1[:, :, :, 1])
+        rec2 = np.fft.ifft2(rec1[:, :, :, 0] + 1j * rec1[:, :, :, 1])
+        aux = rec1.shape[0]
+        dec_test[aux_counter : aux_counter + aux, :, :, 0] = dec2.real
+        dec_test[aux_counter : aux_counter + aux, :, :, 1] = dec2.imag
+        rec_test[aux_counter : aux_counter + aux, :, :, 0] = rec2.real
+        rec_test[aux_counter : aux_counter + aux, :, :, 1] = rec2.imag
         aux_counter += aux
     
     # Shuffle testing
@@ -117,6 +114,9 @@ def create_circular_mask(h=256, w=256, center=None, radius=16):
     dist_from_center = np.sqrt((X - center[0])**2 + (Y-center[1])**2)
 
     mask = dist_from_center <= radius
+    mask = ~np.fft.fftshift(mask, axes=(0, 1))
+    mask = mask.astype(np.bool)
+    
     return mask
 
 # Creates a number of masks (modifiable in settings) with a 22% poisson disk.
@@ -134,13 +134,15 @@ def mask_gen(ADDR, cfg):
             crop_corner=False,
         )
 
-        # mask = mask + create_circular_mask()
         mask = ~np.fft.fftshift(mask, axes=(0, 1))
 
         mask = mask + 2
         mask = mask.astype(np.bool)
+        mask = mask & create_circular_mask()
 
-        filename = "/mask" + str(int(k)) + "_" + str(cfg["params"]["ACCEL"]) + ".npy"
+        sampling = (1.0*mask.sum()/mask.size) * 100
+
+        filename = "/mask" + str(int(k)) + "_" + str(cfg["params"]["ACCEL"]) + "_" + str(int(sampling)) + ".npy"
         filename = cfg["addrs"]["MASK_SAVE"] + filename
         np.save(
             str(ADDR / filename),
@@ -237,7 +239,7 @@ def ifft_layer(dec):
 # Upgraded version, returns fewer arrays but with a faster and more efficient method.
 def get_brains(cfg, ADDR):
 
-    # Note: In train, one file is (174, 256, 256).
+    # Note: In train, one file is (174 x 256 x 256).
     dec_files_train = np.asarray(glob.glob(str(ADDR / cfg["addrs"]["TRAIN"])))
     dec_files_val = np.asarray(glob.glob(str(ADDR / cfg["addrs"]["VAL"])))
 
@@ -265,16 +267,16 @@ def get_brains(cfg, ADDR):
     dec_train = np.zeros((ntrain, shape[0], shape[1], 2))
     aux_counter = 0
     for ii in range(len(dec_files_train)):
-        dec_dec = np.load(dec_files_train[ii]) / norm
-        rec_dec = np.copy(dec_dec)
-        dec_dec[:, mask[int(random.randint(0, cfg["params"]["NUM_MASKS"] - 1))], :] = 0
-        dec_rec = np.fft.ifft2(dec_dec[:, :, :, 0] + 1j * dec_dec[:, :, :, 1])
-        rec_rec = np.fft.ifft2(rec_dec[:, :, :, 0] + 1j * rec_dec[:, :, :, 1])
-        aux = rec_dec.shape[0]
-        dec_train[aux_counter : aux_counter + aux, :, :, 0] = dec_rec.real
-        dec_train[aux_counter : aux_counter + aux, :, :, 1] = dec_rec.imag
-        rec_train[aux_counter : aux_counter + aux, :, :, 0] = rec_rec.real
-        rec_train[aux_counter : aux_counter + aux, :, :, 1] = rec_rec.imag
+        dec1 = np.load(dec_files_train[ii]) / norm
+        rec1 = np.copy(dec1)
+        dec1[:, mask[int(random.randint(0, cfg["params"]["NUM_MASKS"] - 1))], :] = 0
+        dec2 = np.fft.ifft2(dec1[:, :, :, 0] + 1j * dec1[:, :, :, 1])
+        rec2 = np.fft.ifft2(rec1[:, :, :, 0] + 1j * rec1[:, :, :, 1])
+        aux = rec1.shape[0]
+        dec_train[aux_counter : aux_counter + aux, :, :, 0] = dec2.real
+        dec_train[aux_counter : aux_counter + aux, :, :, 1] = dec2.imag
+        rec_train[aux_counter : aux_counter + aux, :, :, 0] = rec2.real
+        rec_train[aux_counter : aux_counter + aux, :, :, 1] = rec2.imag
         aux_counter += aux
 
     # Shuffle training
@@ -305,16 +307,16 @@ def get_brains(cfg, ADDR):
     dec_val = np.zeros((nval, shape[0], shape[1], 2))
     aux_counter = 0
     for ii in range(len(dec_files_val)):
-        dec_dec = np.load(dec_files_val[ii]) / norm
-        rec_dec = np.copy(dec_dec)
-        dec_dec[:, mask[int(random.randint(0, cfg["params"]["NUM_MASKS"] - 1))], :] = 0
-        dec_rec = np.fft.ifft2(dec_dec[:, :, :, 0] + 1j * dec_dec[:, :, :, 1])
-        rec_rec = np.fft.ifft2(rec_dec[:, :, :, 0] + 1j * rec_dec[:, :, :, 1])
-        aux = rec_dec.shape[0]
-        dec_val[aux_counter : aux_counter + aux, :, :, 0] = dec_rec.real
-        dec_val[aux_counter : aux_counter + aux, :, :, 1] = dec_rec.imag
-        rec_val[aux_counter : aux_counter + aux, :, :, 0] = rec_rec.real
-        rec_val[aux_counter : aux_counter + aux, :, :, 1] = rec_rec.imag
+        dec1 = np.load(dec_files_val[ii]) / norm
+        rec1 = np.copy(dec1)
+        dec1[:, mask[int(random.randint(0, cfg["params"]["NUM_MASKS"] - 1))], :] = 0
+        dec2 = np.fft.ifft2(dec1[:, :, :, 0] + 1j * dec1[:, :, :, 1])
+        rec2 = np.fft.ifft2(rec1[:, :, :, 0] + 1j * rec1[:, :, :, 1])
+        aux = rec1.shape[0]
+        dec_val[aux_counter : aux_counter + aux, :, :, 0] = dec2.real
+        dec_val[aux_counter : aux_counter + aux, :, :, 1] = dec2.imag
+        rec_val[aux_counter : aux_counter + aux, :, :, 0] = rec2.real
+        rec_val[aux_counter : aux_counter + aux, :, :, 1] = rec2.imag
         aux_counter += aux
 
     # Shuffle valing
@@ -358,8 +360,6 @@ def get_brains(cfg, ADDR):
 
 
 # Custom complex convolution.
-# I feel like my understanding of his might be off. How are the amount of output filters related to the two channel
-# number? Are the imaginary numbers preserved?
 # Uses algebra below. I've used "|" to denote a two channel array, and "f" to denote a variable that is a part of a filter.
 
 # (R | I) * (Rf | If) = Or | Oi = (R * Rf - I * If) | (I * Rf + R * If)
@@ -395,7 +395,7 @@ class CompConv2D(layers.Layer):
 
 # U-Net model. Includes dec domain U-Net and IFFT.
 def comp_unet_model(
-    mu1, sigma1, mu2, sigma2, cfg, H=256, W=256, channels=2, kshape=(3, 3)
+    cfg, H=256, W=256, channels=2, kshape=(3, 3)
 ):
     MOD = cfg["params"]["MOD"]
 
@@ -436,9 +436,6 @@ def comp_unet_model(
     conv7 = CompConv2D(24 * MOD)(conv7)
 
     conv8 = layers.Conv2D(2, (1, 1), activation="linear")(conv7)
-    # conv8 = CompConv2D(1)(conv7)
-    # res1 = layers.Add()([conv8, inputs])
-    # final = layers.Lambda(lambda res1: (res1 * sigma1 + mu1))(conv8)
 
     model = Model(inputs=inputs, outputs=conv8)
     return model
@@ -446,7 +443,7 @@ def comp_unet_model(
 
 # U-Net model.
 def real_unet_model(
-    cfg, mu1, sigma1, mu2, sigma2, H=256, W=256, channels=2, kshape=(3, 3)
+    cfg, H=256, W=256, channels=2, kshape=(3, 3)
 ):
 
     RE_MOD = cfg["params"]["RE_MOD"]
@@ -488,8 +485,6 @@ def real_unet_model(
     conv7 = Conv2D(48 * RE_MOD, kshape, activation="relu", padding="same")(conv7)
 
     conv8 = layers.Conv2D(2, (1, 1), activation="linear")(conv7)
-    # res1 = layers.Add()([conv8, inputs])
-    # final = layers.Lambda(lambda res1: (res1 * sigma1 + mu1))(res1)
 
     model = Model(inputs=inputs, outputs=conv8)
     return model

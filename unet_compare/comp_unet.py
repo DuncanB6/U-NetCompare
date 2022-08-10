@@ -27,7 +27,7 @@ def comp_main(
 
     # Declares, compiles, fits the model.
     logging.info("Compiling UNet")
-    model = comp_unet_model(stats[0], stats[1], stats[2], stats[3], cfg)
+    model = comp_unet_model(cfg)
     opt = tf.keras.optimizers.Adam(
         lr=cfg["params"]["LR"],
         beta_1=cfg["params"]["BETA_1"],

@@ -3,6 +3,7 @@
 # Requires two existing unets, displays prediction recs.
 
 # scp -r duncan.boyd@arc.ucalgary.ca:home/metrics_test metrics_test
+# scp -r unet_compare duncan.boyd@arc.ucalgary.ca:home
 
 # Imports
 import numpy as np
@@ -33,10 +34,10 @@ def main(cfg: DictConfig):
         rec_test,
     ) = get_test(cfg, ADDR)
 
-    '''plt.imshow((255.0 - dec_test[0, :, :, 0]), cmap='Greys')
+    plt.imshow((255.0 - dec_test[0, :, :, 0]), cmap='Greys')
     plt.show()
     plt.imshow((255.0 - rec_test[0, :, :, 0]), cmap='Greys')
-    plt.show()'''
+    plt.show()
 
     comp_models = np.asarray(glob.glob(str(ADDR / cfg["addrs"]["COMP_ARC"])))
     real_models = np.asarray(glob.glob(str(ADDR / cfg["addrs"]["REAL_ARC"])))

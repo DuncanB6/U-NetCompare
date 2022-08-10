@@ -23,7 +23,7 @@ def real_main(
 
     # Declares, compiles, fits the model.
     logging.info("Compiling UNet")
-    model = real_unet_model(cfg, stats[0], stats[1], stats[2], stats[3])
+    model = real_unet_model(cfg)
     opt = tf.keras.optimizers.Adam(
         lr=cfg["params"]["LR"],
         beta_1=cfg["params"]["BETA_1"],
