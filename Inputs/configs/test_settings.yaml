@@ -1,6 +1,6 @@
 ---
 params:
-  NUM_TEST: 100 # max 1700
+  NUM_TEST: 10 # max 1700
   NUM_MASKS: 1
   ACCEL: 5
 addrs:
