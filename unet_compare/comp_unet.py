@@ -1,4 +1,4 @@
-# Complex UNet that uses a custom layer.
+# Trains a complex UNet that uses a custom layer.
 
 # Imports
 import time
@@ -21,11 +21,11 @@ def comp_main(
     dec_val,
     rec_val,
 ):
-
+    # Initial logging
     logging.info("Initialized complex UNet with ")
     init_time = time.time()
 
-    # Declares, compiles, fits the model.
+    # Declares, compiles the model.
     logging.info("Compiling UNet")
     model = comp_unet_model(cfg)
     opt = tf.keras.optimizers.Adam(
