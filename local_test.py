@@ -1,6 +1,12 @@
-# Aug 5, 2022
+# This program trains two unets and displays results. Used for local testing.
 
-# This program fits two unets and displays results. Used for local testing.
+# Inputs: 
+# train, val, test datasets
+# inputs/configs/settings_1 yaml file
+
+# Outputs: 
+# Models, checkpoints and logs in output file
+# System log in outputs
 
 # Imports
 from pathlib import Path
@@ -21,14 +27,16 @@ import logging
 )
 def main(cfg: DictConfig):
 
-    logging.info("Settings version: " + str(cfg["params"]["UNIT_CONFIRM"]))
+    # Finds working directory address, used with cfg addresses
+    ADDR = Path.cwd()
 
-    ADDR = Path.cwd()  # /Users/duncan.boyd/Documents/WorkCode/workvenv/UofC2022
+    # Initial logging
+    logging.info("Settings version: " + str(cfg["params"]["UNIT_CONFIRM"]))
 
     # Creates masks
     mask_gen(ADDR, cfg)
 
-    # Loads data
+    # Loads all data
     (
         mask,
         stats,
@@ -37,13 +45,12 @@ def main(cfg: DictConfig):
         dec_val,
         rec_val,
     ) = get_brains(cfg, ADDR)
-
     (
         dec_test,
         rec_test,
     ) = get_test(cfg, ADDR)
 
-    # Calls both models
+    # Calls both models to train
     comp_model = comp_main(
         cfg,
         ADDR,
@@ -69,15 +76,14 @@ def main(cfg: DictConfig):
     # Makes predictions
     logging.info("Evaluating UNet")
     comp_pred = comp_model.predict(dec_test)
-
-    # Makes predictions
     logging.info("Evaluating UNet")
     real_pred = real_model.predict(dec_test)
 
+    # Normalizing predictions
     comp_pred = comp_pred / np.max(np.abs(comp_pred[:, :, :, 0] + 1j * comp_pred[:, :, :, 1]))
     real_pred = real_pred / np.max(np.abs(real_pred[:, :, :, 0] + 1j * real_pred[:, :, :, 1]))
 
-    # Displays predictions (Not necessary for ARC)
+    # Displays predictions
     plt.figure(figsize=(10, 10))
     plt.subplot(1, 4, 1)
     plt.imshow((255.0 - rec_test[0, :, :, 0]), cmap="Greys")
