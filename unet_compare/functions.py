@@ -1,4 +1,9 @@
 # Functions that support both UNets. Includes the UNets themselves and the custom layers.
+# This is the majority of code for this project.
+# Because of this, commenting is only done at function top. Good luck.
+
+# Note that the get_test and get_brains functions load all data, even if they only return a part.
+# This is a flaw that could be fixed.
 
 import os
 from re import L
@@ -20,11 +25,9 @@ import matplotlib.pyplot as plt
 
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
 
+# Compares two data sets, prints and returns ssim, psnr, nrmse.
 def metrics(ref, pred):
 
-    print(ref.dtype, pred.dtype)
-
-    metrics = np.zeros((pred.shape[0],3))
     for ii in range(pred.shape[0]):  
         metrics[ii,0] = ssim(ref[ii].ravel(), pred[ii].ravel(), win_size = ref[ii].size-1)
         metrics[ii,1] = norm_root_mse(ref[ii], pred[ii])
@@ -56,12 +59,10 @@ def get_test(cfg, ADDR):
     mask = mask.astype(bool)
     logging.info("masks: " + str(len(mask)))
 
-    # Get number of samples
     ntest = 0
     for ii in range(len(dec_files_test)):
         ntest += np.load(dec_files_test[ii]).shape[0]
 
-    # Load train data
     rec_test = np.zeros((ntest, shape[0], shape[1], 2))
     dec_test = np.zeros((ntest, shape[0], shape[1], 2))
     aux_counter = 0
@@ -78,7 +79,6 @@ def get_test(cfg, ADDR):
         rec_test[aux_counter : aux_counter + aux, :, :, 1] = rec2.imag
         aux_counter += aux
     
-    # Shuffle testing
     indexes = np.arange(rec_test.shape[0], dtype=int)
     np.random.shuffle(indexes)
     rec_test = rec_test[indexes]
@@ -103,6 +103,7 @@ def get_test(cfg, ADDR):
         rec_test,
     )
 
+# Created a boolean circle mask
 def create_circular_mask(h=256, w=256, center=None, radius=16):
 
     if center is None: # use the middle of the rec
@@ -119,7 +120,7 @@ def create_circular_mask(h=256, w=256, center=None, radius=16):
     
     return mask
 
-# Creates a number of masks (modifiable in settings) with a 22% poisson disk.
+# Creates a number of masks with a poisson disk and a circular mask
 def mask_gen(ADDR, cfg):
 
     files = np.asarray(glob.glob(str(ADDR / cfg["addrs"]["MASKS"])))
@@ -152,7 +153,7 @@ def mask_gen(ADDR, cfg):
     return
 
 
-# Return an rec generator which generates augmented recs
+# Returns an image generator which generates images, undersampled and complete
 def data_aug(rec_train, mask, stats, cfg):
     seed = 905
     rec_datagen1 = ImageDataGenerator(
@@ -225,8 +226,7 @@ def nrmse(y_true, y_pred):
     denom = K.sqrt(K.mean(K.square(y_true), axis=(1, 2, 3)))
     return K.sqrt(K.mean(K.square(y_pred - y_true), axis=(1, 2, 3))) / denom
 
-
-# IFFT layer, used in u_net.
+# IFFT layer, used in u_net
 def ifft_layer(dec):
     real = layers.Lambda(lambda dec: dec[:, :, :, 0])(dec)
     imag = layers.Lambda(lambda dec: dec[:, :, :, 1])(dec)
@@ -236,10 +236,10 @@ def ifft_layer(dec):
     return rec1
 
 
-# Upgraded version, returns fewer arrays but with a faster and more efficient method.
+# Gets training data and val data
+# Note: In train, one file is (174 x 256 x 256). This code is fine with that
 def get_brains(cfg, ADDR):
 
-    # Note: In train, one file is (174 x 256 x 256).
     dec_files_train = np.asarray(glob.glob(str(ADDR / cfg["addrs"]["TRAIN"])))
     dec_files_val = np.asarray(glob.glob(str(ADDR / cfg["addrs"]["VAL"])))
 
@@ -257,12 +257,10 @@ def get_brains(cfg, ADDR):
     mask = mask.astype(bool)
     logging.info("masks: " + str(len(mask)))
 
-    # Get number of samples
     ntrain = 0
     for ii in range(len(dec_files_train)):
         ntrain += np.load(dec_files_train[ii]).shape[0]
 
-    # Load train data
     rec_train = np.zeros((ntrain, shape[0], shape[1], 2))
     dec_train = np.zeros((ntrain, shape[0], shape[1], 2))
     aux_counter = 0
@@ -279,7 +277,6 @@ def get_brains(cfg, ADDR):
         rec_train[aux_counter : aux_counter + aux, :, :, 1] = rec2.imag
         aux_counter += aux
 
-    # Shuffle training
     indexes = np.arange(rec_train.shape[0], dtype=int)
     np.random.shuffle(indexes)
     rec_train = rec_train[indexes]
@@ -297,12 +294,10 @@ def get_brains(cfg, ADDR):
     logging.info("dec train: " + str(dec_train.shape))
     logging.info("rec train: " + str(rec_train.shape))
 
-    # Get number of samples
     nval = 0
     for ii in range(len(dec_files_val)):
         nval += np.load(dec_files_val[ii]).shape[0]
 
-    # Load val data
     rec_val = np.zeros((nval, shape[0], shape[1], 2))
     dec_val = np.zeros((nval, shape[0], shape[1], 2))
     aux_counter = 0
@@ -319,7 +314,6 @@ def get_brains(cfg, ADDR):
         rec_val[aux_counter : aux_counter + aux, :, :, 1] = rec2.imag
         aux_counter += aux
 
-    # Shuffle valing
     indexes = np.arange(rec_val.shape[0], dtype=int)
     np.random.shuffle(indexes)
     rec_val = rec_val[indexes]
@@ -340,7 +334,6 @@ def get_brains(cfg, ADDR):
 
     logging.debug("Scans formatted")
 
-    # Save k-space and rec domain stats
     stats = np.zeros(4)
     stats[0] = dec_train.mean()
     stats[1] = dec_train.std()
@@ -361,10 +354,7 @@ def get_brains(cfg, ADDR):
 
 # Custom complex convolution.
 # Uses algebra below. I've used "|" to denote a two channel array, and "f" to denote a variable that is a part of a filter.
-
 # (R | I) * (Rf | If) = Or | Oi = (R * Rf - I * If) | (I * Rf + R * If)
-
-# Config function added to allow loading and saving.
 class CompConv2D(layers.Layer):
     def __init__(self, out_channels, kshape=(3, 3), **kwargs):
         super(CompConv2D, self).__init__()
@@ -393,7 +383,7 @@ class CompConv2D(layers.Layer):
         return dict(list(base_config.items()) + list(config.items()))
 
 
-# U-Net model. Includes dec domain U-Net and IFFT.
+# U-Net model. Uses custom complex layer.
 def comp_unet_model(
     cfg, H=256, W=256, channels=2, kshape=(3, 3)
 ):
@@ -445,7 +435,6 @@ def comp_unet_model(
 def real_unet_model(
     cfg, H=256, W=256, channels=2, kshape=(3, 3)
 ):
-
     RE_MOD = cfg["params"]["RE_MOD"]
 
     inputs = Input(shape=(H, W, channels))
