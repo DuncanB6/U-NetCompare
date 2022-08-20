@@ -1,35 +1,35 @@
-Duncan Boyd, Aug 3, 2022
+Duncan Boyd, Aug 19, 2022
+duncan@wapta.ca
 
 Description: This repository is for all code written as a summer student in the Seaman MRI Center 2022. 
-Comp UNet is the code I'm working on, and is as suggested a complex UNet, as well as a regular UNet.
-The other UNet is a regular UNet.
+Includes debugging programs and ARC programs to allow a user to compare complex vs. real valued algebra in u-nets.
+It is not particularily optimized, and could be structured better. 
+
+Note: Actual complex algebra (one of the only completely original parts of this code) can
+be found in unet_compare/functions line 366. The rest of the code is support to test this. 
+
+Note: Code was greatly inspired (copied) from Dr. Frayne and Dr. Souza's code (link below).
+This is turn from their paper: 
+Souza, Roberto, and Richard Frayne. "A hybrid frequency-domain/image-domain deep network for magnetic resonance image reconstruction." In 2019 32nd SIBGRAPI Conference on Graphics, Patterns and Images (SIBGRAPI), pp. 257-264. IEEE, 2019.
+
+Github link: https://github.com/rmsouza01/Hybrid-CS-Model-MRI
 
 ---
 
-Status: Analyzing trained U-net models, summarizing results.
+Status: Project finished.
 
 ---
 
-ARC instructions:
+Structure:
 
-export PATH=~/software/miniconda3/bin:$PATH
+arc_test, local_test and pred_test are main scripts. Desciption on what they do are commented in.
 
-source activate testvenv
+unet_compare provides support for these three functions.
 
-sbatch arc_script.slurm
+Most other files are either inputs, outputs, debugging or utilities.
+Check out outputs for results.
 
----
 
-Reminder for Duncan: 
 
-git add . 
-
-git commit -m "_message_" 
-
-git push origin main 
-
-git pull origin main
-
-pip3 list – format=freeze > requirements.txt
 
 
