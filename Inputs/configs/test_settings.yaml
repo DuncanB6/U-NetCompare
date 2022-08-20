@@ -1,8 +1,8 @@
 ---
 params:
-  NUM_TEST: 10 # max 1700
-  NUM_MASKS: 1
-  ACCEL: 5
+  NUM_TEST: 100 # max 1700
+  NUM_MASKS: 10
+  ACCEL: 5 
 addrs:
   TEST: test/*.npy
   STATS: outputs_1/stats.npy
@@ -11,4 +11,6 @@ addrs:
   MASK_SAVE: inputs/masks
   COMP_ARC: metrics_test/*/comp_model
   REAL_ARC: metrics_test/*/real_model
+  COMP_LOG: metrics_test/*/comp_unet_train.log
+  REAL_LOG: metrics_test/*/real_unet_train.log
   METRICS: metrics_test/metrics.txt
