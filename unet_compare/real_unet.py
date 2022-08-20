@@ -1,4 +1,4 @@
-# Basic Unet model that mirrors the complex Unet, but does not use the CompConv2D layer.
+# Trains a regular UNet.
 
 # Imports
 import time
@@ -18,6 +18,7 @@ def real_main(
     rec_val,
 ):
 
+    # Initial logging
     logging.info("Initialized real UNet")
     init_time = time.time()
 
