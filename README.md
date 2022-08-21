@@ -22,12 +22,11 @@ Status: Project finished.
 
 Structure:
 
-arc_test, local_test and pred_test are main scripts. Desciption on what they do are commented in.
+arc_test, local_test and pred_test are main scripts. Desciption on what they do are commented at the top of each file.
 
 unet_compare provides support for these three functions.
 
 Most other files are either inputs, outputs, debugging or utilities.
-Check out outputs for results.
 
 
 
